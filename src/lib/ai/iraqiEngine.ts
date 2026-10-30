@@ -23,7 +23,9 @@ const PILOT_PATTERNS = {
   urgent: [/طوارئ|وجع لا يطاق|ورم|انتفاخ|حادث|انكسر سني هسة|نزيف|ينزف|ينزل دم|خروج دم|طلع دم|يموتني الوجع|ديموتني|مسكن قوي|مضاد حيوي|ألم قوي|الم قوي|ألم شديد|الم شديد|يوجعني حيل|يموت من الوجع|الضرس|ضرس|ضرسي|عصب سن/i],
   personalBrand: [/منو دكتور مصطفى|شهادتك|وين متخرج|سيرتك|خبرتك|ليش يشرحلك قبل لا يعالجك|شكد عمرك/i],
   location: [/مكانكم|وين العيادة|وين صايرين|عنوانكم|زيونة|دريم سيتي|اللوكيشن|موقعكم/i],
-  orthodontics: [/تقويم|بريسز|عضة مفتوحة|مطمور|ديمون|شفاف|فك|بروز|سلك|مطاط|closing loop|piggyback|open bite|متراكبة|تراكب|اعوجاج|معوجة|اسناني مخربطة|مخربطة|فتحة بين الاسنان/i],
+  orthodontics: [
+    /تقويم|بريسز|عضة مفتوحة|مطمور|ديمون|شفاف|فك|بروز|سلك|مطاط|closing loop|piggyback|open bite|متراكبة|تراكب|اعوجاج|معوجة|اسناني مخربطة|مخربطة|فتحة بين الاسنان|orthodontic|orthodontics|braces|aligner|aligners|invisalign|الدفعة الأولى|الدفعة الاولى|دفعة أولى|دفعة اولى|دفعة مقدمة|الدفعة المقدمة|أقساط|اقساط|تقسيط|monthly installments|down payment/i,
+  ],
   consultation: [/احجز|حجز|استشارة|كشفية|اريد اجي|اكدر اجي|فحص|موعد|اريد اشوف الدكتور/i],
   generalEducation: [/تفريش|خيط اسنان|معجون|تسوس|اصفرار|تبييض|رائحة الفم|اسنان اللبنية|تنظيف الجير/i],
   humanAgent: [/اريد احجي وياك شخصياً|دكتور مصطفى نفسه|مو روبوت|روبوت|بوت|بشر|انسان|حوّلني|حولي|شخص حقيقي|دكتور حقيقي|احجي ويا واحد|اتصل بيه|احجي ويا الدكتور|أحجي ويا الدكتور|احجي ويا دكتور|أحجي ويا دكتور|اكلم الدكتور|أكلم الدكتور|احجي ويه الدكتور|أحجي ويه الدكتور/i],
@@ -120,7 +122,7 @@ export function classifyPilotIntent(userMessage: string): {
   // 5. Orthodontic Clinical Inquiry
   if (PILOT_PATTERNS.orthodontics.some((r) => r.test(text))) {
     const isOrthoPriceOrInstallment =
-      /سعر|أسعار|اسعار|تكلفة|تكلف|بيش|شكد|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع/i.test(
+      /سعر|أسعار|اسعار|تكلفة|تكلف|يكلف|بيش|شكد|كم|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع|price|prices|cost|costs|installment|installments|down payment|financing/i.test(
         text
       );
     return {
@@ -213,7 +215,7 @@ export function generateIraqiDialectResponse(
 
     case 'orthodontic_inquiry':
       const isPriceOrInstallmentQuery =
-        /سعر|أسعار|اسعار|تكلفة|تكلف|بيش|شكد|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع/i.test(
+        /سعر|أسعار|اسعار|تكلفة|تكلف|يكلف|بيش|شكد|كم|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع|price|prices|cost|costs|installment|installments|down payment|financing/i.test(
           userMessage
         );
       if (isPriceOrInstallmentQuery) {

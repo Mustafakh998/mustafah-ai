@@ -377,13 +377,13 @@ export const InboxView: React.FC<InboxViewProps> = ({
                 <button
                   onClick={() =>
                     setReplyInput(
-                      'كلفة كشفية وفحص التقويم مجانية عند بدء العلاج، ونوفر نظام أقساط شهرية مريحة جداً تناسب ميزانيتك 💚'
+                      'بالنسبة لأسعار تقويم الأسنان، تختلف حسب الحالة ونوع العلاج والخطة المناسبة إلك.\n\nحتى نكدر نعطيك التفاصيل الصحيحة، نفضّل يتم تقييم حالتك والتواصل ويانه مباشرة لمعرفة التفاصيل.\n\nيسعدنا نساعدك ونرتب إلك استشارة ويا د. مصطفى هادي ❤️'
                     )
                   }
                   className="px-2.5 py-1 bg-white hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-300 shrink-0 flex items-center gap-1"
                 >
-                  <DollarSign className="w-3 h-3 text-amber-600" />
-                  <span>{isAr ? 'الأقساط والكشفية' : 'Prices & Installments'}</span>
+                  <DollarSign className="w-3 h-3 text-emerald-600" />
+                  <span>{isAr ? 'سياسة أسعار التقويم' : 'Ortho Pricing Policy'}</span>
                 </button>
               </div>
 
