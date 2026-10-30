@@ -1,69 +1,170 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useAppStore } from '@/lib/store';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { NavTabId } from '@/types';
+import { Header } from '@/components/layout/Header';
+import { OverviewView } from '@/components/pages/OverviewView';
+import { AccountsView } from '@/components/pages/AccountsView';
+import { InboxView } from '@/components/pages/InboxView';
+import { AiSettingsView } from '@/components/pages/AiSettingsView';
+import { KnowledgeBaseView } from '@/components/pages/KnowledgeBaseView';
+import { LeadsCrmView } from '@/components/pages/LeadsCrmView';
+import { AppointmentsView } from '@/components/pages/AppointmentsView';
+import { ContentStudioView } from '@/components/pages/ContentStudioView';
+import { ContentCalendarView } from '@/components/pages/ContentCalendarView';
+import { AdCampaignsView } from '@/components/pages/AdCampaignsView';
+import { AnalyticsView } from '@/components/pages/AnalyticsView';
+import { AdminView } from '@/components/pages/AdminView';
+import { SimulateMessageModal } from '@/components/modals/SimulateMessageModal';
 
 export default function Home() {
+  const {
+    state,
+    setLanguage,
+    setSelectedAccount,
+    setActiveConversation,
+    toggleAiAutoReply,
+    updateLeadStatus,
+    updateAppointmentStatus,
+    createAppointment,
+    sendMessage,
+    simulateIncomingUserMessage,
+    toggleConversationTakeover,
+    addContentItem,
+    updateContentStatus,
+    toggleCampaignStatus,
+    resetAllData,
+  } = useAppStore();
+
+  const [currentTab, setCurrentTab] = useState<NavTabId>('overview');
+  const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
+
+  // Sync RTL / LTR document direction with language
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.dir = state.currentLanguage === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = state.currentLanguage;
+    }
+  }, [state.currentLanguage]);
+
+  // Derived unread counts for badges
+  const unreadMessagesCount = state.conversations.filter((c) => c.unread).length;
+  const newAppointmentsCount = state.appointments.filter((a) => a.status === 'new_request').length;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans">
+      {/* Sidebar Navigation */}
+      <Sidebar
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
+        language={state.currentLanguage}
+        unreadCount={unreadMessagesCount}
+        newAppointmentsCount={newAppointmentsCount}
+      />
+
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Top Header */}
+        <Header
+          accounts={state.accounts}
+          selectedAccountId={state.selectedAccountId}
+          onSelectAccount={setSelectedAccount}
+          language={state.currentLanguage}
+          onToggleLanguage={() => setLanguage(state.currentLanguage === 'ar' ? 'en' : 'ar')}
+          isAiAutoReplyEnabled={state.isAiAutoReplyEnabled}
+          onToggleAiAutoReply={toggleAiAutoReply}
+          onOpenSimulateModal={() => setIsSimulateModalOpen(true)}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+
+        {/* Tab View Container */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          {currentTab === 'overview' && (
+            <OverviewView
+              state={state}
+              onNavigate={setCurrentTab}
+              onOpenSimulateModal={() => setIsSimulateModalOpen(true)}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          )}
+
+          {currentTab === 'accounts' && <AccountsView state={state} />}
+
+          {currentTab === 'inbox' && (
+            <InboxView
+              state={state}
+              onSendMessage={sendMessage}
+              onToggleTakeover={toggleConversationTakeover}
+              onSelectConversation={setActiveConversation}
+              onCreateAppointment={createAppointment}
+              onNavigate={setCurrentTab}
+            />
+          )}
+
+          {currentTab === 'ai_settings' && <AiSettingsView state={state} />}
+
+          {currentTab === 'knowledge_base' && <KnowledgeBaseView state={state} />}
+
+          {currentTab === 'leads_crm' && (
+            <LeadsCrmView
+              state={state}
+              onUpdateStatus={updateLeadStatus}
+              onNavigate={setCurrentTab}
+            />
+          )}
+
+          {currentTab === 'appointments' && (
+            <AppointmentsView
+              state={state}
+              onUpdateStatus={updateAppointmentStatus}
+              onCreateAppointment={createAppointment}
+            />
+          )}
+
+          {currentTab === 'content_studio' && (
+            <ContentStudioView
+              state={state}
+              onAddContentItem={addContentItem}
+              onNavigate={setCurrentTab}
+            />
+          )}
+
+          {currentTab === 'content_calendar' && (
+            <ContentCalendarView
+              state={state}
+              onUpdateStatus={updateContentStatus}
+              onNavigate={setCurrentTab}
+            />
+          )}
+
+          {currentTab === 'ad_campaigns' && (
+            <AdCampaignsView
+              state={state}
+              onToggleCampaignStatus={toggleCampaignStatus}
+            />
+          )}
+
+          {currentTab === 'analytics' && <AnalyticsView state={state} />}
+
+          {currentTab === 'admin' && (
+            <AdminView state={state} onResetData={resetAllData} />
+          )}
+        </main>
+      </div>
+
+      {/* Simulated Inbound DM Modal */}
+      <SimulateMessageModal
+        isOpen={isSimulateModalOpen}
+        onClose={() => setIsSimulateModalOpen(false)}
+        onSendSimulation={(text, username) => {
+          simulateIncomingUserMessage(text, username);
+          // If not in inbox, prompt or automatically navigate to inbox to see real-time AI reply
+          if (currentTab !== 'inbox') {
+            setCurrentTab('inbox');
+          }
+        }}
+        language={state.currentLanguage}
+      />
     </div>
   );
 }
