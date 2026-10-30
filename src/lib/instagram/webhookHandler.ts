@@ -5,6 +5,7 @@ import {
 } from './types';
 import {
   isWithin24HourWindow,
+  getElapsedHours,
   resolveTargetAccount,
   HumanTakeoverTracker,
   globalHumanTakeoverTracker,
@@ -16,11 +17,14 @@ import {
   defaultGraphApiDispatcher,
 } from './graphApi';
 import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
+import { IPersistentStore, EscalationEventType, EscalationSeverity } from '@/lib/db/types';
+import { defaultPersistentStore } from '@/lib/db/persistence';
 
 export interface WebhookHandlerOptions {
   deduplicator?: MessageDeduplicator;
   takeoverTracker?: HumanTakeoverTracker;
   dispatcher?: InstagramGraphApiDispatcher;
+  persistentStore?: IPersistentStore;
   enableOutboundDispatch?: boolean;
   appSecret?: string;
   now?: number;
@@ -88,6 +92,7 @@ export async function processInstagramWebhook(
   const deduplicator = options.deduplicator || globalMessageDeduplicator;
   const takeoverTracker = options.takeoverTracker || globalHumanTakeoverTracker;
   const dispatcher = options.dispatcher || defaultGraphApiDispatcher;
+  const persistentStore = options.persistentStore || defaultPersistentStore;
   const enableOutboundDispatch = options.enableOutboundDispatch ?? true;
   const now = options.now ?? Date.now();
 
@@ -137,26 +142,7 @@ export async function processInstagramWebhook(
         continue;
       }
 
-      // 2. Duplicate Event Check
-      if (deduplicator.isDuplicate(messageId, now)) {
-        summary.duplicates++;
-        results.push({
-          eventId: messageId,
-          senderId,
-          recipientId,
-          accountId: PILOT_ACCOUNT_ID,
-          isEcho: false,
-          isDuplicate: true,
-          isWithin24hWindow: true,
-          isHandedOverToHuman: false,
-          orthoPriceInquiryDetected: false,
-          requiresHumanHandoff: false,
-          status: 'IGNORED_DUPLICATE',
-        });
-        continue;
-      }
-
-      // 3. Account Isolation Check (Clinic Workspace Protection)
+      // 2. Account Isolation Check (Clinic Workspace Protection)
       const accountResolution = resolveTargetAccount(recipientId);
       if (accountResolution.isClinic || !accountResolution.isLiveAllowed) {
         summary.clinicBlocked++;
@@ -180,7 +166,30 @@ export async function processInstagramWebhook(
         continue;
       }
 
+      // 3. Persistent & In-Memory Duplicate Event Check
+      const isMemoryDup = deduplicator.isDuplicate(messageId, now);
+      const isClaimedPersistent = await persistentStore.claimMessageId(messageId, PILOT_ACCOUNT_ID, senderId);
+
+      if (isMemoryDup || !isClaimedPersistent) {
+        summary.duplicates++;
+        results.push({
+          eventId: messageId,
+          senderId,
+          recipientId,
+          accountId: PILOT_ACCOUNT_ID,
+          isEcho: false,
+          isDuplicate: true,
+          isWithin24hWindow: true,
+          isHandedOverToHuman: false,
+          orthoPriceInquiryDetected: false,
+          requiresHumanHandoff: false,
+          status: 'IGNORED_DUPLICATE',
+        });
+        continue;
+      }
+
       // 4. Non-Text Event Handling (e.g. Stickers, Reactions, Audio attachments)
+      const isPersistentTakeoverActive = await persistentStore.isTakeoverActive(PILOT_ACCOUNT_ID, senderId);
       if (!messageText) {
         results.push({
           eventId: messageId,
@@ -190,7 +199,7 @@ export async function processInstagramWebhook(
           isEcho: false,
           isDuplicate: false,
           isWithin24hWindow: isWithin24HourWindow(eventTimestamp, now),
-          isHandedOverToHuman: takeoverTracker.isTakeoverActive(senderId),
+          isHandedOverToHuman: isPersistentTakeoverActive || takeoverTracker.isTakeoverActive(senderId),
           orthoPriceInquiryDetected: false,
           requiresHumanHandoff: false,
           status: 'NON_TEXT_EVENT',
@@ -207,6 +216,23 @@ export async function processInstagramWebhook(
           'خارج نافذة الـ 24 ساعة لسياسة Meta — يجب المتابعة اليدوية أو عبر الواتساب',
           now
         );
+        await persistentStore.setTakeover(
+          PILOT_ACCOUNT_ID,
+          senderId,
+          'خارج نافذة الـ 24 ساعة لسياسة Meta — يجب المتابعة اليدوية أو عبر الواتساب'
+        );
+        await persistentStore.recordEscalation({
+          accountId: PILOT_ACCOUNT_ID,
+          senderId,
+          eventType: 'outside_24h_window',
+          severity: 'warning',
+          rawMessageText: messageText,
+          details: {
+            messageId,
+            eventTimestamp,
+            elapsedHours: getElapsedHours(eventTimestamp, now),
+          },
+        });
         console.warn(
           `[Meta Webhook] Policy Violation: Incoming message from ${senderId} is outside 24h window (${eventTimestamp}). Escalated to human staff.`
         );
@@ -228,10 +254,11 @@ export async function processInstagramWebhook(
         continue;
       }
 
-      // 6. Human Takeover Check: Suppress automated AI replies if conversation is handed over
-      if (takeoverTracker.isTakeoverActive(senderId)) {
+      // 6. Persistent & Memory Human Takeover Check: Suppress automated AI replies if active
+      if (isPersistentTakeoverActive || takeoverTracker.isTakeoverActive(senderId)) {
         summary.humanTakeover++;
-        const handoffReason = takeoverTracker.getTakeoverReason(senderId);
+        const activeRecord = await persistentStore.getActiveTakeover(PILOT_ACCOUNT_ID, senderId);
+        const handoffReason = activeRecord?.reason || takeoverTracker.getTakeoverReason(senderId) || 'المحادثة محولة للموظف البشري';
         console.log(
           `[Meta Webhook] Human Takeover Active for ${senderId}. Automated AI reply suppressed (Reason: ${handoffReason}).`
         );
@@ -263,11 +290,38 @@ export async function processInstagramWebhook(
 
       // 8. If human handoff is required (e.g. ortho price inquiry, emergency, human requested)
       if (aiResponse.requiresHumanHandoff) {
-        takeoverTracker.setTakeover(
+        const handoffReason = aiResponse.handoffReason || 'تحويل للموظف البشري';
+        takeoverTracker.setTakeover(senderId, handoffReason, now);
+        await persistentStore.setTakeover(PILOT_ACCOUNT_ID, senderId, handoffReason);
+
+        let eventType: EscalationEventType = 'human_agent_requested';
+        let severity: EscalationSeverity = 'info';
+
+        if (aiResponse.intent === 'urgent_clinical_question') {
+          eventType = 'medical_emergency';
+          severity = 'emergency';
+        } else if (isOrthoPriceInquiry) {
+          const isInstallment = /قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|installment/i.test(messageText);
+          eventType = isInstallment ? 'orthodontic_installment_inquiry' : 'orthodontic_pricing_inquiry';
+          severity = 'warning';
+        } else if (aiResponse.intent === 'human_attention_required') {
+          eventType = 'human_agent_requested';
+          severity = 'info';
+        }
+
+        await persistentStore.recordEscalation({
+          accountId: PILOT_ACCOUNT_ID,
           senderId,
-          aiResponse.handoffReason || 'تحويل للموظف البشري',
-          now
-        );
+          eventType,
+          severity,
+          rawMessageText: messageText,
+          details: {
+            messageId,
+            intent: aiResponse.intent,
+            confidence: aiResponse.confidence,
+            handoffReason,
+          },
+        });
       }
 
       // 9. Outbound Dispatch via Meta Graph API
@@ -280,6 +334,36 @@ export async function processInstagramWebhook(
           incomingMessageTimestamp: eventTimestamp,
           now,
         });
+
+        if (outboundResult.success) {
+          await persistentStore.markMessageStatus(messageId, 'processed');
+        } else {
+          await persistentStore.markMessageStatus(messageId, 'failed', outboundResult.message);
+
+          let failureType: EscalationEventType = 'outbound_dispatch_failed';
+          let failureSeverity: EscalationSeverity = 'warning';
+
+          if (outboundResult.error === 'TOKEN_EXPIRED') {
+            failureType = 'token_expired_or_invalid';
+            failureSeverity = 'critical';
+          } else if (outboundResult.error === 'RATE_LIMIT_EXCEEDED') {
+            failureType = 'rate_limit_exceeded';
+            failureSeverity = 'warning';
+          }
+
+          await persistentStore.recordEscalation({
+            accountId: PILOT_ACCOUNT_ID,
+            senderId,
+            eventType: failureType,
+            severity: failureSeverity,
+            details: {
+              messageId,
+              error: outboundResult.error,
+              code: outboundResult.code,
+              message: outboundResult.message,
+            },
+          });
+        }
       }
 
       summary.processed++;

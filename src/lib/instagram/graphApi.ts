@@ -122,8 +122,13 @@ export class InstagramGraphApiDispatcher {
       };
     }
 
-    // 4. Construct Payload
-    const url = `${this.baseUrl}/${this.graphApiVersion}/me/messages`;
+    // 4. Construct Endpoint & Payload (Dynamic Hostname Resolution based on Token Type)
+    // If token starts with IGAA (Instagram Login User Token), route to graph.instagram.com
+    let resolvedBaseUrl = this.baseUrl;
+    if (token.startsWith('IGAA') && resolvedBaseUrl.includes('graph.facebook.com')) {
+      resolvedBaseUrl = 'https://graph.instagram.com';
+    }
+    const url = `${resolvedBaseUrl}/${this.graphApiVersion}/me/messages`;
     const payload: OutboundMessageRequest = {
       recipient: { id: recipientId },
       message: { text },

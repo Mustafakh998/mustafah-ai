@@ -1,0 +1,374 @@
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import { AccountId } from '@/types';
+import {
+  IPersistentStore,
+  DeduplicationRecord,
+  TakeoverRecord,
+  EscalationEventRecord,
+  WebhookJobRecord,
+  EscalationEventType,
+} from './types';
+
+interface StoreData {
+  processedMessages: Record<string, DeduplicationRecord>;
+  takeovers: Record<string, TakeoverRecord>;
+  escalations: Record<string, EscalationEventRecord>;
+  jobs: Record<string, WebhookJobRecord>;
+}
+
+export interface PersistentStoreOptions {
+  storageFilePath?: string;
+  useSupabase?: boolean;
+}
+
+/**
+ * Production Persistent Store Implementation
+ * Provides durable, shared deduplication, human takeover tracking,
+ * and escalation logging across server restarts and multiple instances.
+ */
+export class PersistentStore implements IPersistentStore {
+  private filePath: string;
+  private isSupabaseEnabled: boolean;
+  private supabaseUrl?: string;
+  private supabaseKey?: string;
+
+  constructor(options: PersistentStoreOptions = {}) {
+    const defaultDataDir = path.resolve(process.cwd(), '.data');
+    this.filePath = options.storageFilePath || path.join(defaultDataDir, 'mustafah_persistence.json');
+
+    this.supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    this.supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    this.isSupabaseEnabled = Boolean(
+      options.useSupabase && this.supabaseUrl && this.supabaseKey && !this.supabaseUrl.includes('your-project')
+    );
+
+    this.ensureStorageExists();
+  }
+
+  private ensureStorageExists(): void {
+    try {
+      const dir = path.dirname(this.filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      if (!fs.existsSync(this.filePath)) {
+        const initialData: StoreData = {
+          processedMessages: {},
+          takeovers: {},
+          escalations: {},
+          jobs: {},
+        };
+        fs.writeFileSync(this.filePath, JSON.stringify(initialData, null, 2), 'utf-8');
+      }
+    } catch (err) {
+      console.error('[PersistentStore] Error initializing storage directory:', err);
+    }
+  }
+
+  private readData(): StoreData {
+    try {
+      if (fs.existsSync(this.filePath)) {
+        const raw = fs.readFileSync(this.filePath, 'utf-8');
+        return JSON.parse(raw);
+      }
+    } catch (err) {
+      console.error('[PersistentStore] Error reading store from disk:', err);
+    }
+    return {
+      processedMessages: {},
+      takeovers: {},
+      escalations: {},
+      jobs: {},
+    };
+  }
+
+  private writeData(data: StoreData): void {
+    try {
+      const tmpPath = `${this.filePath}.tmp.${Date.now()}.${Math.random().toString(36).slice(2, 6)}`;
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+      fs.renameSync(tmpPath, this.filePath);
+    } catch (err) {
+      console.error('[PersistentStore] Error writing store atomically to disk:', err);
+    }
+  }
+
+  // ===========================================================================
+  // 1. Persistent Message Deduplication
+  // ===========================================================================
+
+  public async claimMessageId(
+    messageId: string,
+    accountId: AccountId,
+    senderId: string
+  ): Promise<boolean> {
+    if (!messageId) return false;
+
+    // Supabase / PostgreSQL REST API path if enabled
+    if (this.isSupabaseEnabled) {
+      try {
+        const res = await fetch(`${this.supabaseUrl}/rest/v1/processed_webhook_messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: this.supabaseKey!,
+            Authorization: `Bearer ${this.supabaseKey}`,
+            Prefer: 'resolution=ignore-duplicates,return=representation',
+          },
+          body: JSON.stringify({
+            message_id: messageId,
+            account_id: accountId,
+            sender_id: senderId,
+            status: 'processing',
+          }),
+        });
+
+        if (res.ok) {
+          const inserted = await res.json();
+          return Array.isArray(inserted) && inserted.length > 0;
+        }
+      } catch (err) {
+        console.warn('[PersistentStore] Supabase claim failed, falling back to durable store:', err);
+      }
+    }
+
+    // Atomic durable file store
+    const data = this.readData();
+    if (data.processedMessages[messageId]) {
+      return false; // Already claimed/processed
+    }
+
+    data.processedMessages[messageId] = {
+      messageId,
+      accountId,
+      senderId,
+      receivedAt: new Date().toISOString(),
+      status: 'processing',
+    };
+
+    this.writeData(data);
+    return true; // Successfully claimed atomically
+  }
+
+  public async isMessageProcessed(messageId: string): Promise<boolean> {
+    if (!messageId) return false;
+    const data = this.readData();
+    return Boolean(data.processedMessages[messageId]);
+  }
+
+  public async markMessageStatus(
+    messageId: string,
+    status: DeduplicationRecord['status'],
+    errorMessage?: string
+  ): Promise<void> {
+    const data = this.readData();
+    if (data.processedMessages[messageId]) {
+      data.processedMessages[messageId].status = status;
+      if (errorMessage) {
+        data.processedMessages[messageId].errorMessage = errorMessage;
+      }
+      this.writeData(data);
+    }
+  }
+
+  // ===========================================================================
+  // 2. Persistent Human Takeover
+  // ===========================================================================
+
+  public async setTakeover(
+    accountId: AccountId,
+    senderId: string,
+    reason: string,
+    conversationId?: string
+  ): Promise<void> {
+    const key = `${accountId}_${senderId}`;
+    const data = this.readData();
+
+    const now = new Date().toISOString();
+    data.takeovers[key] = {
+      id: data.takeovers[key]?.id || crypto.randomUUID(),
+      accountId,
+      senderId,
+      conversationId: conversationId || data.takeovers[key]?.conversationId,
+      reason,
+      isActive: true,
+      initiatedAt: data.takeovers[key]?.initiatedAt || now,
+    };
+
+    this.writeData(data);
+  }
+
+  public async isTakeoverActive(accountId: AccountId, senderId: string): Promise<boolean> {
+    const key = `${accountId}_${senderId}`;
+    const data = this.readData();
+    return Boolean(data.takeovers[key]?.isActive);
+  }
+
+  public async getActiveTakeover(
+    accountId: AccountId,
+    senderId: string
+  ): Promise<TakeoverRecord | null> {
+    const key = `${accountId}_${senderId}`;
+    const data = this.readData();
+    const item = data.takeovers[key];
+    return item?.isActive ? item : null;
+  }
+
+  public async releaseTakeover(
+    accountId: AccountId,
+    senderId: string,
+    releasedBy: string
+  ): Promise<boolean> {
+    const key = `${accountId}_${senderId}`;
+    const data = this.readData();
+    if (data.takeovers[key] && data.takeovers[key].isActive) {
+      data.takeovers[key].isActive = false;
+      data.takeovers[key].releasedAt = new Date().toISOString();
+      data.takeovers[key].releasedBy = releasedBy;
+      this.writeData(data);
+      return true;
+    }
+    return false;
+  }
+
+  public async listActiveTakeovers(accountId?: AccountId): Promise<TakeoverRecord[]> {
+    const data = this.readData();
+    return Object.values(data.takeovers).filter(
+      (t) => t.isActive && (!accountId || t.accountId === accountId)
+    );
+  }
+
+  // ===========================================================================
+  // 3. Persistent Escalation and CRM Events
+  // ===========================================================================
+
+  public async recordEscalation(event: EscalationEventRecord): Promise<string> {
+    const id = event.id || crypto.randomUUID();
+    const record: EscalationEventRecord = {
+      ...event,
+      id,
+      requiresFollowup: event.requiresFollowup ?? true,
+      createdAt: event.createdAt || new Date().toISOString(),
+    };
+
+    const data = this.readData();
+    data.escalations[id] = record;
+    this.writeData(data);
+
+    return id;
+  }
+
+  public async listEscalations(filters?: {
+    accountId?: AccountId;
+    eventType?: EscalationEventType;
+    requiresFollowup?: boolean;
+  }): Promise<EscalationEventRecord[]> {
+    const data = this.readData();
+    return Object.values(data.escalations).filter((e) => {
+      if (filters?.accountId && e.accountId !== filters.accountId) return false;
+      if (filters?.eventType && e.eventType !== filters.eventType) return false;
+      if (filters?.requiresFollowup !== undefined && e.requiresFollowup !== filters.requiresFollowup) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  public async resolveEscalation(eventId: string, resolvedBy: string): Promise<boolean> {
+    const data = this.readData();
+    if (data.escalations[eventId]) {
+      data.escalations[eventId].requiresFollowup = false;
+      data.escalations[eventId].resolvedAt = new Date().toISOString();
+      data.escalations[eventId].resolvedBy = resolvedBy;
+      this.writeData(data);
+      return true;
+    }
+    return false;
+  }
+
+  // ===========================================================================
+  // 4. Durable Webhook Queue
+  // ===========================================================================
+
+  public async enqueueJob(
+    jobData: Omit<WebhookJobRecord, 'id' | 'status' | 'attempts' | 'createdAt' | 'updatedAt'>
+  ): Promise<string> {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const record: WebhookJobRecord = {
+      ...jobData,
+      id,
+      status: 'pending',
+      attempts: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const data = this.readData();
+    data.jobs[id] = record;
+    this.writeData(data);
+
+    return id;
+  }
+
+  public async dequeueJob(lockedBy: string): Promise<WebhookJobRecord | null> {
+    const data = this.readData();
+    const pendingJob = Object.values(data.jobs).find(
+      (j) => j.status === 'pending' || (j.status === 'failed' && j.attempts < j.maxAttempts)
+    );
+
+    if (!pendingJob) return null;
+
+    const now = new Date().toISOString();
+    pendingJob.status = 'processing';
+    pendingJob.attempts += 1;
+    pendingJob.lockedAt = now;
+    pendingJob.lockedBy = lockedBy;
+    pendingJob.updatedAt = now;
+
+    this.writeData(data);
+    return pendingJob;
+  }
+
+  public async completeJob(jobId: string): Promise<void> {
+    const data = this.readData();
+    if (data.jobs[jobId]) {
+      data.jobs[jobId].status = 'completed';
+      data.jobs[jobId].updatedAt = new Date().toISOString();
+      this.writeData(data);
+    }
+  }
+
+  public async failJob(jobId: string, error: string): Promise<void> {
+    const data = this.readData();
+    if (data.jobs[jobId]) {
+      const job = data.jobs[jobId];
+      job.lastError = error;
+      job.updatedAt = new Date().toISOString();
+      if (job.attempts >= job.maxAttempts) {
+        job.status = 'dead_letter';
+      } else {
+        job.status = 'failed';
+      }
+      this.writeData(data);
+    }
+  }
+
+  // ===========================================================================
+  // 5. Utility / Testing
+  // ===========================================================================
+
+  public async clearAll(): Promise<void> {
+    const initialData: StoreData = {
+      processedMessages: {},
+      takeovers: {},
+      escalations: {},
+      jobs: {},
+    };
+    this.writeData(initialData);
+  }
+}
+
+// Global default singleton persistent store
+export const defaultPersistentStore = new PersistentStore();

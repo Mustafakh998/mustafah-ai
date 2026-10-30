@@ -19,6 +19,8 @@ import {
 } from '../src/lib/instagram/graphApi';
 import { InstagramWebhookPayload } from '../src/lib/instagram/types';
 
+import { defaultPersistentStore } from '../src/lib/db/persistence';
+
 console.log('================================================================');
 console.log('MUSTAFAH-AI — PHASE 2: INSTAGRAM PIPELINE AUTOMATED SUITE');
 console.log('================================================================\n');
@@ -37,6 +39,7 @@ function assert(condition: boolean, description: string) {
 }
 
 async function runTests() {
+  await defaultPersistentStore.clearAll();
   const TEST_SECRET = 'test_meta_app_secret_mustafah_2026';
   const NOW = 1730300000000; // Fixed deterministic baseline timestamp
 
@@ -432,7 +435,7 @@ async function runTests() {
           time: NOW,
           messaging: [
             {
-              sender: { id: 'patient_ortho_inquirer' },
+              sender: { id: `patient_ortho_${Math.random().toString(36).slice(2, 7)}` },
               recipient: { id: '17841400000000000' },
               timestamp: NOW,
               message: { mid: `m_ortho_${Date.now()}_${Math.random()}`, text: query },
