@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
 
-// Meta Verification Token from environment (or default development token)
-const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'mustafah_ai_baghdad_secure_verify_2026';
-const APP_SECRET = process.env.META_APP_SECRET || 'mustafah_meta_app_secret_demo';
+// Meta Verification Token & App Secret from environment variables
+// Hardcoded production secrets are strictly prohibited.
+const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN;
+const APP_SECRET = process.env.META_APP_SECRET;
 
 /**
  * 1. Meta Webhook Handshake (GET)
@@ -17,7 +18,16 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  if (mode === 'subscribe' && (token === VERIFY_TOKEN || token === 'almeswak_ai_baghdad_secure_verify_2026')) {
+  // Enforce configuration check
+  if (!VERIFY_TOKEN) {
+    console.error('[Meta Webhook] Server configuration error: META_VERIFY_TOKEN is not set.');
+    return NextResponse.json(
+      { error: 'Server misconfiguration: META_VERIFY_TOKEN environment variable is missing.' },
+      { status: 500 }
+    );
+  }
+
+  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
     console.log('[Meta Webhook] GET handshake verified successfully.');
     // Return raw challenge as plain text with 200 OK
     return new NextResponse(challenge, {
@@ -39,13 +49,32 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
     const signature = request.headers.get('x-hub-signature-256');
 
-    // In production with APP_SECRET, verify HMAC-SHA256 signature
-    if (process.env.NODE_ENV === 'production' && signature && APP_SECRET !== 'almeswak_meta_app_secret_demo') {
+    // In production or whenever APP_SECRET is configured, enforce constant-time HMAC-SHA256 signature verification
+    if (process.env.NODE_ENV === 'production' || APP_SECRET) {
+      if (!APP_SECRET) {
+        console.error('[Meta Webhook] Production error: META_APP_SECRET is not configured.');
+        return NextResponse.json(
+          { error: 'Server misconfiguration: META_APP_SECRET is required for signature verification.' },
+          { status: 500 }
+        );
+      }
+
+      if (!signature) {
+        console.warn('[Meta Webhook] Security rejection: Missing X-Hub-Signature-256 header.');
+        return NextResponse.json({ error: 'Missing HMAC signature.' }, { status: 401 });
+      }
+
       const expectedSignature =
         'sha256=' + crypto.createHmac('sha256', APP_SECRET).update(rawBody).digest('hex');
 
-      if (signature !== expectedSignature) {
-        console.error('[Meta Webhook] Signature verification failed!');
+      const sigBuffer = Buffer.from(signature);
+      const expectedBuffer = Buffer.from(expectedSignature);
+
+      if (
+        sigBuffer.length !== expectedBuffer.length ||
+        !crypto.timingSafeEqual(sigBuffer, expectedBuffer)
+      ) {
+        console.error('[Meta Webhook] Security alert: Signature verification failed!');
         return NextResponse.json({ error: 'Invalid HMAC signature.' }, { status: 401 });
       }
     }

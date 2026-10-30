@@ -119,7 +119,10 @@ export function classifyPilotIntent(userMessage: string): {
 
   // 5. Orthodontic Clinical Inquiry
   if (PILOT_PATTERNS.orthodontics.some((r) => r.test(text))) {
-    const isOrthoPriceOrInstallment = /سعر|أسعار|اسعار|تكلفة|تكلف|بيش|شكد|فلوس|قسط|أقساط|اقساط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع/i.test(text);
+    const isOrthoPriceOrInstallment =
+      /سعر|أسعار|اسعار|تكلفة|تكلف|بيش|شكد|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع/i.test(
+        text
+      );
     return {
       intent: 'orthodontic_inquiry',
       confidence: 0.94,
@@ -210,7 +213,7 @@ export function generateIraqiDialectResponse(
 
     case 'orthodontic_inquiry':
       const isPriceOrInstallmentQuery =
-        /سعر|أسعار|اسعار|تكلفة|تكلف|بيش|شكد|فلوس|قسط|أقساط|اقساط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع/i.test(
+        /سعر|أسعار|اسعار|تكلفة|تكلف|بيش|شكد|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع/i.test(
           userMessage
         );
       if (isPriceOrInstallmentQuery) {

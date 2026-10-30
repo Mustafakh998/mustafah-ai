@@ -30,7 +30,7 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser.
 1. **Push to GitHub:**
    ```bash
    git add .
-   git commit -m "feat: complete ALMESWAK AI Baghdad edition system"
+   git commit -m "feat: complete MustafaH-AI Baghdad edition system"
    git push origin main
    ```
 
@@ -38,7 +38,7 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser.
    * Import the GitHub repository into your Vercel Dashboard.
    * Framework preset will automatically detect **Next.js**.
    * Add the environment variables from `.env.example`:
-     - `META_VERIFY_TOKEN`: `almeswak_ai_baghdad_secure_verify_2026`
+     - `META_VERIFY_TOKEN`: Your secure random verification token
      - `META_APP_SECRET`: Your Meta App Secret
      - `NEXT_PUBLIC_CLINIC_PHONE`: `07768886667`
      - `NEXT_PUBLIC_APP_URL`: `https://your-custom-domain.com`

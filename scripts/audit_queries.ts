@@ -2,6 +2,7 @@ import { generateIraqiDialectResponse } from '../src/lib/ai/iraqiEngine';
 
 const queries = [
   'شكد سعر التقويم؟',
+  'أريد تقسيط التقويم.',
   'أريد تقويم شفاف.',
   'عندي عضة مفتوحة.',
   'أسناني متراكبة.',
