@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ALMESWAK AI — Baghdad Edition | نظام المسواك للذكاء الاصطناعي',
+  title: 'MustafaH-AI | د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك',
   description:
-    'Lean Hybrid Instagram Growth & Patient Acquisition System for Almeswak Dental Clinic & Dr. Mustafa Hadi in Baghdad, Iraq.',
+    'MustafaH-AI — Lean Hybrid Instagram Growth & Patient Acquisition Platform for Dr. Mustafa Hadi (Specialist Orthodontist) in Baghdad, Iraq.',
 };
 
 export default function RootLayout({

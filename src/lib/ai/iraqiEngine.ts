@@ -20,7 +20,7 @@ export interface AIResponseResult {
 // Patterns specifically calibrated for Dr. Mustafa Hadi's Pilot
 const PILOT_PATTERNS = {
   collaboration: [/تعاون|إعلان|اعلان|تسويق|سبونسر|شراكة|مؤتمر|محاضرة|برمجة|تطبيق|سوفتوير|collab|partnership|sponsor/i],
-  urgent: [/طوارئ|وجع لا يطاق|ورم|انتفاخ|حادث|انكسر سني هسة|نزيف|دم|يموتني الوجع|ديموتني|مسكن قوي|مضاد حيوي|ألم قوي|الم قوي|ألم شديد|الم شديد|يوجعني حيل|يموت من الوجع|الضرس|ضرس|ضرسي|عصب سن/i],
+  urgent: [/طوارئ|وجع لا يطاق|ورم|انتفاخ|حادث|انكسر سني هسة|نزيف|ينزف|ينزل دم|خروج دم|طلع دم|يموتني الوجع|ديموتني|مسكن قوي|مضاد حيوي|ألم قوي|الم قوي|ألم شديد|الم شديد|يوجعني حيل|يموت من الوجع|الضرس|ضرس|ضرسي|عصب سن/i],
   personalBrand: [/منو دكتور مصطفى|شهادتك|وين متخرج|سيرتك|خبرتك|ليش يشرحلك قبل لا يعالجك|شكد عمرك/i],
   location: [/مكانكم|وين العيادة|وين صايرين|عنوانكم|زيونة|دريم سيتي|اللوكيشن|موقعكم/i],
   orthodontics: [/تقويم|بريسز|عضة مفتوحة|مطمور|ديمون|شفاف|فك|بروز|سلك|مطاط|closing loop|piggyback|open bite|متراكبة|تراكب|اعوجاج|معوجة|اسناني مخربطة|مخربطة|فتحة بين الاسنان/i],
@@ -119,12 +119,16 @@ export function classifyPilotIntent(userMessage: string): {
 
   // 5. Orthodontic Clinical Inquiry
   if (PILOT_PATTERNS.orthodontics.some((r) => r.test(text))) {
+    const isOrthoPriceOrInstallment = /سعر|أسعار|اسعار|تكلفة|تكلف|بيش|شكد|فلوس|قسط|أقساط|اقساط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع/i.test(text);
     return {
       intent: 'orthodontic_inquiry',
       confidence: 0.94,
       treatment: 'orthodontics',
-      requiresHandoff: false,
-      extractedInfo: { ...extractedInfo, inquiryType: 'orthodontics_explanation' },
+      requiresHandoff: isOrthoPriceOrInstallment,
+      handoffReason: isOrthoPriceOrInstallment
+        ? 'استفسار عن أسعار أو أقساط التقويم — سياسة النظام تمنع كشف الأسعار آلياً وتحوّل الحالة للتقييم والتواصل المباشر'
+        : undefined,
+      extractedInfo: { ...extractedInfo, inquiryType: isOrthoPriceOrInstallment ? 'orthodontic_price_inquiry' : 'orthodontics_explanation' },
     };
   }
 
@@ -166,8 +170,8 @@ export function generateIraqiDialectResponse(
   const nameGreeting = patientName ? `أهلاً وسهلاً بيچ ${patientName} 💚` : 'أهلاً وسهلاً بيك نورت صفحة دكتور مصطفى هادي 💚';
 
   // Assistant introduction representing Dr. Mustafa
-  const assistantIntro = 'أني المساعد الذكي الخاص بدكتور مصطفى هادي';
-  const brandSlogan = 'شعارنا دائماً: "طبيب أسنان يشرحلك قبل لا يعالجك" 📐✨';
+  const assistantIntro = 'أني المساعد الذكي الخاص بدكتور مصطفى هادي (MustafaH-AI)';
+  const brandSlogan = 'شعارنا دائماً: "د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك" 📐✨';
 
   let replyText = '';
 
@@ -205,7 +209,19 @@ export function generateIraqiDialectResponse(
       break;
 
     case 'orthodontic_inquiry':
-      replyText = `${nameGreeting}\n${brandSlogan}\n\nتقويم الأسنان ويا دكتور مصطفى مو مجرد صف أسنان، وإنما هندسة متكاملة للإطباق والابتسامة وتناسق ملامح الوجه 📐.\nنعالج حالات العضة المفتوحة، تزاحم الأسنان، والأسنان المطمورة باستخدام أنظمة متطورة مثل نظام الدامون الذاتي (Damon System) والتقويم الشفاف.\n\n💡 **بالنسبة للأسعار والأقساط:**\nخطة العلاج وتكلفتها تختلف حسب تعقيد الحالة ونوع التقويم (تبدأ تقريبياً من 1,200,000 دينار عراقي مع نظام أقساط شهرية مريحة جداً مع كل جلسة مراجعة). السعر النهائي الدقيق يتحدد فقط بعد الكشفية السريرية وأشعة الـ OPG.\n\nتحب نسجلك طلب كشفية يم دكتور مصطفى حتى يفحص حالتك ويشرحلك الخطة بالتفصيل؟ 🦷`;
+      const isPriceOrInstallmentQuery =
+        /سعر|أسعار|اسعار|تكلفة|تكلف|بيش|شكد|فلوس|قسط|أقساط|اقساط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع/i.test(
+          userMessage
+        );
+      if (isPriceOrInstallmentQuery) {
+        replyText = `بالنسبة لأسعار تقويم الأسنان، تختلف حسب الحالة ونوع العلاج والخطة المناسبة إلك.
+
+حتى نكدر نعطيك التفاصيل الصحيحة، نفضّل يتم تقييم حالتك والتواصل ويانه مباشرة لمعرفة التفاصيل.
+
+يسعدنا نساعدك ونرتب إلك استشارة ويا د. مصطفى هادي ❤️`;
+      } else {
+        replyText = `${nameGreeting}\n${brandSlogan}\n\nتقويم الأسنان ويا دكتور مصطفى مو مجرد صف أسنان، وإنما هندسة متكاملة للإطباق والابتسامة وتناسق ملامح الوجه 📐.\nنعالج حالات العضة المفتوحة، تزاحم الأسنان، والأسنان المطمورة باستخدام أحدث الأنظمة المعتمدة مثل نظام الدامون الذاتي (Damon System) والتقويم الشفاف.\n\nالتشخيص الدقيق وخطة العلاج تتحدد حصرياً بعد الكشفية السريرية وأشعة الـ OPG بالعيادة.\n\nتحب نسجلك طلب كشفية واستشارة يم دكتور مصطفى حتى يفحص حالتك ويشرحلك الخطة بالتفصيل؟ 🦷`;
+      }
       break;
 
     case 'personal_professional_inquiry':

@@ -31,7 +31,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData }) => {
     setIsTestingWebhook(true);
     try {
       const res = await fetch(
-        '/api/webhooks/instagram?hub.mode=subscribe&hub.challenge=test_challenge_baghdad_992&hub.verify_token=almeswak_ai_baghdad_secure_verify_2026'
+        '/api/webhooks/instagram?hub.mode=subscribe&hub.challenge=test_challenge_baghdad_992&hub.verify_token=mustafah_ai_baghdad_secure_verify_2026'
       );
       const text = await res.text();
       if (res.ok && text === 'test_challenge_baghdad_992') {
@@ -85,7 +85,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData }) => {
                 Callback URL (مسار الاستقبال المباشر):
               </span>
               <div className="p-2.5 bg-slate-100 rounded-xl font-mono text-slate-800 select-all border border-slate-200 text-[11px]">
-                https://almeswak-ai.vercel.app/api/webhooks/instagram
+                https://mustafah-ai.vercel.app/api/webhooks/instagram
               </div>
             </div>
 
@@ -94,7 +94,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData }) => {
                 Verify Token (رمز التحقق):
               </span>
               <div className="p-2.5 bg-slate-100 rounded-xl font-mono text-slate-800 select-all border border-slate-200 text-[11px]">
-                almeswak_ai_baghdad_secure_verify_2026
+                mustafah_ai_baghdad_secure_verify_2026
               </div>
             </div>
 

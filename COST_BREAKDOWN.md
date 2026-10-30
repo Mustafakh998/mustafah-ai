@@ -1,4 +1,4 @@
-# ALMESWAK AI — BAGHDAD EDITION
+# MUSTAFAH-AI — BAGHDAD EDITION
 ## Operating Cost Analysis & Budget Control Guide
 
 ---

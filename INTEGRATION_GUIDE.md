@@ -1,11 +1,11 @@
-# ALMESWAK AI — BAGHDAD EDITION
+# MUSTAFAH-AI — BAGHDAD EDITION
 ## Meta Instagram Graph API Integration & Deployment Guide
 
 ---
 
 ## 1. Architecture Overview
 
-ALMESWAK AI operates on a modern hybrid architecture designed specifically for the Iraqi healthcare market:
+MustafaH-AI operates on a modern hybrid architecture designed specifically for the Iraqi healthcare market:
 * **Layer A (Fast-Path Automation):** Rapid instant response (<1s) for standard zero-ambiguity queries (clinic location in Zayouna, opening hours, official booking phone `07768886667`, WhatsApp direct links).
 * **Layer B (Custom Iraqi Arabic AI Engine):** Context-aware conversational AI fluent in Baghdad dialect, equipped with intent classification, dental service knowledge, medical liability guardrails, and automated lead capture.
 * **Receptionist Handoff Hub:** Seamless escalation to reception desk via dashboard and WhatsApp when a patient requests an in-person appointment or asks for human staff.
@@ -22,7 +22,7 @@ ALMESWAK AI operates on a modern hybrid architecture designed specifically for t
                                       │
                                       ▼
                   ┌───────────────────────────────────────┐
-                  │ ALMESWAK AI: Iraqi Dialect Classifier │
+                  │  MustafaH-AI: Iraqi Dialect Classifier│
                   └───────────────┬───────────────────────┘
                                   │
          ┌────────────────────────┴────────────────────────┐
@@ -55,14 +55,14 @@ ALMESWAK AI operates on a modern hybrid architecture designed specifically for t
 1. Go to [developers.facebook.com](https://developers.facebook.com/) and log in with your Facebook account.
 2. Click **My Apps** -> **Create App**.
 3. Choose **Other** as the use case, then select **Business** as the app type.
-4. Name the application: `Almeswak AI Baghdad`.
+4. Name the application: `MustafaH-AI Baghdad`.
 5. Under **Add Products to Your App**, locate **Instagram** and click **Set Up**.
 
 ### Step 3: Webhook Configuration
 1. In the left navigation of the Meta App Dashboard, click **Webhooks** under Instagram.
 2. Provide your production callback URL and verify token:
    * **Callback URL:** `https://your-domain.com/api/webhooks/instagram`
-   * **Verify Token:** `almeswak_ai_baghdad_secure_verify_2026` (or the token configured in `.env.local`)
+   * **Verify Token:** `mustafah_ai_baghdad_secure_verify_2026` (or the token configured in `.env.local`)
 3. Click **Verify and Save**. Meta will send a `GET` handshake request to your endpoint; our system validates the token and immediately returns `hub.challenge`.
 4. Subscribe to the following webhook fields:
    * `messages` (Essential: receives direct messages from patients)

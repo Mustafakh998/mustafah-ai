@@ -45,12 +45,13 @@ export interface AppState {
   }>;
 }
 
-const STORAGE_KEY = 'almeswak_ai_baghdad_state_v1';
+const STORAGE_KEY = 'mustafah_ai_state_v1';
+const LEGACY_STORAGE_KEY = 'almeswak_ai_baghdad_state_v1';
 
 export function useAppStore() {
   const [state, setState] = useState<AppState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (saved) {
         try {
           return JSON.parse(saved);

@@ -3,8 +3,8 @@ import crypto from 'crypto';
 import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
 
 // Meta Verification Token from environment (or default development token)
-const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'almeswak_ai_baghdad_secure_verify_2026';
-const APP_SECRET = process.env.META_APP_SECRET || 'almeswak_meta_app_secret_demo';
+const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN || 'mustafah_ai_baghdad_secure_verify_2026';
+const APP_SECRET = process.env.META_APP_SECRET || 'mustafah_meta_app_secret_demo';
 
 /**
  * 1. Meta Webhook Handshake (GET)
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+  if (mode === 'subscribe' && (token === VERIFY_TOKEN || token === 'almeswak_ai_baghdad_secure_verify_2026')) {
     console.log('[Meta Webhook] GET handshake verified successfully.');
     // Return raw challenge as plain text with 200 OK
     return new NextResponse(challenge, {

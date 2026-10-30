@@ -110,7 +110,7 @@ export const AiSettingsView: React.FC<AiSettingsViewProps> = ({ state }) => {
                   {isAr ? 'فصحى طبية رسمية' : 'Formal Medical Arabic'}
                 </div>
                 <div className="text-[11px] text-slate-500 font-normal leading-relaxed">
-                  "أهلاً بك في عيادة المسواك، تبدأ تكلفة تقويم الأسنان من 1,200,000 دينار..."
+                  "أهلاً بحضرتك.. بالنسبة لأسعار تقويم الأسنان، تختلف حسب الحالة والخطة المناسبة إلك..."
                 </div>
               </button>
             </div>
@@ -167,6 +167,26 @@ export const AiSettingsView: React.FC<AiSettingsViewProps> = ({ state }) => {
                   checked={blockDiagnosis}
                   onChange={(e) => setBlockDiagnosis(e.target.checked)}
                   className="w-4 h-4 accent-emerald-600 rounded"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-red-50/70 border border-red-200">
+                <div>
+                  <div className="text-xs font-bold text-red-950 flex items-center gap-1.5">
+                    <span>{isAr ? 'حظر إفصاح أسعار وأقساط التقويم (Strict Ortho Pricing Ban)' : 'Strict Orthodontic Pricing Prohibition'}</span>
+                    <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded">إلزامي</span>
+                  </div>
+                  <div className="text-[11px] text-red-800 leading-relaxed mt-0.5">
+                    {isAr
+                      ? 'سياسة عالمية إلزامية في MustafaH-AI: منع كشف أي أسعار أو تقديرات أو أقساط للتقويم والرد بالصيغة المعتمدة مع التحويل البشري'
+                      : 'Mandatory global AI policy: never disclose ortho prices, ranges or installments; use approved template and escalate.'}
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={true}
+                  disabled
+                  className="w-4 h-4 accent-red-600 rounded cursor-not-allowed"
                 />
               </div>
 

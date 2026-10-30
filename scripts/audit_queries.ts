@@ -11,7 +11,7 @@ const queries = [
 ];
 
 console.log('================================================================');
-console.log('ALMESWAK AI — BAGHDAD DIALECT VERIFICATION AUDIT');
+console.log('MUSTAFAH-AI — BAGHDAD DIALECT VERIFICATION AUDIT');
 console.log('================================================================\n');
 
 for (const q of queries) {
@@ -26,3 +26,4 @@ for (const q of queries) {
   console.log(res.replyText);
   console.log('\n' + '-'.repeat(60) + '\n');
 }
+

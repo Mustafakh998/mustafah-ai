@@ -65,13 +65,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         <div>
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-white tracking-wide text-base">ALMESWAK AI</span>
+            <span className="font-bold text-white tracking-wide text-base">MustafaH-AI</span>
             <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-semibold px-1.5 py-0.5 rounded border border-emerald-500/30">
               BAGHDAD
             </span>
           </div>
           <p className="text-xs text-slate-400">
-            {isAr ? 'نظام التحويل ونمو العيادة' : 'Patient Acquisition System'}
+            {isAr ? 'د. مصطفى هادي — نظام التحويل' : 'Dr. Mustafa Hadi Platform'}
           </p>
         </div>
       </div>

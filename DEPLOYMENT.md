@@ -1,11 +1,11 @@
-# ALMESWAK AI — BAGHDAD EDITION
+# MUSTAFAH-AI — BAGHDAD EDITION
 ## Production Deployment & Operational Runbook
 
 ---
 
 ## 1. Quick Local Development Setup
 
-To run ALMESWAK AI locally on your development workstation:
+To run MustafaH-AI locally on your development workstation:
 
 ```bash
 # 1. Clone or navigate to the repository

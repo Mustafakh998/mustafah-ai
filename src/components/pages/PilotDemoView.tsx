@@ -146,7 +146,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {isAr ? 'استفسار تقويم وأقساط' : 'Orthodontics & Installments'}
+                  {isAr ? 'استفسار تقويم وعضة مفتوحة' : 'Orthodontics & Open Bite'}
                 </button>
                 <button
                   onClick={() => setDemoScenario('whitening')}
@@ -378,7 +378,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
                   </div>
                   <p>
                     {isAr
-                      ? 'الرسالة تصل إلى نظام ALMESWAK AI خلال 300 مللي ثانية فقط عبر البنية التحتية الرسمية لـ Meta، دون استخدام أي برامج طرف ثالث غير مصرحة أو طلب كلمة المرور.'
+                      ? 'الرسالة تصل إلى نظام MustafaH-AI خلال 300 مللي ثانية فقط عبر البنية التحتية الرسمية لـ Meta، دون استخدام أي برامج طرف ثالث غير مصرحة أو طلب كلمة المرور.'
                       : 'Incoming DMs trigger official webhooks with zero scraping or unsafe password storage.'}
                   </p>
                 </div>
@@ -516,16 +516,16 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
                         <strong>هوية الدكتور:</strong> "د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك".
                       </span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-emerald-600 font-bold">✓</span>
+                    <li className="flex items-start gap-2 text-red-700 font-semibold bg-red-50 p-2 rounded-lg border border-red-200">
+                      <span className="text-red-600 font-bold">✕</span>
                       <span>
-                        <strong>الأسعار المعتمدة:</strong> ذكر نطاق السعر المعتمد (1,000,000 - 1,500,000 د.ع) دون تأكيد رقم نهائي قبل الفحص السريري.
+                        <strong>حظر إفصاح أسعار التقويم:</strong> يمنع منعاً باتاً ذكر أي سعر أو نطاق سعر أو أقساط لتقويم الأسنان آلياً، والالتزام التام بالصيغة المعتمدة مع تحويل الاستفسار المالي للاستقبال.
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-emerald-600 font-bold">✓</span>
                       <span>
-                        <strong>شفافية الأقساط:</strong> توضيح توفر الأقساط الشهرية المريحة مع كل موعد شد.
+                        <strong>التوجيه للتقييم السريري:</strong> التأكيد على أن خطة العلاج وتفاصيلها تحدد حصرياً بعد الفحص السريري والأشعة بالعيادة والتواصل المباشر.
                       </span>
                     </li>
                     <li className="flex items-start gap-2 text-red-700 font-semibold bg-red-50 p-2 rounded-lg border border-red-200">
@@ -549,7 +549,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
 
                   <p className="text-xs leading-relaxed text-slate-100 whitespace-pre-line font-sans">
                     {demoScenario === 'ortho'
-                      ? `أهلاً وسهلاً بيج سارة نورتي 🌸\n\nبالنسبة للعضة المفتوحة وتراكب الأسنان، فهذا تخصصنا الدقيق بدراسة حركة الفكين وأجهزة التقويم.\n\nالتقويم الثابت يمنا يبدأ من 1,000,000 إلى 1,500,000 دينار عراقي حسب نوع الحاصرات وحالة الفك، وأكيد متوفر نظام أقساط مريحة جداً (مقدمة بسيطة وباقي المبلغ أقساط شهرية ويه كل جلسة شد).\n\nبس مثل ما نكول دائماً: "طبيب أسنان يشرحلك قبل لا يعالجك".. فالتشخيص الصحيح وخطة العلاج لازم تكون بعد فحص سريري وأشعة بالعيادة حتى نحدد الأنسب الج.\n\nتحبين نسجل رغبتج بزيارة كشفية بالعيادة ونرتب الموعد المناسب وياج؟ 🦷`
+                      ? `بالنسبة لأسعار تقويم الأسنان، تختلف حسب الحالة ونوع العلاج والخطة المناسبة إلك.\n\nحتى نكدر نعطيك التفاصيل الصحيحة، نفضّل يتم تقييم حالتك والتواصل ويانه مباشرة لمعرفة التفاصيل.\n\nيسعدنا نساعدك ونرتب إلك استشارة ويا د. مصطفى هادي ❤️`
                       : demoScenario === 'whitening'
                       ? `أهلاً وسهلاً بيج سارة نورتي 🌸\n\nتبييض الأسنان بالعيادة نستخدم بيه أحدث تقنية زووم (Philips Zoom) بجلسة وحدة مدتها 45 دقيقة تقريباً، وتنطيج من 4 إلى 8 درجات أفتح وبدون ألم أو تحسس مزعج.\n\nسعر الجلسة يبدأ من 120,000 إلى 180,000 دينار عراقي.\n\nتحبين نسجل رغبتج بموعد بالعيادة وننسق وياج الوقت المناسب؟ 🦷`
                       : `أهلاً وسهلاً.. سلامات وألف سلامة عليك ما تشوف شر 🌸\n\nوجع سن العقل مع الورم يعتبر حالة طارئة تحتاج فحص سريري مباشر بالعيادة للتأكد من عدم وجود التهاب حول التاج (Pericoronitis)، وممنوع أخذ أي مضاد حيوي بدون وصفة الطبيب.\n\nكإجراء أولي لحين وصولك للعيادة: تقدر تستخدم مضمضة مي وملح دافي، وبندول أو بروفين كمسكن بسيط فقط.\n\nعيادة المسواك مفتوحة يومياً من 1:00 ظهراً إلى 9:00 مساءً (زيونة - خدمي دريم سيتي مول). تكدر تتصل فوراً برقم الطوارئ والحجز: 07768886667 أو نسجلك أسبقية حجز حالاً؟ 🚨`}
@@ -582,8 +582,8 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
                     <span className="font-bold text-emerald-700">تقويم أسنان ثابت (عضة مفتوحة)</span>
                   </div>
                   <div className="p-3 bg-white rounded-xl border border-slate-200">
-                    <span className="text-slate-400 block mb-0.5">{isAr ? 'القدرة المالية:' : 'Budget Readiness:'}</span>
-                    <span className="font-bold text-slate-800">مهتم بنظام الأقساط الميسرة</span>
+                    <span className="text-slate-400 block mb-0.5">{isAr ? 'الرغبة في الاستشارة:' : 'Consultation Readiness:'}</span>
+                    <span className="font-bold text-slate-800">جاهزة للتقييم السريري</span>
                   </div>
                   <div className="p-3 bg-white rounded-xl border border-slate-200">
                     <span className="text-slate-400 block mb-0.5">{isAr ? 'المدينة / المنطقة:' : 'Location:'}</span>
@@ -594,7 +594,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
                 <div className="mt-4 p-4 rounded-xl bg-white border border-slate-200 text-xs text-slate-600">
                   <span className="font-bold text-slate-800">{isAr ? 'ملاحظة الذكاء الاصطناعي للاستقبال: ' : 'AI Reception Note: '}</span>
                   {isAr
-                    ? 'المراجعة واعية ومحددة لمشكلتها (عضة مفتوحة)، استفسرت عن الأقساط بعد مشاهدة ريل دكتور مصطفى حول أسعار التقويم. فرصة التحويل إلى كشف سريري تزيد عن 85%.'
+                    ? 'المراجعة واعية ومحددة لمشكلتها (عضة مفتوحة)، طلبت استشارة بعد مشاهدة ريل دكتور مصطفى حول أنواع وعلاج التقويم. تم حجب الأسعار آلياً وتوجيهها للتقييم السريري المباشر.'
                     : 'Patient is well-informed, responding to Dr. Mustafa Reel #1, ready for clinical consult.'}
                 </div>
               </div>
@@ -770,7 +770,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
 
                   <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs space-y-2">
                     <div className="font-bold text-slate-800">
-                      Reel #1: "ليش أسعار التقويم تختلف ببغداد؟ منو ديحدد السعر الحقيقي؟"
+                      Reel #1: "ليش خطط علاج التقويم تختلف ببغداد؟ د. مصطفى هادي يشرحلك قبل لا يعالجك"
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-center text-slate-600 pt-2 border-t border-slate-100">
                       <div>
