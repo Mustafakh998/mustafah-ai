@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
-import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
+import {
+  validateMetaSignature,
+  processInstagramWebhook,
+} from '@/lib/instagram/webhookHandler';
 
-// Meta Verification Token & App Secret from environment variables
+// Meta Verification Token from environment variables
 // Hardcoded production secrets are strictly prohibited.
 const VERIFY_TOKEN = process.env.META_VERIFY_TOKEN;
 const APP_SECRET = process.env.META_APP_SECRET;
@@ -51,74 +53,36 @@ export async function POST(request: NextRequest) {
 
     // In production or whenever APP_SECRET is configured, enforce constant-time HMAC-SHA256 signature verification
     if (process.env.NODE_ENV === 'production' || APP_SECRET) {
-      if (!APP_SECRET) {
-        console.error('[Meta Webhook] Production error: META_APP_SECRET is not configured.');
-        return NextResponse.json(
-          { error: 'Server misconfiguration: META_APP_SECRET is required for signature verification.' },
-          { status: 500 }
-        );
-      }
-
-      if (!signature) {
-        console.warn('[Meta Webhook] Security rejection: Missing X-Hub-Signature-256 header.');
-        return NextResponse.json({ error: 'Missing HMAC signature.' }, { status: 401 });
-      }
-
-      const expectedSignature =
-        'sha256=' + crypto.createHmac('sha256', APP_SECRET).update(rawBody).digest('hex');
-
-      const sigBuffer = Buffer.from(signature);
-      const expectedBuffer = Buffer.from(expectedSignature);
-
-      if (
-        sigBuffer.length !== expectedBuffer.length ||
-        !crypto.timingSafeEqual(sigBuffer, expectedBuffer)
-      ) {
-        console.error('[Meta Webhook] Security alert: Signature verification failed!');
-        return NextResponse.json({ error: 'Invalid HMAC signature.' }, { status: 401 });
+      const sigValidation = validateMetaSignature(rawBody, signature, APP_SECRET);
+      if (!sigValidation.isValid) {
+        console.error(`[Meta Webhook] Signature verification failed: ${sigValidation.error}`);
+        const statusCode = sigValidation.error?.includes('Missing') || sigValidation.error?.includes('Invalid') ? 401 : 500;
+        return NextResponse.json({ error: sigValidation.error }, { status: statusCode });
       }
     }
 
-    const payload = JSON.parse(rawBody);
-
-    // Meta Instagram payloads structure: { object: 'instagram', entry: [{ messaging: [...] }] }
-    if (payload.object === 'instagram' && Array.isArray(payload.entry)) {
-      for (const entry of payload.entry) {
-        const messagingEvents = entry.messaging || [];
-
-        for (const event of messagingEvents) {
-          const senderId = event.sender?.id;
-          const recipientId = event.recipient?.id;
-          const messageText = event.message?.text;
-
-          // Ignore bot's own outbound messages (echoes)
-          if (event.message?.is_echo) {
-            continue;
-          }
-
-          if (messageText) {
-            console.log(`[Meta Webhook] Incoming DM from ${senderId}: "${messageText}"`);
-
-            // Run Iraqi Arabic AI Engine
-            const aiResponse = generateIraqiDialectResponse(messageText, 'drmustafa_hadi');
-
-            console.log(
-              `[Meta Webhook] Generated Iraqi reply (Intent: ${aiResponse.intent}, Confidence: ${aiResponse.confidence}):`
-            );
-            console.log(`[Meta Webhook] "${aiResponse.replyText.slice(0, 80)}..."`);
-
-            // In production with live Meta Page token, you invoke:
-            // POST https://graph.facebook.com/v21.0/me/messages
-            // { recipient: { id: senderId }, message: { text: aiResponse.replyText } }
-          }
-        }
-      }
+    let payload;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON payload.' }, { status: 400 });
     }
+
+    // Process through complete pipeline: deduplication, echo suppression, account isolation,
+    // 24-hour window verification, human takeover checks, Iraqi dialect AI, and Graph API dispatch
+    const result = await processInstagramWebhook(payload);
 
     // Always respond immediately with 200 OK within 2 seconds to prevent Meta retries
-    return NextResponse.json({ status: 'EVENT_RECEIVED' }, { status: 200 });
-  } catch (error: any) {
-    console.error('[Meta Webhook] Error processing event:', error);
+    return NextResponse.json(
+      {
+        status: 'EVENT_RECEIVED',
+        summary: result.summary,
+      },
+      { status: 200 }
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Meta Webhook] Error processing event:', message);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
