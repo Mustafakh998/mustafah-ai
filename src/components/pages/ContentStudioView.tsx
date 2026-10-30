@@ -340,3 +340,4 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
     </div>
   );
 };
+

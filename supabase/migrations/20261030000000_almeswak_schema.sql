@@ -212,3 +212,4 @@ VALUES
     '{"instagram_basic": false, "instagram_manage_messages": false, "pages_manage_metadata": false, "instagram_manage_comments": false}'::jsonb
 )
 ON CONFLICT (id) DO NOTHING;
+

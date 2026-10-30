@@ -64,3 +64,4 @@
 * **Monthly Attended Patients from $80–$100 Ad Spend:** 8 – 14 attended patients.
 * **Projected New Monthly Treatment Revenue:** ~$6,400 – $12,000 USD.
 * **Return on Ad Spend (ROAS):** **60x – 120x**, turning a modest sub-$100 budget into significant clinical cashflow.
+

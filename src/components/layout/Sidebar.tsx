@@ -39,8 +39,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     labelEn: string;
     icon: React.ElementType;
     badge?: number;
+    highlightBadge?: string;
   }[] = [
     { id: 'overview', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: LayoutDashboard },
+    { id: 'pilot_demo', labelAr: 'عرض الإدارة التفاعلي', labelEn: 'Management Live Demo', icon: Sparkles, highlightBadge: 'DEMO' },
     { id: 'accounts', labelAr: 'حسابات إنستغرام', labelEn: 'Instagram Accounts', icon: InstagramIcon },
     { id: 'inbox', labelAr: 'صندوق المحادثات', labelEn: 'DM Inbox', icon: MessageSquare, badge: unreadCount },
     { id: 'ai_settings', labelAr: 'إعدادات المساعد الذكي', labelEn: 'AI Agent Settings', icon: Bot },
@@ -92,6 +94,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
               <span className="flex-1 truncate">{isAr ? item.labelAr : item.labelEn}</span>
+              {item.highlightBadge && !isActive && (
+                <span className="text-[10px] font-black tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                  {item.highlightBadge}
+                </span>
+              )}
               {item.badge && item.badge > 0 ? (
                 <span
                   className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${

@@ -125,16 +125,20 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
           </div>
         </div>
 
-        {/* Clinic Official Account Card (Demo/Config Mode) */}
-        <div className="bg-white rounded-2xl border border-slate-300 p-6 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 end-0 bg-amber-500 text-slate-950 font-bold text-[10px] px-3 py-1 rounded-bl-xl tracking-wider uppercase">
-            {isAr ? 'وضع تجريبي / بانتظار الإدارة' : 'Demo Sandbox'}
+        {/* Clinic Official Account Card (Locked/Demo Pending Clinic Authorization) */}
+        <div className="bg-slate-50/70 rounded-2xl border-2 border-dashed border-amber-300 p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 end-0 bg-amber-500 text-slate-950 font-black text-[10px] px-3.5 py-1 rounded-bl-xl tracking-wider uppercase flex items-center gap-1 shadow-sm">
+            <Lock className="w-3 h-3 text-slate-950" />
+            <span>{isAr ? 'مساحة مقفلة (بانتظار التفويض الإداري)' : 'Locked: Pending Admin Auth'}</span>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-700 to-slate-900 p-0.5 shadow-md shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-700 to-slate-900 p-0.5 shadow-md shrink-0 relative">
               <div className="w-full h-full rounded-2xl bg-white flex items-center justify-center text-emerald-600 font-bold text-2xl">
                 🦷
+              </div>
+              <div className="absolute -bottom-1 -end-1 w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center shadow">
+                <Lock className="w-3.5 h-3.5" />
               </div>
             </div>
             <div className="flex-1">
@@ -144,8 +148,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
                 </h3>
                 <span className="text-xs font-mono text-slate-400">@almeswaksmile.iq</span>
               </div>
-              <p className="text-xs text-slate-600 font-semibold mt-0.5">
-                {isAr ? 'عيادة أسنان تخصصية — بغداد زيونة' : 'Specialized Dental Clinic — Zayouna'}
+              <p className="text-xs text-amber-800 font-bold mt-0.5 flex items-center gap-1">
+                <span>{isAr ? 'مساحة العيادة المستقبلية — بغداد زيونة' : 'Future Clinic Target — Zayouna'}</span>
               </p>
               <p className="text-xs text-slate-500 mt-2 line-clamp-2">
                 "ابتسامة | عناية | علاج | ثقة | 📍 بغداد – زيونة – خدمي دريم سيتي مول | للحجز: 07768886667"
@@ -153,7 +157,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 my-5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+          <div className="grid grid-cols-3 gap-2 my-5 p-3 rounded-xl bg-white border border-slate-200 text-center">
             <div>
               <div className="text-base font-black text-slate-900">1,123</div>
               <div className="text-[11px] text-slate-500">{isAr ? 'متابع' : 'Followers'}</div>
@@ -169,15 +173,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
           </div>
 
           <div className="space-y-3">
-            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
-              <div className="flex items-center gap-1.5 font-bold mb-1">
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
-                <span>{isAr ? 'قيد انتظار تفويض إدارة العيادة' : 'Awaiting Clinic Admin OAuth'}</span>
+            <div className="p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 text-xs text-amber-950 leading-relaxed space-y-1.5">
+              <div className="flex items-center gap-1.5 font-bold">
+                <ShieldCheck className="w-4 h-4 text-amber-600" />
+                <span>{isAr ? 'بروتوكول العزل التام لبيانات المرضى والحساب:' : 'Strict Data Isolation Protocol:'}</span>
               </div>
-              <p>
+              <p className="text-amber-900 text-[11px] leading-relaxed">
                 {isAr
-                  ? 'المستخدم يملك صلاحية الحساب الشخصي فقط. تم تجهيز هذا الحساب ببيئة محاكاة واختبار كاملة لحين منح المشرف صلاحيات فيسبوك/إنستغرام.'
-                  : 'Currently configured in interactive sandbox mode until clinic administrator completes Meta OAuth flow.'}
+                  ? 'تم قفل مساحة العيادة وعزلها برمجياً 100%. لا يتم نقل أي بيانات مرضى شخصية أو محادثات أو وصول غير مصرح بين حساب د. مصطفى وحساب العيادة. لن يتم تشغيل الأتمتة الحية على هذا الحساب إلا بعد تفويض إداري خطي ومصادقة المشرف عبر Meta OAuth.'
+                  : 'Isolated sandbox environment. Zero patient data cross-contamination. Requires official written clinic authorization before connecting live Meta API.'}
               </p>
             </div>
 
@@ -186,10 +190,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
                 setSelectedTargetAccount('almeswaksmile_iq');
                 setIsOAuthModalOpen(true);
               }}
-              className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 shadow-sm"
             >
-              <Key className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{isAr ? 'منح صلاحيات الحساب الرسمي للعيادة' : 'Authorize Official Clinic Account'}</span>
+              <Key className="w-3.5 h-3.5 text-amber-400" />
+              <span>{isAr ? 'تفويض الحساب الإداري للعيادة (يتطلب إذن الإدارة)' : 'Authorize Clinic Account (Admin Permission Required)'}</span>
             </button>
           </div>
         </div>

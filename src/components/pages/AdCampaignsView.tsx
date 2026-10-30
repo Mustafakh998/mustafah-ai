@@ -265,3 +265,4 @@ export const AdCampaignsView: React.FC<AdCampaignsViewProps> = ({
     </div>
   );
 };
+

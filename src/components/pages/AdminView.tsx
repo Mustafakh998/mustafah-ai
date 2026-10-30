@@ -232,3 +232,4 @@ export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData }) => {
     </div>
   );
 };
+

@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { NavTabId } from '@/types';
 import { Header } from '@/components/layout/Header';
 import { OverviewView } from '@/components/pages/OverviewView';
+import { PilotDemoView } from '@/components/pages/PilotDemoView';
 import { AccountsView } from '@/components/pages/AccountsView';
 import { InboxView } from '@/components/pages/InboxView';
 import { AiSettingsView } from '@/components/pages/AiSettingsView';
@@ -82,6 +83,14 @@ export default function Home() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {currentTab === 'overview' && (
             <OverviewView
+              state={state}
+              onNavigate={setCurrentTab}
+              onOpenSimulateModal={() => setIsSimulateModalOpen(true)}
+            />
+          )}
+
+          {currentTab === 'pilot_demo' && (
+            <PilotDemoView
               state={state}
               onNavigate={setCurrentTab}
               onOpenSimulateModal={() => setIsSimulateModalOpen(true)}

@@ -4,6 +4,7 @@ export type AccountId = 'drmustafa_hadi' | 'almeswaksmile_iq';
 
 export type NavTabId =
   | 'overview'
+  | 'pilot_demo'
   | 'accounts'
   | 'inbox'
   | 'ai_settings'
@@ -15,6 +16,16 @@ export type NavTabId =
   | 'ad_campaigns'
   | 'analytics'
   | 'admin';
+
+export type PilotIntentType =
+  | 'general_dental_education'
+  | 'personal_professional_inquiry'
+  | 'orthodontic_inquiry'
+  | 'consultation_request'
+  | 'collaboration_request'
+  | 'urgent_clinical_question'
+  | 'human_attention_required'
+  | 'location_and_directions';
 
 export interface InstagramAccount {
   id: AccountId;

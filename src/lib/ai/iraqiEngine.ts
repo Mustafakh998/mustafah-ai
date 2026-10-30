@@ -1,9 +1,9 @@
 import { CLINIC_SERVICES, INITIAL_ACCOUNTS } from '@/lib/data/initialData';
-import { AccountId, TreatmentType } from '@/types';
+import { AccountId, PilotIntentType, TreatmentType } from '@/types';
 
 export interface AIResponseResult {
   replyText: string;
-  intent: string;
+  intent: PilotIntentType | string;
   confidence: number;
   treatmentDetected?: TreatmentType;
   requiresHumanHandoff: boolean;
@@ -13,25 +13,24 @@ export interface AIResponseResult {
     phone?: string;
     preferredDate?: string;
     preferredTime?: string;
+    inquiryType?: string;
   };
 }
 
-// Baghdad Dialect Vocabulary & Patterns
-const BAGHDAD_PATTERNS = {
-  price: [/شكد|كم سعر|بيش|شقد|كلفة|تكلفة|بكم/i],
-  location: [/وين|مكانكم|عنوانكم|وين صايرين|موقعكم|بيا منطقة|زيونة/i],
-  booking: [/احجز|حجز|موعد|اريد اجي|اكدر اجي|تثبيت|كشفية|استشارة/i],
-  orthodontics: [/تقويم|بريسز|عضة مفتوحة|مطمور|ديمون|شفاف|فك|بروز|سلك|مطاط/i],
-  cosmetic: [/ايماكس|e-max|تجميل|ابتسامة|زيركون|فينير|عدسات|قشور/i],
-  pediatric: [/اطفال|ابني|بنتي|طفل|تسوس طفل|دكتورة سجى|دكتورة شوخان/i],
-  whitening: [/تبييض|تبيض|ليزر|اصفرار|تنظيف/i],
-  general: [/حشوة|عصب|قلع|خلع|وجع|الم|تسكين/i],
-  onlineDiagnosis: [/صورة لسني|شوف هاي الصورة|شخصني|شنو علاجي بالظبط|انطيني دوا|اكتبلي علاج|مضاد حيوي/i],
-  humanAgent: [/انسان|بشر|روبوت|بوت|موظف|استقبال|حوّلني|حولي|شخص حقيقي|دكتور حقيقي|احجي ويا واحد/i],
+// Patterns specifically calibrated for Dr. Mustafa Hadi's Pilot
+const PILOT_PATTERNS = {
+  collaboration: [/تعاون|إعلان|اعلان|تسويق|سبونسر|شراكة|مؤتمر|محاضرة|برمجة|تطبيق|سوفتوير|collab|partnership|sponsor/i],
+  urgent: [/طوارئ|وجع لا يطاق|ورم|انتفاخ|حادث|انكسر سني هسة|نزيف|دم|يموتني الوجع|ديموتني|مسكن قوي|مضاد حيوي/i],
+  personalBrand: [/منو دكتور مصطفى|شهادتك|وين متخرج|سيرتك|خبرتك|ليش يشرحلك قبل لا يعالجك|شكد عمرك/i],
+  location: [/مكانكم|وين العيادة|وين صايرين|عنوانكم|زيونة|دريم سيتي|اللوكيشن|موقعكم/i],
+  orthodontics: [/تقويم|بريسز|عضة مفتوحة|مطمور|ديمون|شفاف|فك|بروز|سلك|مطاط|closing loop|piggyback|open bite/i],
+  consultation: [/احجز|حجز|استشارة|كشفية|اريد اجي|اكدر اجي|فحص|موعد|اريد اشوف الدكتور/i],
+  generalEducation: [/تفريش|خيط اسنان|معجون|تسوس|اصفرار|تبييض|رائحة الفم|اسنان اللبنية|تنظيف الجير/i],
+  humanAgent: [/اريد احجي وياك شخصياً|دكتور مصطفى نفسه|مو روبوت|روبوت|بوت|بشر|انسان|حوّلني|حولي|شخص حقيقي|دكتور حقيقي|احجي ويا واحد|اتصل بيه/i],
 };
 
-export function classifyIntentAndExtractInfo(userMessage: string): {
-  intent: string;
+export function classifyPilotIntent(userMessage: string): {
+  intent: PilotIntentType;
   confidence: number;
   treatment?: TreatmentType;
   requiresHandoff: boolean;
@@ -41,6 +40,7 @@ export function classifyIntentAndExtractInfo(userMessage: string): {
     phone?: string;
     preferredDate?: string;
     preferredTime?: string;
+    inquiryType?: string;
   };
 } {
   const text = userMessage.trim();
@@ -49,15 +49,16 @@ export function classifyIntentAndExtractInfo(userMessage: string): {
     phone?: string;
     preferredDate?: string;
     preferredTime?: string;
+    inquiryType?: string;
   } = {};
 
-  // Extract Iraqi Phone Numbers (077xxxxxxxx, 078xxxxxxxx, 075xxxxxxxx, 079xxxxxxxx, +9647xxxxxxxxx)
+  // Extract Iraqi Phone Numbers
   const phoneMatch = text.match(/(?:\+?964|0)?7[7859]\d{8}/);
   if (phoneMatch) {
     extractedInfo.phone = phoneMatch[0];
   }
 
-  // Extract requested times/days
+  // Extract Days & Times
   const dayMatch = text.match(/السبت|الأحد|الاحد|الاثنين|الإثنين|الثلاثاء|الاربعاء|الأربعاء|الخميس|باجر|عگب باجر/);
   if (dayMatch) {
     extractedInfo.preferredDate = dayMatch[0];
@@ -68,83 +69,91 @@ export function classifyIntentAndExtractInfo(userMessage: string): {
     extractedInfo.preferredTime = timeMatch[0];
   }
 
-  // 1. Check for Human Agent Request
-  if (BAGHDAD_PATTERNS.humanAgent.some((r) => r.test(text))) {
+  // 1. Check for Urgent Clinical Situation (Emergency)
+  if (PILOT_PATTERNS.urgent.some((r) => r.test(text))) {
     return {
-      intent: 'human_takeover_request',
-      confidence: 0.99,
+      intent: 'urgent_clinical_question',
+      confidence: 0.98,
       requiresHandoff: true,
-      handoffReason: 'المراجع طلب التحدث مباشرة مع موظف الاستقبال أو الطبيب',
-      extractedInfo,
+      handoffReason: 'حالة طارئة أو ألم حاد — تستدعي تدخلاً سريعاً ومراجعة الطوارئ أو التواصل الفوري',
+      extractedInfo: { ...extractedInfo, inquiryType: 'urgent_pain' },
     };
   }
 
-  // 2. Check for Online Diagnosis / Drug Prescription Guardrail
-  if (BAGHDAD_PATTERNS.onlineDiagnosis.some((r) => r.test(text))) {
+  // 2. Check for Human Attention Required
+  if (PILOT_PATTERNS.humanAgent.some((r) => r.test(text))) {
     return {
-      intent: 'online_diagnosis_request',
+      intent: 'human_attention_required',
+      confidence: 0.96,
+      requiresHandoff: true,
+      handoffReason: 'المراجع طلب التحدث مباشرة مع دكتور مصطفى أو فريق الاستقبال',
+      extractedInfo: { ...extractedInfo, inquiryType: 'direct_human' },
+    };
+  }
+
+  // 3. Collaboration / Professional Partnership Request
+  if (PILOT_PATTERNS.collaboration.some((r) => r.test(text))) {
+    return {
+      intent: 'collaboration_request',
       confidence: 0.95,
       requiresHandoff: true,
-      handoffReason: 'طلب تشخيص سريري أو وصف أدوية عبر الإنترنت — يتطلب فحصاً مباشراً بالعيادة',
-      extractedInfo,
+      handoffReason: 'طلب تعاون مهني، شراكة، أو محاضرة تقنية موجهة لدكتور مصطفى',
+      extractedInfo: { ...extractedInfo, inquiryType: 'professional_partnership' },
     };
   }
 
-  // 3. Treatment Identification
-  let treatment: TreatmentType | undefined;
-  if (BAGHDAD_PATTERNS.orthodontics.some((r) => r.test(text))) treatment = 'orthodontics';
-  else if (BAGHDAD_PATTERNS.cosmetic.some((r) => r.test(text))) treatment = 'cosmetic_emax';
-  else if (BAGHDAD_PATTERNS.pediatric.some((r) => r.test(text))) treatment = 'pediatric';
-  else if (BAGHDAD_PATTERNS.whitening.some((r) => r.test(text))) treatment = 'teeth_whitening';
-  else if (BAGHDAD_PATTERNS.general.some((r) => r.test(text))) treatment = 'general_restorative';
+  // 4. Consultation Booking Request
+  if (PILOT_PATTERNS.consultation.some((r) => r.test(text)) || extractedInfo.phone || extractedInfo.preferredDate) {
+    let treatment: TreatmentType = 'consultation';
+    if (PILOT_PATTERNS.orthodontics.some((r) => r.test(text))) treatment = 'orthodontics';
 
-  // 4. Intent Classification
-  if (BAGHDAD_PATTERNS.booking.some((r) => r.test(text)) || extractedInfo.phone || extractedInfo.preferredDate) {
     return {
-      intent: 'appointment_request',
+      intent: 'consultation_request',
       confidence: 0.97,
       treatment,
-      requiresHandoff: true, // Leads to reception confirmation
-      handoffReason: 'طلب حجز موعد يتطلب تأكيد التوفر من الاستقبال',
-      extractedInfo,
+      requiresHandoff: true, // Requires reception confirmation
+      handoffReason: 'طلب موعد كشفية واستشارة يتطلب التنسيق مع جدول العيادة لتأكيد التوفر',
+      extractedInfo: { ...extractedInfo, inquiryType: 'appointment_booking' },
     };
   }
 
-  if (BAGHDAD_PATTERNS.location.some((r) => r.test(text))) {
+  // 5. Orthodontic Clinical Inquiry
+  if (PILOT_PATTERNS.orthodontics.some((r) => r.test(text))) {
+    return {
+      intent: 'orthodontic_inquiry',
+      confidence: 0.94,
+      treatment: 'orthodontics',
+      requiresHandoff: false,
+      extractedInfo: { ...extractedInfo, inquiryType: 'orthodontics_explanation' },
+    };
+  }
+
+  // 6. Personal Professional Profile Inquiry
+  if (PILOT_PATTERNS.personalBrand.some((r) => r.test(text))) {
+    return {
+      intent: 'personal_professional_inquiry',
+      confidence: 0.92,
+      requiresHandoff: false,
+      extractedInfo: { ...extractedInfo, inquiryType: 'doctor_profile' },
+    };
+  }
+
+  // 7. Location and Directions
+  if (PILOT_PATTERNS.location.some((r) => r.test(text))) {
     return {
       intent: 'location_and_directions',
       confidence: 0.96,
-      treatment,
       requiresHandoff: false,
-      extractedInfo,
+      extractedInfo: { ...extractedInfo, inquiryType: 'location' },
     };
   }
 
-  if (BAGHDAD_PATTERNS.price.some((r) => r.test(text))) {
-    return {
-      intent: 'price_inquiry',
-      confidence: 0.94,
-      treatment,
-      requiresHandoff: false,
-      extractedInfo,
-    };
-  }
-
-  if (treatment) {
-    return {
-      intent: 'treatment_information',
-      confidence: 0.91,
-      treatment,
-      requiresHandoff: false,
-      extractedInfo,
-    };
-  }
-
+  // 8. General Dental Education
   return {
-    intent: 'general_greeting',
-    confidence: 0.85,
+    intent: 'general_dental_education',
+    confidence: 0.88,
     requiresHandoff: false,
-    extractedInfo,
+    extractedInfo: { ...extractedInfo, inquiryType: 'dental_education' },
   };
 }
 
@@ -153,24 +162,33 @@ export function generateIraqiDialectResponse(
   accountId: AccountId = 'drmustafa_hadi',
   patientName?: string
 ): AIResponseResult {
-  const classification = classifyIntentAndExtractInfo(userMessage);
-  const nameGreeting = patientName ? `أهلاً وسهلاً بيچ ${patientName} 💚` : 'أهلاً وسهلاً بيك نورتنا 💚';
+  const classification = classifyPilotIntent(userMessage);
+  const nameGreeting = patientName ? `أهلاً وسهلاً بيچ ${patientName} 💚` : 'أهلاً وسهلاً بيك نورت صفحة دكتور مصطفى هادي 💚';
 
-  const isPersonal = accountId === 'drmustafa_hadi';
-  const orthoDoctorRef = isPersonal ? 'دكتور مصطفى هادي' : 'دكتور مصطفى هادي (أخصائي التقويم بعيادتنا)';
+  // Assistant introduction representing Dr. Mustafa
+  const assistantIntro = 'أني المساعد الذكي الخاص بدكتور مصطفى هادي';
+  const brandSlogan = 'شعارنا دائماً: "طبيب أسنان يشرحلك قبل لا يعالجك" 📐✨';
 
   let replyText = '';
 
   switch (classification.intent) {
-    case 'human_takeover_request':
-      replyText = `${nameGreeting} تدلل عيوني! راح أحول المحادثة هسة فوراً لزميلتي بمكتب الاستقبال حتى تتواصل وياك مباشرة، أو تكدر تتصل بينا على رقم العيادة المباشر 07768886667 📞. ثواني وتكون وياك!`;
+    case 'urgent_clinical_question':
+      replyText = `${nameGreeting}\nسلامتك ألف سلامة وما تشوف شر يا رب! ⚠️\n\nحسب الأمانة الطبية والمسؤولية المهنية، إذا چان عندك ألم حاد أو ورم مفاجئ أو كسر، مهم جداً ما تكتفي باستشارة الإنستغرام أو أخذ مضاد حيوي ومسكنات قوية بدون فحص سريري وتشخيص مباشر بالعيادة.\n\n📞 يرجى الاتصال المباشر بهاتف الطوارئ والاستقبال بالعيادة بزيونة فوراً: 07768886667\nأو التوجه لأقرب مركز طوارئ أسنان إذا چان الوقت خارج ساعات الدوام الرسمية.\n\nتم تحويل رسالتك هسة لفريق العيادة للتواصل وياك في أقرب فرصة.`;
       break;
 
-    case 'online_diagnosis_request':
-      replyText = `${nameGreeting} سلامتك ألف سلامة يا رب! من باب الأمانة الطبية وحرصاً على صحتك، ما نكدر نشخص الحالة أو نكتب أدوية ومسكنات عن طريق الإنستغرام بدون فحص سريري وأشعة بانورامية بالعيادة حتى نتأكد من وضع السن والعصب صح 🦷.\n\nالكشفية والاستشارة يم ${orthoDoctorRef} وباقي الأطباء تشمل فحص دقيق وخطة علاجية واضحة.\nتحب نثبتلك موعد كشفية مناسب بالعيادة بزيونة؟ 📍`;
+    case 'location_and_directions':
+      replyText = `${nameGreeting}\nمقر العيادة في قلب بغداد:\n📍 **العنوان:** بغداد – زيونة – شارع دريم سيتي مول الخدمي، مجمع عيادات المسواك (فوق كافيه الخيال، الطابق السادس شقة 6).\n\n⏰ **أوقات الدوام:** السبت إلى الخميس: 2:00 ظهراً – 9:00 مساءً.\n📞 **هاتف الحجز المباشر والاستفسار:** 07768886667\n\nتحب نسجل طلب موعد لحضرتك؟ نتشرف بزيارتك! 🦷✨`;
       break;
 
-    case 'appointment_request':
+    case 'human_attention_required':
+      replyText = `${nameGreeting}\nتدلل عيوني! ${assistantIntro}. راح أحول رسالتك هسة مباشرة لدكتور مصطفى وفريق الاستقبال حتى يتواصلون وياك شخصياً.\n\nإذا چان الموضوع مستعجل بخصوص موعد فحص أو استفسار مباشر، تگدر تتصل بينا هاتفياً أو تراسلنا واتساب على: 07768886667 📱\nثواني ويكون الفريق وياك!`;
+      break;
+
+    case 'collaboration_request':
+      replyText = `${nameGreeting}\nشكراً جزيلاً لاهتمامك وتواصلك ويا د. مصطفى هادي 🤝✨\nدكتور مصطفى يرحب دائماً بالتعاون العلمي، المحاضرات الطبية، والمشاريع اللي تدمج بين طب الأسنان والتقنية والبرمجة.\n\nتم تسجيل تفاصيل رسالتك ونقلها لدكتور مصطفى شخصياً للاطلاع عليها والرد.\nإذا عندك ملف أو مقترح رسمي، تكدر تزودنا بريدك الإلكتروني أو رقم الواتساب لسهولة التنسيق. نورتنا!`;
+      break;
+
+    case 'consultation_request':
       if (classification.extractedInfo.preferredDate || classification.extractedInfo.phone) {
         const details = [
           classification.extractedInfo.preferredDate ? `يوم ${classification.extractedInfo.preferredDate}` : '',
@@ -180,42 +198,23 @@ export function generateIraqiDialectResponse(
           .filter(Boolean)
           .join(' — ');
 
-        replyText = `عاشت إيدك ${patientName || 'عيوني'} تم تسجيل طلب الموعد (${details}) بنجاح! 💚\n\nموظفة الاستقبال بعيادة المسواك راح تتأكد من جدول الحجوزات وتتصل بيك هاتفياً أو تراسلك واتساب للتأكيد النهائي وتزويدك بتفاصيل الوصول.\n📍 عنواننا: بغداد – زيونة – خدمي دريم سيتي مول (مجاور مطعم صيف وشتاء، الطابق السادس شقة 6).\n\nننتظرك تنورنا! ✨`;
+        replyText = `عاشت إيدك ${patientName || 'يا غالي'}! تم تسجيل طلب الموعد (${details}) بنجاح في سجلات الاستفسارات 💚\n\n📌 **ملاحظة مهمة من دكتور مصطفى:**\nهذا تسجيل لطلبك، وموظفة الاستقبال بالعيادة راح تتصل بيك هاتفياً للتأكد من توفر الكرسي والوقت المناسب وتأكيد الحجز رسمياً (ما نكدر نأكد الحجز النهائي آلياً قبل مراجعة الجدول).\n\n📍 مكان الكشفية: بغداد – زيونة – خدمي دريم سيتي مول (عيادة المسواك، الطابق السادس شقة 6).\n\nبانتظار تشرفنا بالعيادة! ✨`;
       } else {
-        replyText = `${nameGreeting} تدلل من عيوني! نتشرف بزيارتك بالعيادة. حتى نثبتلك أنسب موعد:\n1️⃣ شنو اليوم والوقت اللي يناسبك (السبت للخميس: 2 ظهراً إلى 9 مساءً)؟\n2️⃣ ويا رقم تلفون لحضرتك حتى نثبت الحجز ونتواصل وياك للتأكيد؟ 📱`;
+        replyText = `${nameGreeting}\nتدلل من عيوني! الكشفية والاستشارة يم د. مصطفى تشمل فحص سريري دقيق ودراسة إطباق الفكين وأخذ الأشعة اللازمة 📐.\n\nحتى نرفع طلب الموعد لمكتب الاستقبال ويتصلون بيك للتأكيد:\n1️⃣ شنو اليوم والوقت التقريبي اللي يناسبك؟\n2️⃣ ويا رقم تلفون لحضرتك للتواصل وتأكيد الحجز؟ 📱\n\n(أوقات دوام العيادة: السبت إلى الخميس: 2:00 ظهراً – 9:00 مساءً).`;
       }
       break;
 
-    case 'location_and_directions':
-      replyText = `${nameGreeting} مكاننا سهل كلش ووسط بغداد 📍:\n\n🏬 **عيادة المسواك التخصصية**\nبغداد – زيونة – شارع دريم سيتي الخدمي\n(مجاور مطعم صيف وشتاء، البناية اللي فوق مقهى الخيال – الطابق السادس، شقة 6).\n\n⏰ أوقات الدوام: من السبت إلى الخميس، من الساعة 2:00 ظهراً وحتى 9:00 مساءً.\n📞 رقم الحجز والاستعلام المباشر: 07768886667\n\nتحب نثبتلك موعد كشفية تشرفنا بيه؟ 💚`;
+    case 'orthodontic_inquiry':
+      replyText = `${nameGreeting}\n${brandSlogan}\n\nتقويم الأسنان ويا دكتور مصطفى مو مجرد صف أسنان، وإنما هندسة متكاملة للإطباق والابتسامة وتناسق ملامح الوجه 📐.\nنعالج حالات العضة المفتوحة، تزاحم الأسنان، والأسنان المطمورة باستخدام أنظمة متطورة مثل نظام الدامون الذاتي (Damon System) والتقويم الشفاف.\n\n💡 **بالنسبة للأسعار والأقساط:**\nخطة العلاج وتكلفتها تختلف حسب تعقيد الحالة ونوع التقويم (تبدأ تقريبياً من 1,200,000 دينار عراقي مع نظام أقساط شهرية مريحة جداً مع كل جلسة مراجعة). السعر النهائي الدقيق يتحدد فقط بعد الكشفية السريرية وأشعة الـ OPG.\n\nتحب نسجلك طلب كشفية يم دكتور مصطفى حتى يفحص حالتك ويشرحلك الخطة بالتفصيل؟ 🦷`;
       break;
 
-    case 'price_inquiry':
-      if (classification.treatment === 'orthodontics' || isPersonal) {
-        replyText = `${nameGreeting} كلفة التقويم يم ${orthoDoctorRef} تبدأ من 1,200,000 دينار عراقي وتعتمد على نوع التقويم (المعدني الدقيق، نظام الدامون الذاتي Damon، أو التقويم الشفاف Clear Aligners) وحاجة الفك لتعديل الإطباق.\n\n✨ الأهم عدنا نوفر **نظام أقساط مريح جداً**: دفعة أولى بسيطة والباقي أقساط مريحة ويا جلسات المتابعة الشهرية.\n\nالكشفية الأولية وفحص الفكين تشمل خطة علاج متكاملة. تحب تشرفنا لأخذ أشعة وقياسات؟ 🦷`;
-      } else if (classification.treatment === 'cosmetic_emax') {
-        replyText = `${nameGreeting} في عيادة المسواك نعتمد على خزف الإيماكس الألماني الأصلي E-max بجلستين فقط مع بطاقة ضمان رسمي مدى الحياة ضد تغير اللون أو الكسر ✨.\nالكلفة تبدأ من 250,000 إلى 350,000 دينار للسن الواحد مع برد سطحي جداً للحفاظ على السن الطبيعي.\n\nتحبين موعد كشفية ويا دكتور أحمد هاشم لاختيار درجة البياض المناسبة لملامح وجهك؟ 🤍`;
-      } else if (classification.treatment === 'pediatric') {
-        replyText = `فدوة لقلبه 🩵 بقسم أسنان الأطفال مع د. سجى الحسيني ود. شوخان طوزلو، كشفية وفحص الطفل بـ 25,000 دينار فقط، وجلسات علاج التسوس بدون حفر وإبرة بمادة SDF تبدأ من 35,000 دينار.\nالأجواء مرحة ومليانة ألعاب حتى الطفل يطلع فرحان بدون أي خوف! 🧸`;
-      } else {
-        replyText = `${nameGreeting} تدلل! أسعارنا في عيادة المسواك مدروسة وشفافة:\n• كشفية وفحص كامل: 15,000 دينار (ومجانية عند البدء بالعلاج)\n• تنظيف وتلميع وإزالة تكلسات بالألتراسونيك: 35,000 دينار\n• حشوات تجميلية ليزرية أصلية: تبدأ من 35,000 دينار\n• تبييض ليزري بجلسة واحدة: 150,000 - 200,000 دينار\n\nعن أي إجراء حاب تستفسر بالتحديد يا غالي؟ 💚`;
-      }
+    case 'personal_professional_inquiry':
+      replyText = `${nameGreeting}\nدكتور مصطفى هادي هو طبيب أسنان وأخصائي تقويم الأسنان والفكين في بغداد 🦷.\nمهتم جداً بتطبيق التكنولوجيا، الميكانيكا الحيوية الدقيقة، والبرمجة في تخطيط ابتسامات المرضى.\n\nشعار دكتور مصطفى بالعمل:\n"طبيب أسنان يشرحلك قبل لا يعالجك" — لأننا نؤمن إن المريض شريك أساسي في فهم خطته العلاجية قبل البدء بأي خطوة.\n\nدكتور مصطفى يستقبل مراجعيه في عيادة المسواك التخصصية (بغداد – زيونة، خدمي دريم سيتي مول).\nشلون نكدر نساعدك اليوم باستفسارك؟ 💚`;
       break;
 
-    case 'treatment_information':
-      if (classification.treatment === 'orthodontics' || isPersonal) {
-        replyText = `${nameGreeting} علاج تقويم الأسنان ويا ${orthoDoctorRef} يتم بأعلى المعايير العالمية الرقمية.\nنعالج العضة المفتوحة، تزاحم الأسنان، والأسنان المطمورة (المدفونة) بطرق ميكانيكية دقيقة تحافظ على صحة الجذور واللثة وبأقل مدة ممكنة.\nالهدف مو بس صف الأسنان، وإنما تحقيق إطباق وظيفي مريح وابتسامة متناسقة ويا ملامح الوجه 📐✨.\n\nتحب نحجزلك موعد كشفية نوضحلك بيه خطة علاج حالتك بالتفصيل؟`;
-      } else if (classification.treatment === 'pediatric') {
-        replyText = `أهلاً بيكم 🩵 قسم طب أسنان الأطفال بعيادة المسواك بإشراف د. سجى الحسيني ود. شوخان طوزلو مصمم خصيصاً ليكسر خوف الطفل من طبيب الأسنان. نستخدم تقنيات حديثة بدون ألم مثل مادة الفلورايد الفضي SDF والحشوات التجميلية اللطيفة.\n\nتحبون تحجزون جلسة فحص وتعارف لطفلكم؟ 🧸`;
-      } else {
-        replyText = `${nameGreeting} بالمسواك نوفر أحدث التقنيات الرقمية لتجميل وعلاج الأسنان مع فريق من أمهر أطباء بغداد في زيونة 💚.\nعن أي حالة تحب تستفسر أكثر، ونكدر نرتبلك موعد فحص واستشارة بالعيادة بأي وقت يناسبك!`;
-      }
-      break;
-
+    case 'general_dental_education':
     default:
-      replyText = isPersonal
-        ? `${nameGreeting} عيادة دكتور مصطفى هادي لتقويم الأسنان ترحب بيك! شلون أكدر أساعدك اليوم بخصوص أسنانك أو استفسارك عن التقويم؟ 🦷`
-        : `${nameGreeting} عيادة المسواك لطب وتجميل الأسنان ترحب بيك في بغداد زيونة! شلون نكدر نساعدك اليوم بابتسامتك؟ 💚`;
+      replyText = `${nameGreeting}\n${brandSlogan}\n\nسؤالك ممتاز! الحفاظ على صحة الأسنان يبدأ من العادات اليومية الصحيحة: تفريش الأسنان مرتين يومياً بمعجون يحتوي على الفلورايد، واستخدام خيط الأسنان الطبي لتنظيف الفراغات اللي الفرشاة ما توصلها.\nإذا چان استفسارك عن حالة معينة بأسنانك أو حاب تعرف معلومات أكثر عن التقويم، اكتبلي تفاصيل أكثر وتدلل! 🦷✨`;
       break;
   }
 

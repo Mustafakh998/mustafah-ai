@@ -232,3 +232,4 @@ export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ state }) =
     </div>
   );
 };
+

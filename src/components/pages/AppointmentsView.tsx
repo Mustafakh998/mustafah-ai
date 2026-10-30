@@ -392,3 +392,4 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
     </div>
   );
 };
+

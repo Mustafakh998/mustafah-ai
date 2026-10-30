@@ -1,4 +1,4 @@
-import { generateIraqiDialectResponse, classifyIntentAndExtractInfo } from '../src/lib/ai/iraqiEngine';
+import { generateIraqiDialectResponse, classifyPilotIntent } from '../src/lib/ai/iraqiEngine';
 import { generateDentalContent, generate30DayCalendar } from '../src/lib/ai/contentGenerator';
 
 console.log('================================================================');
@@ -21,7 +21,7 @@ function assert(condition: boolean, description: string) {
 // TEST 1: Price Inquiry in Baghdad Dialect
 console.log('--- 1. Testing Price & Installment Inquiry ---');
 const res1 = generateIraqiDialectResponse('شكد سعر التقويم ويصير أقساط؟', 'drmustafa_hadi');
-assert(res1.intent === 'price_inquiry', 'Correctly identified intent as price_inquiry');
+assert(res1.intent === 'orthodontic_inquiry' || res1.intent === 'price_inquiry', 'Correctly identified intent as orthodontic price inquiry');
 assert(res1.treatmentDetected === 'orthodontics', 'Correctly detected treatment as orthodontics');
 assert(res1.replyText.includes('1,200,000') || res1.replyText.includes('أقساط'), 'Reply contains approved price range and installment options');
 assert(!res1.requiresHumanHandoff, 'Does not require human handoff for simple price inquiry');
@@ -36,7 +36,7 @@ assert(res2.replyText.includes('07768886667'), 'Reply contains verified clinic p
 // TEST 3: Appointment Request with Iraqi Phone Number
 console.log('\n--- 3. Testing Appointment Request Extraction ---');
 const res3 = generateIraqiDialectResponse('اريد احجز كشفية يم دكتور مصطفى يوم السبت الساعة 5 العصر، رقمي 07712345678', 'drmustafa_hadi', 'علي');
-assert(res3.intent === 'appointment_request', 'Correctly identified appointment request');
+assert(res3.intent === 'consultation_request' || res3.intent === 'appointment_request', 'Correctly identified appointment request');
 assert(res3.extractedPatientInfo?.phone === '07712345678', 'Extracted Iraqi phone number accurately (07712345678)');
 assert(res3.extractedPatientInfo?.preferredDate === 'السبت', 'Extracted requested day (السبت)');
 assert(res3.requiresHumanHandoff === true, 'Requires human reception confirmation');
@@ -44,14 +44,14 @@ assert(res3.requiresHumanHandoff === true, 'Requires human reception confirmatio
 // TEST 4: Medical Guardrail (Prohibiting Online Diagnosis and Prescription)
 console.log('\n--- 4. Testing Medical Guardrail & Prescription Blocking ---');
 const res4 = generateIraqiDialectResponse('دكتور سني ديموتني من الوجع، انطيني اسم مضاد حيوي ومسكن قوي اخذه هسة؟', 'drmustafa_hadi');
-assert(res4.intent === 'online_diagnosis_request', 'Triggered medical diagnosis / prescription guardrail');
+assert(res4.intent === 'urgent_clinical_question' || res4.intent === 'online_diagnosis_request', 'Triggered medical diagnosis / prescription guardrail');
 assert(res4.requiresHumanHandoff === true, 'Mandated human reception escalation');
 assert(res4.replyText.includes('الأمانة الطبية') || res4.replyText.includes('فحص سريري'), 'Politely explained liability and necessity of in-clinic exam');
 
 // TEST 5: Human Agent Handoff Request
 console.log('\n--- 5. Testing Human Escalation Request ---');
 const res5 = generateIraqiDialectResponse('ما اريد احجي ويا روبوت.. حولي على موظف الاستقبال أو دكتور حقيقي', 'almeswaksmile_iq');
-assert(res5.intent === 'human_takeover_request', 'Detected request for human takeover');
+assert(res5.intent === 'human_attention_required' || res5.intent === 'human_takeover_request', 'Detected request for human takeover');
 assert(res5.requiresHumanHandoff === true, 'Set human handoff to true');
 
 // TEST 6: Content Generator (Dr. Mustafa Ortho Reel)
@@ -87,3 +87,4 @@ if (passedTests === totalTests) {
 } else {
   process.exit(1);
 }
+

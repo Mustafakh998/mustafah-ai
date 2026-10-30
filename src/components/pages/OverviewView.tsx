@@ -15,6 +15,7 @@ import {
   Phone,
   Sparkles,
   AlertCircle,
+  Bot,
 } from 'lucide-react';
 import { AppState, useAppStore } from '@/lib/store';
 import { Language, NavTabId } from '@/types';
@@ -77,17 +78,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+            <button
+              onClick={() => onNavigate('pilot_demo')}
+              className="bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-1.5 active:scale-95 ring-2 ring-emerald-400/30"
+            >
+              <Sparkles className="w-4 h-4 text-slate-950" />
+              <span>{isAr ? 'العرض التفاعلي للإدارة (Demo)' : 'Management Live Demo'}</span>
+            </button>
             <button
               onClick={onOpenSimulateModal}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-emerald-900/40 flex items-center gap-2 active:scale-95"
+              className="bg-slate-800/90 hover:bg-slate-700 text-white font-bold px-3.5 py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center gap-1.5 active:scale-95"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>{isAr ? 'تجربة محادثة باللهجة العراقية' : 'Test Iraqi AI DM'}</span>
+              <Bot className="w-4 h-4 text-emerald-400" />
+              <span>{isAr ? 'تجربة محاكاة DM' : 'Test Iraqi AI DM'}</span>
             </button>
             <button
               onClick={() => onNavigate('inbox')}
-              className="bg-slate-800/80 hover:bg-slate-700 text-white font-semibold px-4 py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center gap-2"
+              className="bg-slate-800/80 hover:bg-slate-700 text-white font-semibold px-3.5 py-2.5 rounded-xl text-xs transition-all border border-slate-700 flex items-center gap-1.5"
             >
               <MessageSquare className="w-4 h-4 text-emerald-400" />
               <span>{isAr ? 'صندوق الرسائل' : 'Live Inbox'}</span>
@@ -432,3 +440,4 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
     </div>
   );
 };
+

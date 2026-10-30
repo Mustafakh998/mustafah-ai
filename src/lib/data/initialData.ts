@@ -627,3 +627,4 @@ export const INITIAL_ANALYTICS: AnalyticsMetrics = {
   profileVisits: 3120,
   followerGrowth: 185,
 };
+

@@ -51,10 +51,10 @@ export const Header: React.FC<HeaderProps> = ({
               className="bg-slate-100 hover:bg-slate-200/80 border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl px-3 py-1.5 pe-8 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer transition-colors"
             >
               <option value="drmustafa_hadi">
-                {isAr ? 'د. مصطفى هادي (@drmustafa_hadi) — نشط ومربوط' : 'Dr. Mustafa Hadi (@drmustafa_hadi) — Active'}
+                {isAr ? 'د. مصطفى هادي (@drmustafa_hadi) — نشط ومربوط (Pilot)' : 'Dr. Mustafa Hadi (@drmustafa_hadi) — Active Pilot'}
               </option>
               <option value="almeswaksmile_iq">
-                {isAr ? 'عيادة المسواك (@almeswaksmile.iq) — وضع تجريبي' : 'Almeswak Clinic (@almeswaksmile.iq) — Sandbox'}
+                {isAr ? 'عيادة المسواك (@almeswaksmile.iq) — مقفلة (بانتظار التفويض)' : 'Almeswak Clinic (@almeswaksmile.iq) — Locked (Pending Auth)'}
               </option>
               <option value="all">
                 {isAr ? 'كل الحسابات (عرض مجمّع)' : 'All Accounts (Unified Hub)'}
@@ -70,9 +70,9 @@ export const Header: React.FC<HeaderProps> = ({
             {isAr ? 'حساب المطور (مربوط)' : 'Personal Dev (Connected)'}
           </span>
         ) : selectedAccountId === 'almeswaksmile_iq' ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-            {isAr ? 'وضع تجريبي بانتظار الإدارة' : 'Demo Sandbox (Pending Admin)'}
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-300">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+            {isAr ? 'مساحة مقفلة ومعزولة (بانتظار الإدارة)' : 'Locked & Isolated (Pending Admin Auth)'}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">

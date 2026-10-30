@@ -79,3 +79,4 @@ Open [http://localhost:3000](http://localhost:3000) in your web browser.
 3. **Closing Protocol (9:00 PM Baghdad Time):**
    * Update appointment statuses in the **Leads CRM** to `Attended` or `No-show`.
    * Review content scheduled for the next day in the **Content Calendar** and approve for publishing.
+

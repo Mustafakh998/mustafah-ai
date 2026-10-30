@@ -126,3 +126,4 @@ The AI assistant is strictly instructed on the following non-negotiable medical 
 2. **No Prescription or Medication Dosage:** It will never prescribe antibiotics, anti-inflammatories, or analgesics.
 3. **No Clinical Guarantees:** It will never guarantee specific treatment durations or outcomes over text without in-person clinical assessment.
 4. **Immediate Human Escalation:** Any inquiry involving acute dental trauma, severe facial swelling, or explicit requests for human staff immediately triggers receptionist notification.
+

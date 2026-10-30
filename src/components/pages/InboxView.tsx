@@ -494,3 +494,4 @@ export const InboxView: React.FC<InboxViewProps> = ({
     </div>
   );
 };
+
