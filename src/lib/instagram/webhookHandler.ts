@@ -17,7 +17,12 @@ import {
   defaultGraphApiDispatcher,
 } from './graphApi';
 import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
-import { IPersistentStore, EscalationEventType, EscalationSeverity } from '@/lib/db/types';
+import {
+  IPersistentStore,
+  EscalationEventType,
+  EscalationSeverity,
+  DatabaseUnavailableError,
+} from '@/lib/db/types';
 import { defaultPersistentStore } from '@/lib/db/persistence';
 
 export interface WebhookHandlerOptions {
@@ -87,6 +92,7 @@ export async function processInstagramWebhook(
     outOfWindow: number;
     humanTakeover: number;
     clinicBlocked: number;
+    dbFailSafeClosed: number;
   };
 }> {
   const deduplicator = options.deduplicator || globalMessageDeduplicator;
@@ -105,6 +111,7 @@ export async function processInstagramWebhook(
     outOfWindow: 0,
     humanTakeover: 0,
     clinicBlocked: 0,
+    dbFailSafeClosed: 0,
   };
 
   if (payload.object !== 'instagram' || !Array.isArray(payload.entry)) {
@@ -168,7 +175,32 @@ export async function processInstagramWebhook(
 
       // 3. Persistent & In-Memory Duplicate Event Check
       const isMemoryDup = deduplicator.isDuplicate(messageId, now);
-      const isClaimedPersistent = await persistentStore.claimMessageId(messageId, PILOT_ACCOUNT_ID, senderId);
+      let isClaimedPersistent = false;
+      try {
+        isClaimedPersistent = await persistentStore.claimMessageId(messageId, PILOT_ACCOUNT_ID, senderId);
+      } catch (err: unknown) {
+        if (err instanceof DatabaseUnavailableError || (err instanceof Error && err.name === 'DatabaseUnavailableError')) {
+          console.error(`[Meta Webhook] FAIL-SAFE CLOSED: Database unavailable for event ${messageId}. Suppressing automated replies.`);
+          summary.dbFailSafeClosed++;
+          results.push({
+            eventId: messageId,
+            senderId,
+            recipientId,
+            accountId: PILOT_ACCOUNT_ID,
+            messageText,
+            isEcho: false,
+            isDuplicate: false,
+            isWithin24hWindow: true,
+            isHandedOverToHuman: true,
+            orthoPriceInquiryDetected: false,
+            requiresHumanHandoff: true,
+            handoffReason: 'قاعدة البيانات غير متاحة — تم إيقاف الرد الآلي وتفعيل الحماية المغلقة (Fail-Safe Closed)',
+            status: 'FAIL_SAFE_DB_UNAVAILABLE_CLOSED',
+          });
+          continue;
+        }
+        throw err;
+      }
 
       if (isMemoryDup || !isClaimedPersistent) {
         summary.duplicates++;
@@ -189,7 +221,32 @@ export async function processInstagramWebhook(
       }
 
       // 4. Non-Text Event Handling (e.g. Stickers, Reactions, Audio attachments)
-      const isPersistentTakeoverActive = await persistentStore.isTakeoverActive(PILOT_ACCOUNT_ID, senderId);
+      let isPersistentTakeoverActive = false;
+      try {
+        isPersistentTakeoverActive = await persistentStore.isTakeoverActive(PILOT_ACCOUNT_ID, senderId);
+      } catch (err: unknown) {
+        if (err instanceof DatabaseUnavailableError || (err instanceof Error && err.name === 'DatabaseUnavailableError')) {
+          console.error(`[Meta Webhook] FAIL-SAFE CLOSED: Database unavailable for sender ${senderId}. Suppressing automated replies.`);
+          summary.dbFailSafeClosed++;
+          results.push({
+            eventId: messageId,
+            senderId,
+            recipientId,
+            accountId: PILOT_ACCOUNT_ID,
+            messageText,
+            isEcho: false,
+            isDuplicate: false,
+            isWithin24hWindow: true,
+            isHandedOverToHuman: true,
+            orthoPriceInquiryDetected: false,
+            requiresHumanHandoff: true,
+            handoffReason: 'قاعدة البيانات غير متاحة — تم إيقاف الرد الآلي وتفعيل الحماية المغلقة (Fail-Safe Closed)',
+            status: 'FAIL_SAFE_DB_UNAVAILABLE_CLOSED',
+          });
+          continue;
+        }
+        throw err;
+      }
       if (!messageText) {
         results.push({
           eventId: messageId,

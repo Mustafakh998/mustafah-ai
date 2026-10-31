@@ -9,6 +9,8 @@ import {
   EscalationEventRecord,
   WebhookJobRecord,
   EscalationEventType,
+  DatabaseConnectionStatus,
+  DatabaseUnavailableError,
 } from './types';
 
 interface StoreData {
@@ -21,18 +23,21 @@ interface StoreData {
 export interface PersistentStoreOptions {
   storageFilePath?: string;
   useSupabase?: boolean;
+  failSafeClosed?: boolean;
 }
 
 /**
  * Production Persistent Store Implementation
  * Provides durable, shared deduplication, human takeover tracking,
- * and escalation logging across server restarts and multiple instances.
+ * escalation logging, and job queue management across server restarts and multiple instances.
  */
 export class PersistentStore implements IPersistentStore {
   private filePath: string;
   private isSupabaseEnabled: boolean;
+  private isFailSafeClosed: boolean;
   private supabaseUrl?: string;
   private supabaseKey?: string;
+  private databaseUrl?: string;
 
   constructor(options: PersistentStoreOptions = {}) {
     const defaultDataDir = path.resolve(process.cwd(), '.data');
@@ -40,8 +45,14 @@ export class PersistentStore implements IPersistentStore {
 
     this.supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     this.supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    this.databaseUrl = process.env.DATABASE_URL;
+
     this.isSupabaseEnabled = Boolean(
-      options.useSupabase && this.supabaseUrl && this.supabaseKey && !this.supabaseUrl.includes('your-project')
+      options.useSupabase ?? (this.supabaseUrl && this.supabaseKey && !this.supabaseUrl.includes('your-project'))
+    );
+
+    this.isFailSafeClosed = Boolean(
+      options.failSafeClosed ?? (process.env.FAIL_SAFE_CLOSED === 'true' || (process.env.NODE_ENV === 'production' && this.isSupabaseEnabled))
     );
 
     this.ensureStorageExists();
@@ -95,6 +106,80 @@ export class PersistentStore implements IPersistentStore {
   }
 
   // ===========================================================================
+  // 0. Connection & Health Validation
+  // ===========================================================================
+
+  public async validateConnection(): Promise<DatabaseConnectionStatus> {
+    const isDbUrlConfigured = Boolean(this.databaseUrl && !this.databaseUrl.includes('localhost:5432/mustafah_ai'));
+    const isServiceRoleConfigured = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY.includes('your_'));
+    
+    let poolerMode: DatabaseConnectionStatus['poolerMode'] = 'none';
+    if (this.databaseUrl) {
+      if (this.databaseUrl.includes(':6543') || this.databaseUrl.includes('pooler.supabase.com')) {
+        poolerMode = 'transaction';
+      } else if (this.databaseUrl.includes(':5432')) {
+        poolerMode = 'session';
+      }
+    }
+
+    if (this.isSupabaseEnabled && this.supabaseUrl && this.supabaseKey) {
+      const startTime = Date.now();
+      try {
+        const res = await fetch(`${this.supabaseUrl}/rest/v1/instagram_accounts?select=id&limit=1`, {
+          method: 'GET',
+          headers: {
+            apikey: this.supabaseKey,
+            Authorization: `Bearer ${this.supabaseKey}`,
+          },
+          signal: AbortSignal.timeout(3000),
+        });
+
+        const latencyMs = Date.now() - startTime;
+        if (res.ok) {
+          return {
+            connected: true,
+            latencyMs,
+            mode: 'supabase_rest',
+            databaseUrlConfigured: isDbUrlConfigured,
+            poolerMode,
+            serviceRoleConfigured: isServiceRoleConfigured,
+          };
+        } else {
+          return {
+            connected: false,
+            latencyMs,
+            error: `Supabase REST returned status ${res.status}: ${res.statusText}`,
+            mode: 'disconnected',
+            databaseUrlConfigured: isDbUrlConfigured,
+            poolerMode,
+            serviceRoleConfigured: isServiceRoleConfigured,
+          };
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown connection error';
+        return {
+          connected: false,
+          error: `Failed to connect to Supabase: ${message}`,
+          mode: 'disconnected',
+          databaseUrlConfigured: isDbUrlConfigured,
+          poolerMode,
+          serviceRoleConfigured: isServiceRoleConfigured,
+        };
+      }
+    }
+
+    // Local / Testing durable store mode
+    return {
+      connected: true,
+      latencyMs: 1,
+      mode: 'durable_store',
+      databaseUrlConfigured: isDbUrlConfigured,
+      poolerMode,
+      serviceRoleConfigured: isServiceRoleConfigured,
+    };
+  }
+
+  // ===========================================================================
   // 1. Persistent Message Deduplication
   // ===========================================================================
 
@@ -127,8 +212,17 @@ export class PersistentStore implements IPersistentStore {
         if (res.ok) {
           const inserted = await res.json();
           return Array.isArray(inserted) && inserted.length > 0;
+        } else if (res.status === 409) {
+          return false; // Duplicate
+        } else if (this.isFailSafeClosed) {
+          throw new DatabaseUnavailableError(`Supabase claim failed with status ${res.status}`);
         }
       } catch (err) {
+        if (this.isFailSafeClosed) {
+          throw new DatabaseUnavailableError(
+            err instanceof Error ? err.message : 'Persistent store unreachable in fail-safe closed mode'
+          );
+        }
         console.warn('[PersistentStore] Supabase claim failed, falling back to durable store:', err);
       }
     }
@@ -288,7 +382,7 @@ export class PersistentStore implements IPersistentStore {
   }
 
   // ===========================================================================
-  // 4. Durable Webhook Queue
+  // 4. Durable Webhook Queue & Concurrency
   // ===========================================================================
 
   public async enqueueJob(
@@ -353,6 +447,31 @@ export class PersistentStore implements IPersistentStore {
       }
       this.writeData(data);
     }
+  }
+
+  public async getJobById(jobId: string): Promise<WebhookJobRecord | null> {
+    const data = this.readData();
+    return data.jobs[jobId] || null;
+  }
+
+  public async listDeadLetterJobs(accountId?: AccountId): Promise<WebhookJobRecord[]> {
+    const data = this.readData();
+    return Object.values(data.jobs).filter(
+      (j) => j.status === 'dead_letter' && (!accountId || j.accountId === accountId)
+    );
+  }
+
+  public async retryDeadLetterJob(jobId: string): Promise<boolean> {
+    const data = this.readData();
+    if (data.jobs[jobId] && data.jobs[jobId].status === 'dead_letter') {
+      data.jobs[jobId].status = 'pending';
+      data.jobs[jobId].attempts = 0;
+      data.jobs[jobId].lastError = undefined;
+      data.jobs[jobId].updatedAt = new Date().toISOString();
+      this.writeData(data);
+      return true;
+    }
+    return false;
   }
 
   // ===========================================================================

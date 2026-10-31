@@ -131,6 +131,7 @@ export interface ProcessedWebhookEventResult {
     | 'HUMAN_TAKEOVER_ACTIVE_NO_AI_REPLY'
     | 'OUTSIDE_24H_WINDOW_ESCALATED'
     | 'PROCESSED_NO_DISPATCH'
-    | 'NON_TEXT_EVENT';
+    | 'NON_TEXT_EVENT'
+    | 'FAIL_SAFE_DB_UNAVAILABLE_CLOSED';
 }
 

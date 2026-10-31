@@ -94,3 +94,4 @@ CREATE TABLE IF NOT EXISTS webhook_jobs (
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON webhook_jobs(status);
 CREATE INDEX IF NOT EXISTS idx_jobs_account ON webhook_jobs(account_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_created ON webhook_jobs(created_at);
+

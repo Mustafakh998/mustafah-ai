@@ -93,3 +93,4 @@ flowchart TD
 * If token starts with `IGAA...`: Automatically routes to `https://graph.instagram.com/v21.0/me/messages`.
 * Otherwise: Automatically routes to `https://graph.facebook.com/v21.0/me/messages`.
 This guarantees zero disruption regardless of which Meta product is provisioned.
+

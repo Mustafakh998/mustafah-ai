@@ -1,5 +1,12 @@
 import { AccountId } from '@/types';
 
+export class DatabaseUnavailableError extends Error {
+  constructor(message = 'Persistent database is unreachable and fail-safe closed mode is active.') {
+    super(message);
+    this.name = 'DatabaseUnavailableError';
+  }
+}
+
 export interface DeduplicationRecord {
   messageId: string;
   accountId: AccountId;
@@ -29,7 +36,8 @@ export type EscalationEventType =
   | 'outside_24h_window'
   | 'outbound_dispatch_failed'
   | 'token_expired_or_invalid'
-  | 'rate_limit_exceeded';
+  | 'rate_limit_exceeded'
+  | 'database_unavailable';
 
 export type EscalationSeverity = 'info' | 'warning' | 'critical' | 'emergency';
 
@@ -65,7 +73,20 @@ export interface WebhookJobRecord {
   updatedAt: string;
 }
 
+export interface DatabaseConnectionStatus {
+  connected: boolean;
+  latencyMs?: number;
+  error?: string;
+  mode: 'supabase_rest' | 'durable_store' | 'disconnected';
+  databaseUrlConfigured: boolean;
+  poolerMode: 'transaction' | 'session' | 'none';
+  serviceRoleConfigured: boolean;
+}
+
 export interface IPersistentStore {
+  // Connection & Health
+  validateConnection(): Promise<DatabaseConnectionStatus>;
+
   // Deduplication
   claimMessageId(messageId: string, accountId: AccountId, senderId: string): Promise<boolean>;
   isMessageProcessed(messageId: string): Promise<boolean>;
@@ -88,6 +109,9 @@ export interface IPersistentStore {
   dequeueJob(lockedBy: string): Promise<WebhookJobRecord | null>;
   completeJob(jobId: string): Promise<void>;
   failJob(jobId: string, error: string): Promise<void>;
+  getJobById(jobId: string): Promise<WebhookJobRecord | null>;
+  listDeadLetterJobs(accountId?: AccountId): Promise<WebhookJobRecord[]>;
+  retryDeadLetterJob(jobId: string): Promise<boolean>;
 
   // Reset / Clear (for testing)
   clearAll(): Promise<void>;
