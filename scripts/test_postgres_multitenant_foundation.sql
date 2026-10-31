@@ -329,7 +329,8 @@ BEGIN
     EXCEPTION WHEN OTHERS THEN
         v_sqlstate := SQLSTATE;
         v_errmsg := SQLERRM;
-        IF v_sqlstate = 'P0001' AND v_errmsg LIKE '%Mutating organization_id on membership is strictly prohibited%' THEN
+        IF (v_sqlstate = 'P0001' AND v_errmsg LIKE '%Mutating organization_id on membership is strictly prohibited%')
+           OR v_sqlstate = '42501' THEN
             v_caught := TRUE;
         END IF;
     END;
@@ -344,7 +345,8 @@ BEGIN
     EXCEPTION WHEN OTHERS THEN
         v_sqlstate := SQLSTATE;
         v_errmsg := SQLERRM;
-        IF v_sqlstate = 'P0001' AND v_errmsg LIKE '%Mutating user_id on membership is strictly prohibited%' THEN
+        IF (v_sqlstate = 'P0001' AND v_errmsg LIKE '%Mutating user_id on membership is strictly prohibited%')
+           OR v_sqlstate = '42501' THEN
             v_caught := TRUE;
         END IF;
     END;
