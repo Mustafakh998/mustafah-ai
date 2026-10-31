@@ -735,7 +735,8 @@ GRANT ALL ON public.organizations TO service_role, app_worker;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.branches TO authenticated;
 GRANT ALL ON public.branches TO service_role, app_worker;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.organization_members TO authenticated;
+GRANT SELECT, INSERT, DELETE ON public.organization_members TO authenticated;
+GRANT UPDATE (role, is_active) ON public.organization_members TO authenticated;
 GRANT ALL ON public.organization_members TO service_role, app_worker;
 
 -- 9.1 organizations RLS
