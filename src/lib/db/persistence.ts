@@ -186,7 +186,8 @@ export class PersistentStore implements IPersistentStore {
   public async claimMessageId(
     messageId: string,
     accountId: AccountId,
-    senderId: string
+    senderId: string,
+    organizationId?: string
   ): Promise<boolean> {
     if (!messageId) return false;
 
@@ -206,6 +207,7 @@ export class PersistentStore implements IPersistentStore {
             account_id: accountId,
             sender_id: senderId,
             status: 'processing',
+            ...(organizationId ? { organization_id: organizationId } : {}),
           }),
         });
 
@@ -236,6 +238,7 @@ export class PersistentStore implements IPersistentStore {
     data.processedMessages[messageId] = {
       messageId,
       accountId,
+      organizationId,
       senderId,
       receivedAt: new Date().toISOString(),
       status: 'processing',
@@ -274,7 +277,8 @@ export class PersistentStore implements IPersistentStore {
     accountId: AccountId,
     senderId: string,
     reason: string,
-    conversationId?: string
+    conversationId?: string,
+    organizationId?: string
   ): Promise<void> {
     const key = `${accountId}_${senderId}`;
     const data = this.readData();
@@ -283,6 +287,7 @@ export class PersistentStore implements IPersistentStore {
     data.takeovers[key] = {
       id: data.takeovers[key]?.id || crypto.randomUUID(),
       accountId,
+      organizationId: organizationId || data.takeovers[key]?.organizationId,
       senderId,
       conversationId: conversationId || data.takeovers[key]?.conversationId,
       reason,

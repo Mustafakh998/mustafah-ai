@@ -10,6 +10,7 @@ export class DatabaseUnavailableError extends Error {
 export interface DeduplicationRecord {
   messageId: string;
   accountId: AccountId;
+  organizationId?: string;
   senderId: string;
   receivedAt: string;
   status: 'received' | 'processing' | 'processed' | 'failed';
@@ -19,6 +20,7 @@ export interface DeduplicationRecord {
 export interface TakeoverRecord {
   id: string;
   accountId: AccountId;
+  organizationId?: string;
   senderId: string;
   conversationId?: string;
   reason: string;
@@ -44,6 +46,7 @@ export type EscalationSeverity = 'info' | 'warning' | 'critical' | 'emergency';
 export interface EscalationEventRecord {
   id?: string;
   accountId: AccountId;
+  organizationId?: string;
   senderId: string;
   conversationId?: string;
   eventType: EscalationEventType;
@@ -60,6 +63,8 @@ export interface WebhookJobRecord {
   id: string;
   messageId: string;
   accountId: AccountId;
+  organizationId?: string;
+  branchId?: string;
   senderId: string;
   recipientId: string;
   payload: Record<string, unknown>;
@@ -88,12 +93,12 @@ export interface IPersistentStore {
   validateConnection(): Promise<DatabaseConnectionStatus>;
 
   // Deduplication
-  claimMessageId(messageId: string, accountId: AccountId, senderId: string): Promise<boolean>;
+  claimMessageId(messageId: string, accountId: AccountId, senderId: string, organizationId?: string): Promise<boolean>;
   isMessageProcessed(messageId: string): Promise<boolean>;
   markMessageStatus(messageId: string, status: DeduplicationRecord['status'], errorMessage?: string): Promise<void>;
 
   // Human Takeover
-  setTakeover(accountId: AccountId, senderId: string, reason: string, conversationId?: string): Promise<void>;
+  setTakeover(accountId: AccountId, senderId: string, reason: string, conversationId?: string, organizationId?: string): Promise<void>;
   isTakeoverActive(accountId: AccountId, senderId: string): Promise<boolean>;
   getActiveTakeover(accountId: AccountId, senderId: string): Promise<TakeoverRecord | null>;
   releaseTakeover(accountId: AccountId, senderId: string, releasedBy: string): Promise<boolean>;

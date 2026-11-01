@@ -219,3 +219,5 @@ export interface AnalyticsMetrics {
   profileVisits: number;
   followerGrowth: number;
 }
+
+export * from './tenant';
