@@ -21,6 +21,7 @@ interface HeaderProps {
   isAiAutoReplyEnabled: boolean;
   onToggleAiAutoReply: () => void;
   onOpenSimulateModal: () => void;
+  onOpenOnboardModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   isAiAutoReplyEnabled,
   onToggleAiAutoReply,
   onOpenSimulateModal,
+  onOpenOnboardModal,
 }) => {
   const isAr = language === 'ar';
   const selectedAcc = accounts.find((a) => a.id === selectedAccountId);
@@ -90,6 +92,18 @@ export const Header: React.FC<HeaderProps> = ({
           <span>{isAr ? 'خط الحجز:' : 'Reception:'}</span>
           <span className="font-bold text-slate-900 font-mono">07768886667</span>
         </div>
+
+        {/* Register New Clinic Button */}
+        {onOpenOnboardModal && (
+          <button
+            onClick={onOpenOnboardModal}
+            className="hidden sm:flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+            title={isAr ? 'تسجيل عيادة جديدة وتفعيل الاشتراك' : 'Onboard New Clinic & Plan'}
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-indigo-600" />
+            <span>{isAr ? '+ عيادة جديدة' : '+ New Clinic'}</span>
+          </button>
+        )}
 
         {/* Simulate Inbound DM Button */}
         <button

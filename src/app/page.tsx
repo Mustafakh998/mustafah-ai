@@ -19,6 +19,7 @@ import { AdCampaignsView } from '@/components/pages/AdCampaignsView';
 import { AnalyticsView } from '@/components/pages/AnalyticsView';
 import { AdminView } from '@/components/pages/AdminView';
 import { SimulateMessageModal } from '@/components/modals/SimulateMessageModal';
+import { ClinicOnboardingModal } from '@/components/modals/ClinicOnboardingModal';
 
 export default function Home() {
   const {
@@ -41,6 +42,7 @@ export default function Home() {
 
   const [currentTab, setCurrentTab] = useState<NavTabId>('overview');
   const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
+  const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
 
   // Sync RTL / LTR document direction with language
   useEffect(() => {
@@ -77,6 +79,7 @@ export default function Home() {
           isAiAutoReplyEnabled={state.isAiAutoReplyEnabled}
           onToggleAiAutoReply={toggleAiAutoReply}
           onOpenSimulateModal={() => setIsSimulateModalOpen(true)}
+          onOpenOnboardModal={() => setIsOnboardModalOpen(true)}
         />
 
         {/* Tab View Container */}
@@ -172,6 +175,13 @@ export default function Home() {
             setCurrentTab('inbox');
           }
         }}
+        language={state.currentLanguage}
+      />
+
+      {/* New Clinic Onboarding Modal */}
+      <ClinicOnboardingModal
+        isOpen={isOnboardModalOpen}
+        onClose={() => setIsOnboardModalOpen(false)}
         language={state.currentLanguage}
       />
     </div>

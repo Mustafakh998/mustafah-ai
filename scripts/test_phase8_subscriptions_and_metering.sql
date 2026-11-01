@@ -218,7 +218,7 @@ BEGIN
     -- 5a. Quota Exceeded Check: Artificially set usage record consumed = allocated_quota
     UPDATE public.subscription_usage_records 
     SET dms_consumed = allocated_quota 
-    WHERE organization_id = v_org_a AND period_start > NOW() - INTERVAL '2 days';
+    WHERE organization_id = v_org_a AND NOW() BETWEEN period_start AND period_end;
 
     v_res_json := public.reserve_dm_quota(v_org_a, v_msg_exceeded);
     IF (v_res_json->>'success')::boolean != FALSE OR (v_res_json->>'error') != 'QUOTA_EXCEEDED' THEN

@@ -141,3 +141,4 @@ In the event of an unexpected migration failure:
    WHERE wait_event_type = 'Lock';
    ```
 3. **Roll Forward:** Address the specific constraint or index issue by creating a forward migration timestamped sequentially (`20261031090000_...sql`).
+
