@@ -1,6 +1,6 @@
 export type Language = 'ar' | 'en';
 
-export type AccountId = 'drmustafa_hadi' | 'almeswaksmile_iq';
+export type AccountId = 'drmustafa_hadi' | 'almeswaksmile_iq' | (string & {});
 
 export type NavTabId =
   | 'overview'

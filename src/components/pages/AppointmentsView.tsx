@@ -12,6 +12,12 @@ import {
   Calendar,
   AlertCircle,
   Sparkles,
+  Copy,
+  Check,
+  ExternalLink,
+  Send,
+  X,
+  ShieldCheck,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
 import { Appointment, AppointmentStatus, Language, TreatmentType } from '@/types';
@@ -33,6 +39,11 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | AppointmentStatus>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // WhatsApp Template Modal State
+  const [selectedAptForWhatsApp, setSelectedAptForWhatsApp] = useState<Appointment | null>(null);
+  const [templateType, setTemplateType] = useState<'reminder' | 'confirmation' | 'followup'>('reminder');
+  const [hasCopied, setHasCopied] = useState(false);
+
   // New appointment form state
   const [patientName, setPatientName] = useState('');
   const [phone, setPhone] = useState('');
@@ -41,6 +52,57 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
   const [preferredTime, setPreferredTime] = useState('05:00 PM');
   const [doctor, setDoctor] = useState('Dr. Mustafa Hadi');
   const [notes, setNotes] = useState('');
+
+  const getAppointmentClinicInfo = (accountId: string) => {
+    const acc = state.accounts.find((a) => a.id === accountId);
+    if (acc) {
+      return {
+        name: isAr ? acc.nameAr : acc.name,
+        location: isAr ? acc.locationAr : acc.location,
+        phone: acc.phone,
+        handle: acc.handle,
+      };
+    }
+    return {
+      name: isAr ? 'عيادة د. مصطفى هادي' : 'Dr. Mustafa Hadi Dental Clinic',
+      location: isAr ? 'بغداد، زيونة (خدمي دريم سيتي مول)' : 'Baghdad, Zayouna',
+      phone: '07768886667',
+      handle: 'drmustafa_hadi',
+    };
+  };
+
+  const cleanIraqiPhone = (rawPhone: string) => {
+    return rawPhone.replace(/^(\+964|00964|0)/, '').replace(/\D/g, '');
+  };
+
+  const formatWhatsAppMessage = (apt: Appointment, type: 'reminder' | 'confirmation' | 'followup') => {
+    const clinic = getAppointmentClinicInfo(apt.accountId);
+    const patient = apt.patientName || (isAr ? 'المراجع الكريم' : 'Patient');
+    const assignedDoc = apt.assignedDoctorAr || apt.assignedDoctor;
+
+    switch (type) {
+      case 'reminder':
+        return isAr
+          ? `مرحباً بحضرتك ${patient} 🌸\nنود تذكيرك بموعد الكشفية القادم مع ${assignedDoc} في ${clinic.name}.\n📍 العنوان: ${clinic.location}\n📅 الموعد: يوم ${apt.preferredDate} الساعة ${apt.preferredTime}.\nنتمنى لك دوام الصحة والابتسامة المشرقة! 🦷✨`
+          : `Hello ${patient} 🌸\nThis is a friendly reminder for your upcoming appointment with ${assignedDoc} at ${clinic.name}.\n📍 Location: ${clinic.location}\n📅 Date & Time: ${apt.preferredDate} at ${apt.preferredTime}.\nLooking forward to seeing you! 🦷✨`;
+      case 'confirmation':
+        return isAr
+          ? `أهلاً وسهلاً بحضرتك ${patient} 💚\nتم بنجاح تأكيد حجز موعد الكشفية مع ${assignedDoc} في ${clinic.name}.\n📅 التاريخ: ${apt.preferredDate}\n⏰ الوقت: ${apt.preferredTime}\n📍 العنوان: ${clinic.location}\n📞 هاتف الاستقبال: ${clinic.phone}\nبانتظار تشريفك للعيادة! 🌿`
+          : `Welcome ${patient} 💚\nYour dental consultation with ${assignedDoc} at ${clinic.name} is confirmed.\n📅 Date: ${apt.preferredDate}\n⏰ Time: ${apt.preferredTime}\n📍 Location: ${clinic.location}\n📞 Reception: ${clinic.phone}\nWe look forward to welcoming you! 🌿`;
+      case 'followup':
+        return isAr
+          ? `مرحباً ${patient} 🌿\nنتمنى أن تكون بصحة وعافية بعد زيارتك لـ ${clinic.name}.\nيسعدنا دائماً الاطمئنان على راحتك وصحة أسنانك، وفريقنا الطبي في خدمتك لأي استفسار أو ملاحظة. دمت بابتسامة مشرقة! ✨`
+          : `Hello ${patient} 🌿\nWe hope you had a comfortable visit at ${clinic.name}.\nPlease let us know if you need any follow-up care or have any questions. Wishing you a healthy smile! ✨`;
+    }
+  };
+
+  const handleCopyMessage = (text: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setHasCopied(true);
+      setTimeout(() => setHasCopied(false), 2000);
+    }
+  };
 
   const filteredAppointments = appointments.filter((a) => {
     if (selectedAccountId !== 'all' && a.accountId !== selectedAccountId) return false;
@@ -227,18 +289,18 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       {/* WhatsApp Reminder Button */}
-                      <a
-                        href={`https://wa.me/964${apt.phone.replace(/^0/, '')}?text=${encodeURIComponent(
-                          `أهلاً وسهلاً بحضرتك ${apt.patientName} 💚 نود تذكيرك بموعد كشفية الأسنان في عيادة المسواك (زيونة - خدمي دريم سيتي مول، مجاور مطعم صيف وشتاء، ط6 ش6) يوم ${apt.preferredDate} الساعة ${apt.preferredTime} مع ${apt.assignedDoctorAr}. نتمنى لك ابتسامة مشرقة!`
-                        )}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold flex items-center gap-1 transition-colors"
-                        title={isAr ? 'إرسال تذكير واتساب رسمي' : 'Send WhatsApp Reminder'}
+                      <button
+                        onClick={() => {
+                          setSelectedAptForWhatsApp(apt);
+                          setTemplateType('reminder');
+                          setHasCopied(false);
+                        }}
+                        className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold flex items-center gap-1.5 transition-colors shadow-xs active:scale-95"
+                        title={isAr ? 'قوالب وتذكيرات واتساب المعتمدة' : 'WhatsApp Reminder & Confirmations'}
                       >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span className="hidden xl:inline">{isAr ? 'تذكير واتساب' : 'WhatsApp'}</span>
-                      </a>
+                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="hidden xl:inline">{isAr ? 'واتساب' : 'WhatsApp'}</span>
+                      </button>
 
                       {/* Status Dropdown */}
                       <select
@@ -386,6 +448,135 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* WhatsApp Template & Reminder Dispatch Modal */}
+      {selectedAptForWhatsApp && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-100">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                    {isAr ? 'قوالب وتذكيرات واتساب المعتمدة' : 'Official WhatsApp Templates'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {selectedAptForWhatsApp.patientName} • {selectedAptForWhatsApp.phone}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedAptForWhatsApp(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Template Selector Tabs */}
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl text-xs font-bold text-center">
+              <button
+                onClick={() => {
+                  setTemplateType('reminder');
+                  setHasCopied(false);
+                }}
+                className={`py-2 rounded-xl transition-all ${
+                  templateType === 'reminder'
+                    ? 'bg-white text-emerald-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {isAr ? 'تذكير موعد' : 'Reminder'}
+              </button>
+              <button
+                onClick={() => {
+                  setTemplateType('confirmation');
+                  setHasCopied(false);
+                }}
+                className={`py-2 rounded-xl transition-all ${
+                  templateType === 'confirmation'
+                    ? 'bg-white text-emerald-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {isAr ? 'تأكيد حجز' : 'Confirmation'}
+              </button>
+              <button
+                onClick={() => {
+                  setTemplateType('followup');
+                  setHasCopied(false);
+                }}
+                className={`py-2 rounded-xl transition-all ${
+                  templateType === 'followup'
+                    ? 'bg-white text-emerald-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {isAr ? 'متابعة زيارة' : 'Follow-up'}
+              </button>
+            </div>
+
+            {/* Message Preview Box */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                <span>{isAr ? 'معاينة نص الرسالة (اللهجة العراقية المهذبة):' : 'Message Preview:'}</span>
+                <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  {isAr ? 'معتمد سريرياً' : 'Clinically Approved'}
+                </span>
+              </div>
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-800 leading-relaxed font-sans whitespace-pre-line select-all">
+                {formatWhatsAppMessage(selectedAptForWhatsApp, templateType)}
+              </div>
+            </div>
+
+            {/* Zero-Price Orthodontic Compliance Notice */}
+            <div className="p-2.5 bg-teal-50/60 border border-teal-200/60 rounded-xl flex items-start gap-2 text-[10px] text-teal-900 font-medium">
+              <Sparkles className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+              <span>
+                {isAr
+                  ? 'حظر التسعير الآلي: تلتزم جميع القوالب بحظر تقديم عروض أو أقساط علاج التقويم قبل الكشفية السريرية وأشعة OPG وفق ضوابط د. مصطفى هادي.'
+                  : 'Orthodontic Price Prohibition: All templates strictly prohibit automated price quotes or down payments prior to in-person clinical diagnosis.'}
+              </span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-2 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleCopyMessage(formatWhatsAppMessage(selectedAptForWhatsApp, templateType))}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors"
+              >
+                {hasCopied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{isAr ? 'تم النسخ بنجاح!' : 'Copied!'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'نسخ النص' : 'Copy Text'}</span>
+                  </>
+                )}
+              </button>
+
+              <a
+                href={`https://wa.me/964${cleanIraqiPhone(selectedAptForWhatsApp.phone)}?text=${encodeURIComponent(
+                  formatWhatsAppMessage(selectedAptForWhatsApp, templateType)
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-2 transition-all active:scale-95"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>{isAr ? 'إرسال عبر واتساب' : 'Open WhatsApp'}</span>
+                <ExternalLink className="w-3 h-3 opacity-80" />
+              </a>
+            </div>
           </div>
         </div>
       )}

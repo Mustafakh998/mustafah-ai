@@ -52,12 +52,19 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => onSelectAccount(e.target.value as AccountId | 'all')}
               className="bg-slate-100 hover:bg-slate-200/80 border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl px-3 py-1.5 pe-8 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer transition-colors"
             >
-              <option value="drmustafa_hadi">
-                {isAr ? 'د. مصطفى هادي (@drmustafa_hadi) — نشط ومربوط (Pilot)' : 'Dr. Mustafa Hadi (@drmustafa_hadi) — Active Pilot'}
-              </option>
-              <option value="almeswaksmile_iq">
-                {isAr ? 'عيادة المسواك (@almeswaksmile.iq) — مقفلة (بانتظار التفويض)' : 'Almeswak Clinic (@almeswaksmile.iq) — Locked (Pending Auth)'}
-              </option>
+              {accounts.map((acc) => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.id === 'drmustafa_hadi'
+                    ? isAr
+                      ? 'د. مصطفى هادي (@drmustafa_hadi) — نشط ومربوط (Pilot)'
+                      : 'Dr. Mustafa Hadi (@drmustafa_hadi) — Active Pilot'
+                    : acc.id === 'almeswaksmile_iq'
+                    ? isAr
+                      ? 'عيادة المسواك (@almeswaksmile.iq) — مقفلة (بانتظار التفويض)'
+                      : 'Almeswak Clinic (@almeswaksmile.iq) — Locked (Pending Auth)'
+                    : `${isAr ? acc.nameAr : acc.name} (@${acc.handle}) — ${acc.status === 'connected' ? (isAr ? 'نشط ومربوط' : 'Active') : acc.status}`}
+                </option>
+              ))}
               <option value="all">
                 {isAr ? 'كل الحسابات (عرض مجمّع)' : 'All Accounts (Unified Hub)'}
               </option>
@@ -76,10 +83,15 @@ export const Header: React.FC<HeaderProps> = ({
             <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
             {isAr ? 'مساحة مقفلة ومعزولة (بانتظار الإدارة)' : 'Locked & Isolated (Pending Admin Auth)'}
           </span>
-        ) : (
+        ) : selectedAccountId === 'all' ? (
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
             <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
             {isAr ? 'إدارة موحدة' : 'Unified View'}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+            {isAr ? 'مستأجر سحابي نشط' : 'Active Cloud Tenant'}
           </span>
         )}
       </div>
@@ -90,7 +102,9 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700">
           <Phone className="w-3.5 h-3.5 text-emerald-600" />
           <span>{isAr ? 'خط الحجز:' : 'Reception:'}</span>
-          <span className="font-bold text-slate-900 font-mono">07768886667</span>
+          <span className="font-bold text-slate-900 font-mono">
+            {selectedAcc?.phone || '07768886667'}
+          </span>
         </div>
 
         {/* Register New Clinic Button */}

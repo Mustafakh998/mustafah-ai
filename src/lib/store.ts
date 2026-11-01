@@ -11,6 +11,7 @@ import {
   AnalyticsMetrics,
   LeadStatus,
   AppointmentStatus,
+  SubscriptionTier,
 } from '@/types';
 import {
   INITIAL_ACCOUNTS,
@@ -331,6 +332,57 @@ export function useAppStore() {
     }));
   };
 
+  const registerClinic = (params: {
+    name: string;
+    city: string;
+    phone: string;
+    plan: SubscriptionTier;
+    leadDoctor?: string;
+  }) => {
+    const cleanSlug =
+      params.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '_')
+        .replace(/_+/g, '_')
+        .slice(0, 20) || `clinic_${Date.now()}`;
+    const accountId = `tenant_${cleanSlug}_${Date.now()}`;
+
+    const newAccount: InstagramAccount = {
+      id: accountId,
+      handle: `${cleanSlug}.iq`,
+      name: params.name,
+      nameAr: params.name,
+      category: 'Dental Clinic',
+      categoryAr: 'عيادة أسنان تخصصية',
+      followers: 0,
+      following: 0,
+      postsCount: 0,
+      avatarUrl:
+        'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=200&auto=format&fit=crop&q=80',
+      isVerified: false,
+      status: 'connected',
+      tokenExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+      role: 'clinic_official',
+      bio: `Official account of ${params.name} | 📍 ${params.city}`,
+      bioAr: `الحساب الرسمي لـ ${params.name} | 📍 ${params.city} | هاتف: ${params.phone}`,
+      location: params.city,
+      locationAr: params.city,
+      phone: params.phone,
+      permissions: {
+        instagram_basic: true,
+        instagram_manage_messages: true,
+        pages_manage_metadata: true,
+        instagram_manage_comments: true,
+      },
+    };
+
+    setState((prev) => ({
+      ...prev,
+      accounts: [...prev.accounts, newAccount],
+      selectedAccountId: newAccount.id,
+    }));
+  };
+
   const resetAllData = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
@@ -366,6 +418,7 @@ export function useAppStore() {
     addContentItem,
     updateContentStatus,
     toggleCampaignStatus,
+    registerClinic,
     resetAllData,
   };
 }

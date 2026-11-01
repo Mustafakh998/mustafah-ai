@@ -37,6 +37,7 @@ export default function Home() {
     addContentItem,
     updateContentStatus,
     toggleCampaignStatus,
+    registerClinic,
     resetAllData,
   } = useAppStore();
 
@@ -183,6 +184,7 @@ export default function Home() {
         isOpen={isOnboardModalOpen}
         onClose={() => setIsOnboardModalOpen(false)}
         language={state.currentLanguage}
+        onClinicCreated={registerClinic}
       />
     </div>
   );
