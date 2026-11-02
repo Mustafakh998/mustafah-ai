@@ -25,6 +25,7 @@ export const AiSettingsView: React.FC<AiSettingsViewProps> = ({ state }) => {
   const [dialectTone, setDialectTone] = useState<'baghdad_polite' | 'baghdad_street' | 'standard_arabic'>('baghdad_polite');
   const [minConfidence, setMinConfidence] = useState(0.85);
   const [blockDiagnosis, setBlockDiagnosis] = useState(true);
+  const [blockOrthoPricing, setBlockOrthoPricing] = useState(true);
   const [blockPrescriptions, setBlockPrescriptions] = useState(true);
   const [escalateOnPhone, setEscalateOnPhone] = useState(true);
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
@@ -170,23 +171,27 @@ export const AiSettingsView: React.FC<AiSettingsViewProps> = ({ state }) => {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-xl bg-red-50/70 border border-red-200">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <div>
-                  <div className="text-xs font-bold text-red-950 flex items-center gap-1.5">
-                    <span>{isAr ? 'حظر إفصاح أسعار وأقساط التقويم (Strict Ortho Pricing Ban)' : 'Strict Orthodontic Pricing Prohibition'}</span>
-                    <span className="text-[10px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded">إلزامي</span>
+                  <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <span>{isAr ? 'حماية أسعار واستشارات التقويم (Ortho Pricing Guardrail)' : 'Orthodontic Pricing Guardrail'}</span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      blockOrthoPricing ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {blockOrthoPricing ? (isAr ? 'مفعّل' : 'Active') : (isAr ? 'معطّل' : 'Off')}
+                    </span>
                   </div>
-                  <div className="text-[11px] text-red-800 leading-relaxed mt-0.5">
+                  <div className="text-[11px] text-slate-500 leading-relaxed mt-0.5">
                     {isAr
-                      ? 'سياسة عالمية إلزامية في MustafaH-AI: منع كشف أي أسعار أو تقديرات أو أقساط للتقويم والرد بالصيغة المعتمدة مع التحويل البشري'
-                      : 'Mandatory global AI policy: never disclose ortho prices, ranges or installments; use approved template and escalate.'}
+                      ? 'تفضيل عدم كشف أسعار أو أقساط التقويم آلياً والرد بالصيغة الاستشارية المعتمدة مع تحويل الاستفسار للاستقبال'
+                      : 'Optionally conceal orthodontic prices and installments; use consultation template and escalate to reception.'}
                   </div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={true}
-                  disabled
-                  className="w-4 h-4 accent-red-600 rounded cursor-not-allowed"
+                  checked={blockOrthoPricing}
+                  onChange={(e) => setBlockOrthoPricing(e.target.checked)}
+                  className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
                 />
               </div>
 

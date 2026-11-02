@@ -235,31 +235,30 @@ export const ClinicOnboardingModal: React.FC<ClinicOnboardingModalProps> = ({
               </div>
             </div>
 
-            {/* Mandatory Orthodontic Price Guardrail Acknowledgment */}
-            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+            {/* Optional Orthodontic Price Guardrail Preference */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
               <div className="flex items-start gap-2.5">
-                <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                <div className="text-[11px] text-amber-900 leading-relaxed">
-                  <span className="font-bold block mb-0.5">
+                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                <div className="text-[11px] text-slate-700 leading-relaxed">
+                  <span className="font-bold block mb-0.5 text-slate-900">
                     {isAr
-                      ? 'الشرط الحاكم الإلزامي: حظر إفشاء أسعار التقويم التلقائي'
-                      : 'Mandatory Policy: Strict Orthodontic Price Concealment'}
+                      ? 'حماية وضوابط أسعار التقويم (موصى به)'
+                      : 'Orthodontic Pricing Protection (Recommended)'}
                   </span>
                   {isAr
-                    ? 'يُمنع منعاً باتاً كشف أسعار التقويم أو الأقساط أو الدفعات الأولى عبر الردود الآلية، وتُحول جميع استفسارات التقويم إلى كشف سريري مباشر مع الطبيب.'
-                    : 'System strictly forbids automated orthodontic price disclosure. Inquiries are permanently escalated to clinical examination.'}
+                    ? 'تفعيل توجيه استفسارات تكلفة التقويم إلى الاستشارة والفحص السريري المباشر بدلاً من التقدير الآلي.'
+                    : 'Route orthodontic price inquiries to direct clinical consultation instead of automated estimates.'}
                 </div>
               </div>
               <label className="flex items-center gap-2 pt-1 cursor-pointer">
                 <input
                   type="checkbox"
-                  required
                   checked={hasAcknowledgedOrthoGuardrail}
                   onChange={(e) => setHasAcknowledgedOrthoGuardrail(e.target.checked)}
-                  className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                  className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                 />
                 <span className="text-[11px] font-bold text-slate-800">
-                  {isAr ? 'أوافق على سياسة الأسعار الصارمة وضوابط الحوكمة' : 'I agree to the strict pricing compliance policy'}
+                  {isAr ? 'تفعيل حماية أسعار التقويم لهذه العيادة' : 'Enable orthodontic pricing protection for this clinic'}
                 </span>
               </label>
             </div>
@@ -267,7 +266,7 @@ export const ClinicOnboardingModal: React.FC<ClinicOnboardingModalProps> = ({
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting || !hasAcknowledgedOrthoGuardrail}
+              disabled={isSubmitting}
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-indigo-100 cursor-pointer"
             >
               {isSubmitting ? (
