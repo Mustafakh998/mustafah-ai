@@ -42,3 +42,4 @@ next-env.d.ts
 
 # local persistent data
 .data/
+supabase/.temp/

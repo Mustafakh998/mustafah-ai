@@ -51,6 +51,24 @@ GRANT ALL ON public.platform_superadmins TO service_role, app_worker;
 GRANT SELECT ON public.platform_superadmin_audit_log TO authenticated;
 GRANT ALL ON public.platform_superadmin_audit_log TO service_role, app_worker;
 
+-- 2.1 Helper function for policy definition
+CREATE OR REPLACE FUNCTION public.is_platform_superadmin()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.platform_superadmins
+        WHERE user_id = auth.uid()
+    );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_platform_superadmin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_platform_superadmin() TO authenticated, service_role;
+
 DROP POLICY IF EXISTS "superadmins_select" ON public.platform_superadmins;
 CREATE POLICY "superadmins_select" ON public.platform_superadmins 
     FOR SELECT TO authenticated 
