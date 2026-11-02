@@ -259,7 +259,22 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredAppointments.map((apt) => (
+              {filteredAppointments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center text-slate-400">
+                    <Calendar className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                    <p className="font-bold text-sm text-slate-700">
+                      {isAr ? 'لا توجد مواعيد مسجلة حتى الآن' : 'No appointments registered yet'}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto leading-relaxed">
+                      {isAr
+                        ? 'النظام في حالة عمل نظيفة وجاهزة. يمكنك تسجيل موعد جديد يدوياً من زر "إضافة موعد جديد" أعلاه، أو إرسال استفسار عبر محاكاة رسائل إنستغرام لإنشاء الموعد آلياً.'
+                        : 'System is running on a clean operational slate. Use "Add Appointment" above or simulate an incoming DM to book a consultation.'}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredAppointments.map((apt) => (
                 <tr key={apt.id} className="hover:bg-slate-50/70 transition-colors">
                   <td className="p-4">
                     <div className="font-bold text-slate-900 text-sm">{apt.patientName}</div>
@@ -318,7 +333,7 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

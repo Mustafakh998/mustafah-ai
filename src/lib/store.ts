@@ -12,6 +12,7 @@ import {
   LeadStatus,
   AppointmentStatus,
   SubscriptionTier,
+  TreatmentType,
 } from '@/types';
 import {
   INITIAL_ACCOUNTS,
@@ -46,13 +47,46 @@ export interface AppState {
   }>;
 }
 
-const STORAGE_KEY = 'mustafah_ai_state_v1';
-const LEGACY_STORAGE_KEY = 'almeswak_ai_baghdad_state_v1';
+export const CLEAN_ANALYTICS: AnalyticsMetrics = {
+  totalInquiries: 0,
+  qualifiedLeads: 0,
+  appointmentRequests: 0,
+  confirmedAppointments: 0,
+  attendedPatients: 0,
+  totalAdSpendUSD: 0,
+  costPerQualifiedInquiryUSD: 0,
+  costPerAttendedPatientUSD: 0,
+  reach: 0,
+  totalReelViews: 0,
+  avgWatchTimeSeconds: 0,
+  likesPerReachPercent: 0,
+  sendsPerReachPercent: 0,
+  savesCount: 0,
+  profileVisits: 0,
+  followerGrowth: 0,
+};
+
+export const CLEAN_INITIAL_STATE: AppState = {
+  currentLanguage: 'ar',
+  selectedAccountId: 'drmustafa_hadi',
+  accounts: INITIAL_ACCOUNTS,
+  leads: [],
+  appointments: [],
+  conversations: [],
+  activeConversationId: '',
+  contentItems: [],
+  campaigns: [],
+  analytics: CLEAN_ANALYTICS,
+  isAiAutoReplyEnabled: true,
+  webhookEventsLog: [],
+};
+
+const STORAGE_KEY = 'mustafah_ai_state_v3_clean';
 
 export function useAppStore() {
   const [state, setState] = useState<AppState>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           return JSON.parse(saved);
@@ -61,37 +95,7 @@ export function useAppStore() {
         }
       }
     }
-    return {
-      currentLanguage: 'ar',
-      selectedAccountId: 'drmustafa_hadi',
-      accounts: INITIAL_ACCOUNTS,
-      leads: INITIAL_LEADS,
-      appointments: INITIAL_APPOINTMENTS,
-      conversations: INITIAL_CONVERSATIONS,
-      activeConversationId: 'conv_1',
-      contentItems: INITIAL_CONTENT_ITEMS,
-      campaigns: INITIAL_CAMPAIGNS,
-      analytics: INITIAL_ANALYTICS,
-      isAiAutoReplyEnabled: true,
-      webhookEventsLog: [
-        {
-          id: 'evt_1',
-          timestamp: '2026-10-30T01:10:00Z',
-          eventType: 'instagram_messages',
-          senderId: 'nour_al_huda99',
-          payloadSnippet: 'مرحبا دكتور.. عندي بروز بالأسنان الفوك، شكد يطول التقويم؟',
-          status: 'processed',
-        },
-        {
-          id: 'evt_2',
-          timestamp: '2026-10-29T21:15:00Z',
-          eventType: 'instagram_messages',
-          senderId: 'ali_alkarkhi98',
-          payloadSnippet: 'دكتور بلا زحمة يصير اجي السبت الساعة 5 العصر للكشفية؟',
-          status: 'processed',
-        },
-      ],
-    };
+    return CLEAN_INITIAL_STATE;
   });
 
   useEffect(() => {
@@ -123,7 +127,6 @@ export function useAppStore() {
         lead.id === leadId ? { ...lead, status: newStatus } : lead
       );
 
-      // Recalculate metrics
       const qualified = updatedLeads.filter((l) => l.status !== 'new_inquiry' && l.status !== 'lost').length;
       const booked = updatedLeads.filter((l) => l.status === 'confirmed' || l.status === 'attended').length;
       const attended = updatedLeads.filter((l) => l.status === 'attended').length;
@@ -150,7 +153,6 @@ export function useAppStore() {
         apt.id === appointmentId ? { ...apt, status: newStatus } : apt
       );
 
-      // If marked attended, sync with lead status
       const apt = prev.appointments.find((a) => a.id === appointmentId);
       let updatedLeads = prev.leads;
       if (apt && newStatus === 'attended') {
@@ -159,10 +161,18 @@ export function useAppStore() {
         updatedLeads = prev.leads.map((l) => (l.id === apt.leadId ? { ...l, status: 'confirmed' } : l));
       }
 
+      const attended = updatedAppointments.filter((a) => a.status === 'attended').length;
+      const confirmed = updatedAppointments.filter((a) => a.status === 'confirmed' || a.status === 'attended').length;
+
       return {
         ...prev,
         appointments: updatedAppointments,
         leads: updatedLeads,
+        analytics: {
+          ...prev.analytics,
+          attendedPatients: attended,
+          confirmedAppointments: confirmed,
+        },
       };
     });
   };
@@ -175,17 +185,46 @@ export function useAppStore() {
       createdAt: new Date().toISOString(),
     };
 
-    setState((prev) => ({
-      ...prev,
-      appointments: [fullApt, ...prev.appointments],
-      leads: prev.leads.map((lead) =>
-        lead.id === newApt.leadId ? { ...lead, status: 'appointment_requested' } : lead
-      ),
-      analytics: {
-        ...prev.analytics,
-        appointmentRequests: prev.analytics.appointmentRequests + 1,
-      },
-    }));
+    setState((prev) => {
+      const leadExists = prev.leads.some((l) => l.id === newApt.leadId);
+      const updatedLeads: Lead[] = leadExists
+        ? prev.leads.map((lead) =>
+            lead.id === newApt.leadId ? { ...lead, status: 'confirmed' as const } : lead
+          )
+        : [
+            {
+              id: newApt.leadId,
+              accountId: newApt.accountId,
+              instagramUsername: 'direct_patient',
+              patientName: newApt.patientName,
+              phone: newApt.phone,
+              treatment: newApt.treatment,
+              treatmentNameAr: newApt.treatmentNameAr,
+              status: 'confirmed' as const,
+              inquiryDate: new Date().toISOString(),
+              campaignSource: 'Manual Direct Reception Booking',
+              estimatedValueIQD: 0,
+              staffNotes: newApt.receptionNotes || 'حجز موعد كشفية',
+              confidenceScore: 1.0,
+              lastMessageText: 'تم تأكيد حجز الموعد يدوياً',
+              lastMessageTime: new Date().toISOString(),
+              isHandedOverToHuman: true,
+              unreadCount: 0,
+            },
+            ...prev.leads,
+          ];
+
+      return {
+        ...prev,
+        appointments: [fullApt, ...prev.appointments],
+        leads: updatedLeads,
+        analytics: {
+          ...prev.analytics,
+          appointmentRequests: prev.analytics.appointmentRequests + 1,
+          confirmedAppointments: prev.analytics.confirmedAppointments + 1,
+        },
+      };
+    });
   };
 
   // Chat Actions
@@ -218,21 +257,45 @@ export function useAppStore() {
 
   // Simulate user incoming message (or real webhook event)
   const simulateIncomingUserMessage = (userText: string, username = 'patient_iq') => {
-    const activeConv = state.conversations.find((c) => c.id === state.activeConversationId) || state.conversations[0];
-    const targetAccountId = activeConv?.accountId || 'drmustafa_hadi';
+    const targetAccountId =
+      state.selectedAccountId !== 'all' ? state.selectedAccountId : 'drmustafa_hadi';
+
+    let activeConv =
+      state.conversations.find((c) => c.id === state.activeConversationId) ||
+      state.conversations[0];
+
+    const isNewConv = !activeConv;
+    const convId = activeConv?.id || `conv_${Date.now()}`;
+    const patientName =
+      activeConv?.patientName ||
+      (username === 'patient_iq' ? 'مراجع إنستغرام تجريبي' : `@${username}`);
+
+    if (isNewConv) {
+      activeConv = {
+        id: convId,
+        accountId: targetAccountId,
+        instagramUsername: username,
+        patientName,
+        status: 'active_ai',
+        lastMessage: userText,
+        lastMessageTime: new Date().toISOString(),
+        unread: true,
+        messages: [],
+      };
+    }
 
     // 1. Add User Message
     const userMsgId = `usr_${Date.now()}`;
     const userMsg = {
       id: userMsgId,
-      conversationId: activeConv.id,
+      conversationId: convId,
       sender: 'user' as const,
       text: userText,
       timestamp: new Date().toISOString(),
     };
 
     // 2. Run Iraqi AI Language Engine
-    const aiResult = generateIraqiDialectResponse(userText, targetAccountId, activeConv.patientName);
+    const aiResult = generateIraqiDialectResponse(userText, targetAccountId, patientName);
 
     // 3. Log webhook event
     const webhookEvt = {
@@ -245,46 +308,101 @@ export function useAppStore() {
     };
 
     setState((prev) => {
-      const updatedConversations = prev.conversations.map((c) => {
-        if (c.id === activeConv.id) {
-          const msgs = [...c.messages, userMsg];
+      let convs = prev.conversations;
+      const existingConv = convs.find((c) => c.id === convId);
 
-          // If AI auto-reply is on and not handed over, generate AI response
-          if (prev.isAiAutoReplyEnabled && c.status !== 'human_takeover') {
-            const aiMsg = {
-              id: `ai_${Date.now() + 1}`,
-              conversationId: c.id,
-              sender: 'assistant' as const,
-              text: aiResult.replyText,
-              timestamp: new Date(Date.now() + 1000).toISOString(),
-              intent: aiResult.intent,
-              confidence: aiResult.confidence,
-              suggestedReply: aiResult.replyText,
-            };
-            msgs.push(aiMsg);
-          }
+      const msgs = existingConv ? [...existingConv.messages, userMsg] : [userMsg];
 
-          return {
-            ...c,
-            lastMessage: userText,
-            lastMessageTime: userMsg.timestamp,
-            treatmentInterest: aiResult.treatmentDetected || c.treatmentInterest,
-            status: aiResult.requiresHumanHandoff ? ('human_takeover' as const) : c.status,
-            messages: msgs,
-            patientPhone: aiResult.extractedPatientInfo?.phone || c.patientPhone,
-            preferredDate: aiResult.extractedPatientInfo?.preferredDate || c.preferredDate,
-          };
-        }
-        return c;
-      });
+      if (prev.isAiAutoReplyEnabled && (!existingConv || existingConv.status !== 'human_takeover')) {
+        const aiMsg = {
+          id: `ai_${Date.now() + 1}`,
+          conversationId: convId,
+          sender: 'assistant' as const,
+          text: aiResult.replyText,
+          timestamp: new Date(Date.now() + 1000).toISOString(),
+          intent: aiResult.intent,
+          confidence: aiResult.confidence,
+          suggestedReply: aiResult.replyText,
+        };
+        msgs.push(aiMsg);
+      }
+
+      const updatedConv = {
+        ...(existingConv || activeConv!),
+        lastMessage: userText,
+        lastMessageTime: userMsg.timestamp,
+        treatmentInterest: aiResult.treatmentDetected || existingConv?.treatmentInterest || 'general_restorative',
+        status: aiResult.requiresHumanHandoff ? ('human_takeover' as const) : (existingConv?.status || 'active_ai'),
+        messages: msgs,
+        patientPhone: aiResult.extractedPatientInfo?.phone || existingConv?.patientPhone,
+        preferredDate: aiResult.extractedPatientInfo?.preferredDate || existingConv?.preferredDate,
+      };
+
+      if (existingConv) {
+        convs = convs.map((c) => (c.id === convId ? updatedConv : c));
+      } else {
+        convs = [updatedConv, ...convs];
+      }
+
+      // Automatically create or update lead in CRM
+      let updatedLeads = prev.leads;
+      const existingLead = updatedLeads.find(
+        (l) => l.instagramUsername === username || l.id === `lead_${username}`
+      );
+
+      if (existingLead) {
+        updatedLeads = updatedLeads.map((l) =>
+          l.id === existingLead.id
+            ? {
+                ...l,
+                phone: aiResult.extractedPatientInfo?.phone || l.phone,
+                treatment: (aiResult.treatmentDetected as TreatmentType) || l.treatment,
+                status: aiResult.requiresHumanHandoff ? 'qualified' : l.status,
+                lastMessageText: userText,
+                lastMessageTime: new Date().toISOString(),
+                unreadCount: (l.unreadCount || 0) + 1,
+              }
+            : l
+        );
+      } else {
+        const detectedTreatment = (aiResult.treatmentDetected as TreatmentType) || 'general_restorative';
+        const newLead: Lead = {
+          id: `lead_${Date.now()}`,
+          accountId: targetAccountId,
+          instagramUsername: username,
+          patientName,
+          phone: aiResult.extractedPatientInfo?.phone,
+          treatment: detectedTreatment,
+          treatmentNameAr:
+            detectedTreatment === 'orthodontics'
+              ? 'تقويم أسنان'
+              : detectedTreatment === 'cosmetic_emax'
+              ? 'ابتسامة إيماكس'
+              : 'كشفية أسنان',
+          status: aiResult.requiresHumanHandoff ? 'qualified' : 'new_inquiry',
+          inquiryDate: new Date().toISOString(),
+          campaignSource: 'Organic Instagram DM',
+          estimatedValueIQD: 0,
+          staffNotes: userText,
+          confidenceScore: aiResult.confidence || 0.9,
+          lastMessageText: userText,
+          lastMessageTime: new Date().toISOString(),
+          isHandedOverToHuman: !!aiResult.requiresHumanHandoff,
+          unreadCount: 1,
+        };
+        updatedLeads = [newLead, ...updatedLeads];
+      }
 
       return {
         ...prev,
-        conversations: updatedConversations,
+        conversations: convs,
+        activeConversationId: convId,
+        leads: updatedLeads,
         webhookEventsLog: [webhookEvt, ...prev.webhookEventsLog.slice(0, 19)],
         analytics: {
           ...prev.analytics,
           totalInquiries: prev.analytics.totalInquiries + 1,
+          qualifiedLeads: prev.analytics.qualifiedLeads + (aiResult.requiresHumanHandoff ? 1 : 0),
         },
       };
     });
@@ -386,7 +504,13 @@ export function useAppStore() {
   const resetAllData = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('mustafah_ai_state_v1');
+      localStorage.removeItem('almeswak_ai_baghdad_state_v1');
     }
+    setState(CLEAN_INITIAL_STATE);
+  };
+
+  const loadDemoData = () => {
     setState({
       currentLanguage: 'ar',
       selectedAccountId: 'drmustafa_hadi',
@@ -420,6 +544,6 @@ export function useAppStore() {
     toggleCampaignStatus,
     registerClinic,
     resetAllData,
+    loadDemoData,
   };
 }
-

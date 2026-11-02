@@ -170,7 +170,12 @@ export const LeadsCrmView: React.FC<LeadsCrmViewProps> = ({
 
               {/* Cards Container */}
               <div className="space-y-2 flex-1 overflow-y-auto">
-                {colLeads.map((lead) => (
+                {colLeads.length === 0 ? (
+                  <div className="h-full min-h-[80px] flex items-center justify-center text-center p-3 text-slate-400 border border-dashed border-slate-200/80 rounded-xl my-1">
+                    <span className="text-[11px] font-medium text-slate-400">{isAr ? 'لا توجد سجلات' : 'No records'}</span>
+                  </div>
+                ) : (
+                  colLeads.map((lead) => (
                   <div
                     key={lead.id}
                     onClick={() => setSelectedLead(lead)}
@@ -220,7 +225,7 @@ export const LeadsCrmView: React.FC<LeadsCrmViewProps> = ({
                       </select>
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
             </div>
           );

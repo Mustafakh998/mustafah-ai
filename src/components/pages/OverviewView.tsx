@@ -125,7 +125,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
             <div className="text-2xl font-black text-slate-900">{analytics.totalInquiries}</div>
             <div className="text-[11px] text-emerald-600 font-semibold mt-1">
-              +14% {isAr ? 'هذا الأسبوع' : 'this week'}
+              {analytics.totalInquiries > 0 ? (isAr ? '+14% هذا الأسبوع' : '+14% this week') : (isAr ? 'جاهز للاستقبال' : 'Ready for DMs')}
             </div>
           </div>
 
@@ -329,7 +329,17 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
 
           <div className="space-y-3">
-            {appointments.slice(0, 3).map((apt) => (
+            {appointments.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 border border-dashed border-slate-200 rounded-xl">
+                <p className="text-xs font-semibold text-slate-600">
+                  {isAr ? 'لا توجد طلبات مواعيد حالياً' : 'No pending appointments'}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  {isAr ? 'عند وصول أول استفسار أو حجز سيظهر هنا لموظف الاستقبال مباشرة.' : 'New inquiries and bookings will appear here in real time.'}
+                </p>
+              </div>
+            ) : (
+              appointments.slice(0, 3).map((apt) => (
               <div
                 key={apt.id}
                 className="p-3.5 rounded-xl border border-slate-200/90 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all flex items-center justify-between gap-4"
@@ -385,7 +395,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                   </button>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </div>
 

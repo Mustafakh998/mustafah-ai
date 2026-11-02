@@ -39,6 +39,7 @@ export default function Home() {
     toggleCampaignStatus,
     registerClinic,
     resetAllData,
+    loadDemoData,
   } = useAppStore();
 
   const [currentTab, setCurrentTab] = useState<NavTabId>('overview');
@@ -160,7 +161,11 @@ export default function Home() {
           {currentTab === 'analytics' && <AnalyticsView state={state} />}
 
           {currentTab === 'admin' && (
-            <AdminView state={state} onResetData={resetAllData} />
+            <AdminView
+              state={state}
+              onResetData={resetAllData}
+              onLoadDemoData={loadDemoData}
+            />
           )}
         </main>
       </div>

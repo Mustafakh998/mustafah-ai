@@ -15,6 +15,7 @@ import {
   GitBranch,
   Lock,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
 import { Language, TenantAnomalyReportItem } from '@/types';
@@ -22,26 +23,27 @@ import { Language, TenantAnomalyReportItem } from '@/types';
 interface AdminViewProps {
   state: AppState;
   onResetData: () => void;
+  onLoadDemoData?: () => void;
 }
 
-const SEED_ANOMALY_REPORT: TenantAnomalyReportItem[] = [
-  { tableName: 'instagram_accounts', totalRows: 2, mappedRows: 2, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'leads', totalRows: 14, mappedRows: 14, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'appointments', totalRows: 8, mappedRows: 8, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'conversations', totalRows: 6, mappedRows: 6, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'chat_messages', totalRows: 24, mappedRows: 24, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'content_items', totalRows: 16, mappedRows: 16, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'ad_campaigns', totalRows: 4, mappedRows: 4, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'processed_webhook_messages', totalRows: 18, mappedRows: 18, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'human_takeovers', totalRows: 2, mappedRows: 2, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'escalation_events', totalRows: 7, mappedRows: 7, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'webhook_jobs', totalRows: 5, mappedRows: 5, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-  { tableName: 'webhook_logs', totalRows: 12, mappedRows: 12, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
-];
-
-export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData }) => {
+export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData, onLoadDemoData }) => {
   const isAr = state.currentLanguage === 'ar';
   const { webhookEventsLog } = state;
+
+  const anomalyReport: TenantAnomalyReportItem[] = [
+    { tableName: 'instagram_accounts', totalRows: state.accounts.length, mappedRows: state.accounts.length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'leads', totalRows: state.leads.length, mappedRows: state.leads.length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'appointments', totalRows: state.appointments.length, mappedRows: state.appointments.length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'conversations', totalRows: state.conversations.length, mappedRows: state.conversations.length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'chat_messages', totalRows: state.conversations.reduce((acc, c) => acc + (c.messages?.length || 0), 0), mappedRows: state.conversations.reduce((acc, c) => acc + (c.messages?.length || 0), 0), unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'content_items', totalRows: state.contentItems.length, mappedRows: state.contentItems.length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'ad_campaigns', totalRows: state.campaigns.length, mappedRows: state.campaigns.length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'processed_webhook_messages', totalRows: state.webhookEventsLog.length, mappedRows: state.webhookEventsLog.length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'human_takeovers', totalRows: state.conversations.filter(c => c.status === 'human_takeover').length, mappedRows: state.conversations.filter(c => c.status === 'human_takeover').length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'escalation_events', totalRows: 0, mappedRows: 0, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'webhook_jobs', totalRows: 0, mappedRows: 0, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+    { tableName: 'webhook_logs', totalRows: state.webhookEventsLog.length, mappedRows: state.webhookEventsLog.length, unmappedRows: 0, missingParents: 0, crossTenantViolations: 0, invalidReferences: 0 },
+  ];
 
   const [testWebhookStatus, setTestWebhookStatus] = useState<string | null>(null);
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
@@ -257,7 +259,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {SEED_ANOMALY_REPORT.map((row) => (
+              {anomalyReport.map((row) => (
                 <tr key={row.tableName} className="hover:bg-slate-50 transition-colors">
                   <td className="py-2 font-mono font-semibold text-slate-800">{row.tableName}</td>
                   <td className="py-2 text-center font-mono text-slate-600">{row.totalRows}</td>
@@ -416,29 +418,61 @@ export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData }) => {
         </div>
       </div>
 
-      {/* Danger Zone: Reset Demo Data */}
-      <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between text-xs">
-        <div>
-          <div className="font-bold text-rose-900">
-            {isAr ? 'إعادة ضبط البيانات إلى الحالة الأولية' : 'Reset Application State to Seed Data'}
+      {/* Data Management: Clean Slate & Demo Fixtures */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Option 1: Clean Slate */}
+        <div className="p-5 bg-rose-50/80 border border-rose-200 rounded-2xl flex flex-col justify-between text-xs space-y-3">
+          <div>
+            <div className="font-bold text-rose-900 flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-rose-600" />
+              <span>{isAr ? 'تصفير المنظومة إلى الحالة الصفرية النظيفة (Clean Fresh Slate)' : 'Reset System to Clean Fresh Slate'}</span>
+            </div>
+            <p className="text-rose-700 mt-1 leading-relaxed">
+              {isAr
+                ? 'يمسح كل الرسائل والمواعيد والبيانات، ويبدأ النظام ببيئة عمل صفرية نظيفة جاهزة للتشغيل والاختبار الحقيقي.'
+                : 'Clears all cached demo data, providing a clean 0-based operational state ready for real production testing.'}
+            </p>
           </div>
-          <p className="text-rose-700 mt-0.5">
-            {isAr
-              ? 'يمسح كل الرسائل والمواعيد المسجلة محلياً ويعيد تهيئة البيانات المعتمدة لعيادة المسواك ود. مصطفى'
-              : 'Clears local storage and re-initializes seed clinical leads and conversations.'}
-          </p>
+          <button
+            onClick={() => {
+              if (confirm(isAr ? 'هل أنت متأكد من رغبتك بتصفير المنظومة والبدء بحالة صفرية نظيفة؟' : 'Reset to clean state?')) {
+                onResetData();
+              }
+            }}
+            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm flex items-center justify-center gap-1.5 self-start"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{isAr ? 'تصفير المنظومة (Clean Slate)' : 'Clean Slate'}</span>
+          </button>
         </div>
-        <button
-          onClick={() => {
-            if (confirm(isAr ? 'هل أنت متأكد من رغبتك بإعادة ضبط البيانات؟' : 'Reset all data?')) {
-              onResetData();
-            }
-          }}
-          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm flex items-center gap-1.5 shrink-0"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          <span>{isAr ? 'إعادة الضبط' : 'Reset Data'}</span>
-        </button>
+
+        {/* Option 2: Load Demo Showcase Data */}
+        <div className="p-5 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex flex-col justify-between text-xs space-y-3">
+          <div>
+            <div className="font-bold text-emerald-950 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span>{isAr ? 'تحميل بيانات تجريبية للعرض (Load Demo Showcase Data)' : 'Load Demo Showcase Data'}</span>
+            </div>
+            <p className="text-emerald-800 mt-1 leading-relaxed">
+              {isAr
+                ? 'إذا كنت تريد استعراض واجهات النظام مع أمثلة سريرية جاهزة لعيادة المسواك ود. مصطفى، يمكنك تحميل هذه البيانات التجريبية بضغطة زر.'
+                : 'Loads pre-configured showcase clinical cases and demo appointments for visual presentations and stakeholder demos.'}
+            </p>
+          </div>
+          {onLoadDemoData && (
+            <button
+              onClick={() => {
+                if (confirm(isAr ? 'هل تريد تحميل البيانات التجريبية للعرض؟' : 'Load showcase demo data?')) {
+                  onLoadDemoData();
+                }
+              }}
+              className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition-colors shadow-sm flex items-center justify-center gap-1.5 self-start"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{isAr ? 'تحميل بيانات العرض التجريبية' : 'Load Demo Data'}</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

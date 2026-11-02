@@ -144,74 +144,86 @@ export const InboxView: React.FC<InboxViewProps> = ({
 
           {/* Conversations Scrollable List */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-            {filteredConvs.map((conv) => {
-              const isSelected = activeConv?.id === conv.id;
-              return (
-                <div
-                  key={conv.id}
-                  onClick={() => onSelectConversation(conv.id)}
-                  className={`p-3.5 cursor-pointer transition-all text-start relative ${
-                    isSelected ? 'bg-emerald-50/70 border-s-4 border-emerald-600' : 'hover:bg-slate-100/70'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs truncate">
-                      <span>{conv.patientName}</span>
-                      {conv.unread && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+            {filteredConvs.length === 0 ? (
+              <div className="p-6 text-center text-slate-400 space-y-2">
+                <MessageSquare className="w-8 h-8 mx-auto text-slate-300" />
+                <p className="text-xs font-semibold text-slate-600">
+                  {isAr ? 'لا توجد محادثات واردة' : 'No incoming DMs'}
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  {isAr ? 'جاهز لاستقبال استفسارات إنستغرام الحية' : 'Ready for live Instagram inquiries'}
+                </p>
+              </div>
+            ) : (
+              filteredConvs.map((conv) => {
+                const isSelected = activeConv?.id === conv.id;
+                return (
+                  <div
+                    key={conv.id}
+                    onClick={() => onSelectConversation(conv.id)}
+                    className={`p-3.5 cursor-pointer transition-all text-start relative ${
+                      isSelected ? 'bg-emerald-50/70 border-s-4 border-emerald-600' : 'hover:bg-slate-100/70'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs truncate">
+                        <span>{conv.patientName}</span>
+                        {conv.unread && (
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {new Date(conv.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] text-slate-500 font-mono mb-1">
+                      @{conv.instagramUsername} • {conv.accountId === 'drmustafa_hadi' ? 'د. مصطفى' : 'العيادة'}
+                    </div>
+
+                    <p className="text-xs text-slate-600 line-clamp-1 leading-snug">
+                      {conv.lastMessage}
+                    </p>
+
+                    <div className="mt-2 flex items-center justify-between">
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          conv.status === 'human_takeover'
+                            ? 'bg-amber-100 text-amber-800'
+                            : conv.status === 'booked'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-emerald-100 text-emerald-800'
+                        }`}
+                      >
+                        {conv.status === 'human_takeover'
+                          ? isAr
+                            ? 'استقبال بشري'
+                            : 'Human Agent'
+                          : conv.status === 'booked'
+                          ? isAr
+                            ? 'حجز موعد'
+                            : 'Booked'
+                          : isAr
+                          ? 'مساعد الذكاء'
+                          : 'AI Active'}
+                      </span>
+
+                      {conv.treatmentInterest && (
+                        <span className="text-[10px] text-slate-500 font-medium">
+                          {conv.treatmentInterest === 'orthodontics'
+                            ? 'تقويم'
+                            : conv.treatmentInterest === 'cosmetic_emax'
+                            ? 'إيماكس'
+                            : conv.treatmentInterest === 'pediatric'
+                            ? 'أطفال'
+                            : 'علاج'}
+                        </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {new Date(conv.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
                   </div>
-
-                  <div className="text-[11px] text-slate-500 font-mono mb-1">
-                    @{conv.instagramUsername} • {conv.accountId === 'drmustafa_hadi' ? 'د. مصطفى' : 'العيادة'}
-                  </div>
-
-                  <p className="text-xs text-slate-600 line-clamp-1 leading-snug">
-                    {conv.lastMessage}
-                  </p>
-
-                  <div className="mt-2 flex items-center justify-between">
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        conv.status === 'human_takeover'
-                          ? 'bg-amber-100 text-amber-800'
-                          : conv.status === 'booked'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}
-                    >
-                      {conv.status === 'human_takeover'
-                        ? isAr
-                          ? 'استقبال بشري'
-                          : 'Human Agent'
-                        : conv.status === 'booked'
-                        ? isAr
-                          ? 'حجز موعد'
-                          : 'Booked'
-                        : isAr
-                        ? 'مساعد الذكاء'
-                        : 'AI Active'}
-                    </span>
-
-                    {conv.treatmentInterest && (
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        {conv.treatmentInterest === 'orthodontics'
-                          ? 'تقويم'
-                          : conv.treatmentInterest === 'cosmetic_emax'
-                          ? 'إيماكس'
-                          : conv.treatmentInterest === 'pediatric'
-                          ? 'أطفال'
-                          : 'علاج'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -412,8 +424,18 @@ export const InboxView: React.FC<InboxViewProps> = ({
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
-              {isAr ? 'اختر محادثة لعرض التفاصيل' : 'Select a conversation to view'}
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400 space-y-3">
+              <Bot className="w-12 h-12 text-slate-300" />
+              <div className="max-w-md">
+                <h3 className="font-bold text-slate-700 text-sm mb-1">
+                  {isAr ? 'صندوق رسائل إنستغرام نظيف وجاهز' : 'Instagram Inbox Ready'}
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  {isAr
+                    ? 'لا توجد محادثات حالياً. يمكنك استخدام زر "محاكاة رسالة مريض" في الشريط العلوي لاختبار رد الذكاء الاصطناعي وإنشاء أول محادثة ومراجع حقيقي تلقائياً!'
+                    : 'No conversations yet. Use the "Simulate DM" button in the top navbar to test the AI response and instantiate your first live record.'}
+                </p>
+              </div>
             </div>
           )}
         </div>
