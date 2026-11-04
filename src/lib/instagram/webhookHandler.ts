@@ -24,6 +24,7 @@ import {
   DatabaseUnavailableError,
 } from '@/lib/db/types';
 import { defaultPersistentStore } from '@/lib/db/persistence';
+import { persistWebhookEventToSupabase } from '@/lib/db/supabaseService';
 
 export interface WebhookHandlerOptions {
   deduplicator?: MessageDeduplicator;
@@ -421,6 +422,29 @@ export async function processInstagramWebhook(
             },
           });
         }
+      }
+
+      // 10. Persist Conversation, Messages, and CRM Lead into Supabase
+      try {
+        await persistWebhookEventToSupabase({
+          messageId,
+          senderId,
+          recipientId,
+          accountId: PILOT_ACCOUNT_ID,
+          messageText,
+          timestamp: eventTimestamp,
+          aiResponse: {
+            replyText: aiResponse.replyText,
+            intent: aiResponse.intent,
+            confidence: aiResponse.confidence,
+            requiresHumanHandoff: aiResponse.requiresHumanHandoff,
+            treatmentDetected: aiResponse.treatmentDetected,
+            extractedPatientInfo: aiResponse.extractedPatientInfo,
+          },
+          outboundDispatched: outboundResult?.success,
+        });
+      } catch (dbErr) {
+        console.error('[Meta Webhook] Error persisting conversation to Supabase:', dbErr);
       }
 
       summary.processed++;

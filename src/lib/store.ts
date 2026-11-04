@@ -104,6 +104,75 @@ export function useAppStore() {
     }
   }, [state]);
 
+  // Real-time backend synchronization hook
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const syncWithRemoteBackend = async () => {
+      try {
+        const targetAccount = state.selectedAccountId !== 'all' ? state.selectedAccountId : 'drmustafa_hadi';
+        const res = await fetch(`/api/conversations?accountId=${targetAccount}`);
+        if (!res.ok || !isSubscribed) return;
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.conversations)) {
+          setState((prev) => {
+            const remoteConvs: Conversation[] = data.conversations;
+            const remoteLeads: Lead[] = data.leads || [];
+            const remoteApts: Appointment[] = data.appointments || [];
+
+            // If no remote data yet, preserve local state
+            if (remoteConvs.length === 0 && remoteLeads.length === 0) {
+              return prev;
+            }
+
+            let activeId = prev.activeConversationId;
+            if (!activeId || !remoteConvs.some((c) => c.id === activeId)) {
+              activeId = remoteConvs[0]?.id || prev.activeConversationId;
+            }
+
+            const totalInquiries = Math.max(prev.analytics.totalInquiries, remoteConvs.length);
+            const qualifiedLeads = remoteLeads.filter(
+              (l) => l.status !== 'new_inquiry' && l.status !== 'lost'
+            ).length;
+            const confirmedAppointments = remoteApts.filter(
+              (a) => a.status === 'confirmed' || a.status === 'attended'
+            ).length;
+            const attendedPatients = remoteApts.filter((a) => a.status === 'attended').length;
+
+            return {
+              ...prev,
+              conversations: remoteConvs.length > 0 ? remoteConvs : prev.conversations,
+              leads: remoteLeads.length > 0 ? remoteLeads : prev.leads,
+              appointments: remoteApts.length > 0 ? remoteApts : prev.appointments,
+              activeConversationId: activeId,
+              analytics: {
+                ...prev.analytics,
+                totalInquiries,
+                qualifiedLeads: Math.max(prev.analytics.qualifiedLeads, qualifiedLeads),
+                confirmedAppointments: Math.max(prev.analytics.confirmedAppointments, confirmedAppointments),
+                attendedPatients: Math.max(prev.analytics.attendedPatients, attendedPatients),
+              },
+            };
+          });
+        }
+      } catch (err) {
+        // Quietly ignore network polling errors
+      }
+    };
+
+    // Immediate initial sync
+    syncWithRemoteBackend();
+
+    // 4-second live polling interval
+    const intervalId = setInterval(syncWithRemoteBackend, 4000);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(intervalId);
+    };
+  }, [state.selectedAccountId]);
+
   const setLanguage = (lang: Language) => {
     setState((prev) => ({ ...prev, currentLanguage: lang }));
   };
@@ -253,6 +322,18 @@ export function useAppStore() {
       });
       return { ...prev, conversations: convs };
     });
+
+    // Persist staff reply to backend/Supabase
+    fetch('/api/conversations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'staff_reply',
+        conversationId,
+        text,
+        sender,
+      }),
+    }).catch((err) => console.error('Failed to sync staff reply to Supabase:', err));
   };
 
   // Simulate user incoming message (or real webhook event)
@@ -406,6 +487,18 @@ export function useAppStore() {
         },
       };
     });
+
+    // Persist simulated message to backend/Supabase
+    fetch('/api/conversations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'simulate',
+        text: userText,
+        username,
+        accountId: targetAccountId,
+      }),
+    }).catch((err) => console.error('Failed to sync simulated message to Supabase:', err));
   };
 
   const toggleConversationTakeover = (conversationId: string) => {
