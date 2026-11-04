@@ -74,8 +74,39 @@ export function generateSmartContextualResponse(
     ? `أهلاً وسهلاً ${greetingParticle} ${brotherSister} ${cleanPatientDisplay} نورتنا 💚`
     : `أهلاً وسهلاً ${greetingParticle} نورت صفحة د. مصطفى هادي 💚`;
 
-  // 1. Photo Assessment / Remote Evaluation Inquiry (e.g. "اريد على صورة وجهي لان بيتي بعيد")
-  const isPhotoInquiry = /صورة|صور|صوره|صورتي|وجهي|ادز صور|ادزلك|دزيت|اونلاين|عن بعد|بعيد|بيتي بعيد|المسافة|محافظة|محافظات|كشفية بالصور|فحص بالصور/i.test(text);
+  // 1. Gratitude & Polite Closures
+  const isGratitude = /^(شكراً|شكرا|تسلم|تسلمين|ممنون|ممنونة|عاشت ايدك|مشكور|مشكورة|الله يحفظك|حبيبي|يسلمو|فدوة|تدلل)$/i.test(text) ||
+    /شكراً جزيلاً|تسلم يا غالي|ممنون دكتور|عاشت ايدكم/i.test(text);
+  if (isGratitude) {
+    return {
+      replyText: `تدلل ${brotherSister}! بالخدمة دائماً وأي استفسار ثاني تحتاجوه دكتور مصطفى وفريق العيادة حاضرين 💚 نتشرف بيكم بأي وقت! 🦷`,
+      intent: 'general_dental_education',
+      confidence: 0.98,
+      treatmentDetected: 'consultation',
+      requiresHumanHandoff: false,
+    };
+  }
+
+  // 2. Photos Already Sent / Follow-up on Pictures
+  const isPhotosAlreadySent = /دزيت|دزيتهن|وصلت الصور|وصلن الصور|شوفهن|شوكت يرجعلي|شوكت الرد|شوكت يجاوب|شفت الصور|شفتوهن/i.test(text);
+  if (isPhotosAlreadySent) {
+    const reply = `عاشت إيدك ${dearParticle}! استلمنا الصور بنجاح وهسة راح يعرضها الفريق على دكتور مصطفى أول ما يفرغ من الكشفية السريرية بالعيادة 📸✨\n\n` +
+      `راح نراجعها ونرد عليك برأي الدكتور المبدئي بأقرب فرصة ممكنة اليوم.\n\n` +
+      `إذا تحب تزودنا برقم تلفونك حتى نتصل بيك مباشرة أول ما يجهز التقييم تگدر تكتبه وتدلل! 📲`;
+
+    return {
+      replyText: reply,
+      intent: 'consultation_request',
+      confidence: 0.97,
+      treatmentDetected: 'orthodontics',
+      requiresHumanHandoff: true,
+      handoffReason: 'المراجع أرسل صور الأسنان وبانتظار تقييم دكتور مصطفى',
+      extractedPatientInfo: { inquiryType: 'photos_submitted' },
+    };
+  }
+
+  // 3. Photo Assessment / Remote Evaluation Inquiry (e.g. "اريد على صورة وجهي لان بيتي بعيد")
+  const isPhotoInquiry = /صورة|صور|صوره|صورتي|وجهي|ادز صور|ادزلك|اونلاين|عن بعد|بعيد|بيتي بعيد|المسافة|محافظة|محافظات|كشفية بالصور|فحص بالصور/i.test(text);
   if (isPhotoInquiry) {
     const isFarDistance = /بعيد|بيتي بعيد|مسافة|محافظة|محافظات|طريق|سفر/i.test(text);
 
@@ -239,3 +270,4 @@ export function generateSmartContextualResponse(
     extractedPatientInfo: { inquiryType: 'general_inquiry' },
   };
 }
+
