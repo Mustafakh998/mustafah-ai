@@ -375,8 +375,9 @@ export function useAppStore() {
       timestamp: new Date().toISOString(),
     };
 
-    // 2. Run Iraqi AI Language Engine
-    const aiResult = generateIraqiDialectResponse(userText, targetAccountId, patientName);
+    // 2. Run Iraqi AI Language Engine (context-aware with conversation history)
+    const historySnippet = (activeConv?.messages || []).map((m) => ({ sender: m.sender, text: m.text }));
+    const aiResult = generateIraqiDialectResponse(userText, targetAccountId, patientName, historySnippet);
 
     // 3. Log webhook event
     const webhookEvt = {
@@ -497,6 +498,8 @@ export function useAppStore() {
         text: userText,
         username,
         accountId: targetAccountId,
+        conversationId: convId,
+        history: historySnippet,
       }),
     }).catch((err) => console.error('Failed to sync simulated message to Supabase:', err));
   };

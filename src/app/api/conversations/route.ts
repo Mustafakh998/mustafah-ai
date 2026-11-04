@@ -5,7 +5,7 @@ import {
   persistWebhookEventToSupabase,
   mapIntentToTreatment,
 } from '@/lib/db/supabaseService';
-import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
+import { generateIraqiDialectResponseAsync } from '@/lib/ai/iraqiEngine';
 import { AccountId } from '@/types';
 
 /**
@@ -60,20 +60,23 @@ export async function POST(request: NextRequest) {
         text,
         username = 'patient_iq',
         accountId = 'drmustafa_hadi',
+        conversationId,
+        history = [],
       } = body;
 
       if (!text) {
         return NextResponse.json({ error: 'text is required.' }, { status: 400 });
       }
 
-      const senderId = `sim_${Date.now()}`;
+      const senderId = conversationId ? conversationId.replace('conv_', '') : `sim_${Date.now()}`;
       const patientName = username === 'patient_iq' ? 'مراجع إنستغرام تجريبي' : `@${username}`;
 
-      // 1. Run Iraqi AI Dialect Engine
-      const aiResponse = generateIraqiDialectResponse(
+      // 1. Run Iraqi AI Dialect Engine (Async with Gemini + context history)
+      const aiResponse = await generateIraqiDialectResponseAsync(
         text,
         accountId as AccountId,
-        patientName
+        patientName,
+        history
       );
 
       // 2. Persist to Supabase

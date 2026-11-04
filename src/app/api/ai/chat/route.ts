@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
+import { generateIraqiDialectResponseAsync } from '@/lib/ai/iraqiEngine';
 import { AccountId } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, accountId = 'drmustafa_hadi', patientName } = body;
+    const { message, accountId = 'drmustafa_hadi', patientName, history = [] } = body;
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const result = generateIraqiDialectResponse(
+    const result = await generateIraqiDialectResponseAsync(
       message,
       accountId as AccountId,
-      patientName
+      patientName,
+      history
     );
 
     return NextResponse.json(result);

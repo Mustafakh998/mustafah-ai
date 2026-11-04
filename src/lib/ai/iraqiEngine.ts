@@ -1,5 +1,7 @@
 import { CLINIC_SERVICES, INITIAL_ACCOUNTS } from '@/lib/data/initialData';
 import { AccountId, PilotIntentType, TreatmentType } from '@/types';
+import { generateSmartContextualResponse, ChatHistoryMessage } from './smartFallback';
+import { generateGeminiDialectResponse } from './geminiEngine';
 
 export interface AIResponseResult {
   replyText: string;
@@ -169,83 +171,21 @@ export function classifyPilotIntent(userMessage: string): {
 export function generateIraqiDialectResponse(
   userMessage: string,
   accountId: AccountId = 'drmustafa_hadi',
-  patientName?: string
+  patientName?: string,
+  history: ChatHistoryMessage[] = []
 ): AIResponseResult {
-  const classification = classifyPilotIntent(userMessage);
-  const nameGreeting = patientName ? `أهلاً وسهلاً بيچ ${patientName} 💚` : 'أهلاً وسهلاً بيك نورت صفحة دكتور مصطفى هادي 💚';
+  return generateSmartContextualResponse(userMessage, accountId, patientName, history);
+}
 
-  // Assistant introduction representing Dr. Mustafa
-  const assistantIntro = 'أني المساعد الذكي الخاص بدكتور مصطفى هادي (MustafaH-AI)';
-  const brandSlogan = 'شعارنا دائماً: "د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك" 📐✨';
-
-  let replyText = '';
-
-  switch (classification.intent) {
-    case 'urgent_clinical_question':
-      replyText = `${nameGreeting}\nسلامتك ألف سلامة وما تشوف شر يا رب! ⚠️\n\nحسب الأمانة الطبية والمسؤولية المهنية، إذا چان عندك ألم حاد أو ورم مفاجئ أو كسر، مهم جداً ما تكتفي باستشارة الإنستغرام أو أخذ مضاد حيوي ومسكنات قوية بدون فحص سريري وتشخيص مباشر بالعيادة.\n\n📞 يرجى الاتصال المباشر بهاتف الطوارئ والاستقبال بالعيادة بزيونة فوراً: 07768886667\nأو التوجه لأقرب مركز طوارئ أسنان إذا چان الوقت خارج ساعات الدوام الرسمية.\n\nتم تحويل رسالتك هسة لفريق العيادة للتواصل وياك في أقرب فرصة.`;
-      break;
-
-    case 'location_and_directions':
-      replyText = `${nameGreeting}\nمقر العيادة في قلب بغداد:\n📍 **العنوان:** بغداد – زيونة – شارع دريم سيتي مول الخدمي، مجمع عيادات المسواك (فوق كافيه الخيال، الطابق السادس شقة 6).\n\n⏰ **أوقات الدوام:** السبت إلى الخميس: 2:00 ظهراً – 9:00 مساءً.\n📞 **هاتف الحجز المباشر والاستفسار:** 07768886667\n\nتحب نسجل طلب موعد لحضرتك؟ نتشرف بزيارتك! 🦷✨`;
-      break;
-
-    case 'human_attention_required':
-      replyText = `${nameGreeting}\nتدلل عيوني! ${assistantIntro}. راح أحول رسالتك هسة مباشرة لدكتور مصطفى وفريق الاستقبال حتى يتواصلون وياك شخصياً.\n\nإذا چان الموضوع مستعجل بخصوص موعد فحص أو استفسار مباشر، تگدر تتصل بينا هاتفياً أو تراسلنا واتساب على: 07768886667 📱\nثواني ويكون الفريق وياك!`;
-      break;
-
-    case 'collaboration_request':
-      replyText = `${nameGreeting}\nشكراً جزيلاً لاهتمامك وتواصلك ويا د. مصطفى هادي 🤝✨\nدكتور مصطفى يرحب دائماً بالتعاون العلمي، المحاضرات الطبية، والمشاريع اللي تدمج بين طب الأسنان والتقنية والبرمجة.\n\nتم تسجيل تفاصيل رسالتك ونقلها لدكتور مصطفى شخصياً للاطلاع عليها والرد.\nإذا عندك ملف أو مقترح رسمي، تكدر تزودنا بريدك الإلكتروني أو رقم الواتساب لسهولة التنسيق. نورتنا!`;
-      break;
-
-    case 'consultation_request':
-      if (classification.extractedInfo.preferredDate || classification.extractedInfo.phone) {
-        const details = [
-          classification.extractedInfo.preferredDate ? `يوم ${classification.extractedInfo.preferredDate}` : '',
-          classification.extractedInfo.preferredTime ? `الساعة ${classification.extractedInfo.preferredTime}` : '',
-          classification.extractedInfo.phone ? `رقمك: ${classification.extractedInfo.phone}` : '',
-        ]
-          .filter(Boolean)
-          .join(' — ');
-
-        replyText = `عاشت إيدك ${patientName || 'يا غالي'}! تم تسجيل طلب الموعد (${details}) بنجاح في سجلات الاستفسارات 💚\n\n📌 **ملاحظة مهمة من دكتور مصطفى:**\nهذا تسجيل لطلبك، وموظفة الاستقبال بالعيادة راح تتصل بيك هاتفياً للتأكد من توفر الكرسي والوقت المناسب وتأكيد الحجز رسمياً (ما نكدر نأكد الحجز النهائي آلياً قبل مراجعة الجدول).\n\n📍 مكان الكشفية: بغداد – زيونة – خدمي دريم سيتي مول (عيادة المسواك، الطابق السادس شقة 6).\n\nبانتظار تشرفنا بالعيادة! ✨`;
-      } else {
-        replyText = `${nameGreeting}\nتدلل من عيوني! الكشفية والاستشارة يم د. مصطفى تشمل فحص سريري دقيق ودراسة إطباق الفكين وأخذ الأشعة اللازمة 📐.\n\nحتى نرفع طلب الموعد لمكتب الاستقبال ويتصلون بيك للتأكيد:\n1️⃣ شنو اليوم والوقت التقريبي اللي يناسبك؟\n2️⃣ ويا رقم تلفون لحضرتك للتواصل وتأكيد الحجز؟ 📱\n\n(أوقات دوام العيادة: السبت إلى الخميس: 2:00 ظهراً – 9:00 مساءً).`;
-      }
-      break;
-
-    case 'orthodontic_inquiry':
-      const isPriceOrInstallmentQuery =
-        /سعر|أسعار|اسعار|تكلفة|تكلف|يكلف|بيش|شكد|كم|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع|price|prices|cost|costs|installment|installments|down payment|financing/i.test(
-          userMessage
-        );
-      if (isPriceOrInstallmentQuery) {
-        replyText = `بالنسبة لأسعار تقويم الأسنان، تختلف حسب الحالة ونوع العلاج والخطة المناسبة إلك.
-
-حتى نكدر نعطيك التفاصيل الصحيحة، نفضّل يتم تقييم حالتك والتواصل ويانه مباشرة لمعرفة التفاصيل.
-
-يسعدنا نساعدك ونرتب إلك استشارة ويا د. مصطفى هادي ❤️`;
-      } else {
-        replyText = `${nameGreeting}\n${brandSlogan}\n\nتقويم الأسنان ويا دكتور مصطفى مو مجرد صف أسنان، وإنما هندسة متكاملة للإطباق والابتسامة وتناسق ملامح الوجه 📐.\nنعالج حالات العضة المفتوحة، تزاحم الأسنان، والأسنان المطمورة باستخدام أحدث الأنظمة المعتمدة مثل نظام الدامون الذاتي (Damon System) والتقويم الشفاف.\n\nالتشخيص الدقيق وخطة العلاج تتحدد حصرياً بعد الكشفية السريرية وأشعة الـ OPG بالعيادة.\n\nتحب نسجلك طلب كشفية واستشارة يم دكتور مصطفى حتى يفحص حالتك ويشرحلك الخطة بالتفصيل؟ 🦷`;
-      }
-      break;
-
-    case 'personal_professional_inquiry':
-      replyText = `${nameGreeting}\nدكتور مصطفى هادي هو طبيب أسنان وأخصائي تقويم الأسنان والفكين في بغداد 🦷.\nمهتم جداً بتطبيق التكنولوجيا، الميكانيكا الحيوية الدقيقة، والبرمجة في تخطيط ابتسامات المرضى.\n\nشعار دكتور مصطفى بالعمل:\n"طبيب أسنان يشرحلك قبل لا يعالجك" — لأننا نؤمن إن المريض شريك أساسي في فهم خطته العلاجية قبل البدء بأي خطوة.\n\nدكتور مصطفى يستقبل مراجعيه في عيادة المسواك التخصصية (بغداد – زيونة، خدمي دريم سيتي مول).\nشلون نكدر نساعدك اليوم باستفسارك؟ 💚`;
-      break;
-
-    case 'general_dental_education':
-    default:
-      replyText = `${nameGreeting}\n${brandSlogan}\n\nسؤالك ممتاز! الحفاظ على صحة الأسنان يبدأ من العادات اليومية الصحيحة: تفريش الأسنان مرتين يومياً بمعجون يحتوي على الفلورايد، واستخدام خيط الأسنان الطبي لتنظيف الفراغات اللي الفرشاة ما توصلها.\nإذا چان استفسارك عن حالة معينة بأسنانك أو حاب تعرف معلومات أكثر عن التقويم، اكتبلي تفاصيل أكثر وتدلل! 🦷✨`;
-      break;
-  }
-
-  return {
-    replyText,
-    intent: classification.intent,
-    confidence: classification.confidence,
-    treatmentDetected: classification.treatment,
-    requiresHumanHandoff: classification.requiresHandoff,
-    handoffReason: classification.handoffReason,
-    extractedPatientInfo: classification.extractedInfo,
-  };
+/**
+ * Async version that leverages Google Gemini LLM if GEMINI_API_KEY is available,
+ * or gracefully falls back to the intelligent contextual Baghdad dialect engine.
+ */
+export async function generateIraqiDialectResponseAsync(
+  userMessage: string,
+  accountId: AccountId = 'drmustafa_hadi',
+  patientName?: string,
+  history: ChatHistoryMessage[] = []
+): Promise<AIResponseResult> {
+  return generateGeminiDialectResponse(userMessage, accountId, patientName, history);
 }

@@ -16,7 +16,7 @@ import {
   InstagramGraphApiDispatcher,
   defaultGraphApiDispatcher,
 } from './graphApi';
-import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
+import { generateIraqiDialectResponseAsync } from '@/lib/ai/iraqiEngine';
 import {
   IPersistentStore,
   EscalationEventType,
@@ -339,7 +339,7 @@ export async function processInstagramWebhook(
       }
 
       // 7. Iraqi Arabic AI Engine Execution with Strict Orthodontic Pricing Prohibition
-      const aiResponse = generateIraqiDialectResponse(messageText, PILOT_ACCOUNT_ID);
+      const aiResponse = await generateIraqiDialectResponseAsync(messageText, PILOT_ACCOUNT_ID);
       const isOrthoPriceInquiry =
         aiResponse.intent === 'orthodontic_inquiry' &&
         /سعر|أسعار|اسعار|تكلفة|تكلف|يكلف|بيش|شكد|كم|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع|price|cost|installment/i.test(
