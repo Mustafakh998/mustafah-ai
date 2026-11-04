@@ -1,4 +1,5 @@
 import { AccountId, ContentItem } from '@/types';
+import { callTieredAI } from './tieredEngine';
 
 export const DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT: ContentItem[] = [
   // =========================================================================
@@ -496,14 +497,9 @@ export async function generateDentalContentAsync(request: {
   series?: string;
   format?: 'reel' | 'carousel' | 'story';
 }): Promise<ContentItem> {
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-
-  // 1. If topic provided and Gemini API key is configured, use Gemini LLM
-  if (request.topic && GEMINI_API_KEY && !GEMINI_API_KEY.includes('your_gemini') && GEMINI_API_KEY.length > 10) {
+  // 1. If topic provided, call Tiered AI Cascade (Tier 1 Gemini -> Tier 2 Groq -> Tier 3 OpenRouter)
+  if (request.topic && request.topic.trim()) {
     try {
-      const { GoogleGenAI } = await import('@google/genai');
-      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
       const prompt = `أنت المخرج الطبي والمستشار الإبداعي لعيادة د. مصطفى هادي (أخصائي تقويم الأسنان والفكين في بغداد).
 شعار العيادة الثابت: "د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك" 📐✨.
 
@@ -525,18 +521,22 @@ export async function generateDentalContentAsync(request: {
   "targetAudienceAr": "الجمهور المستهدف"
 }`;
 
-      const res = await ai.models.generateContent({
-        model: process.env.AI_MODEL || 'gemini-2.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.7,
-          responseMimeType: 'application/json',
-        },
+      const tieredRes = await callTieredAI({
+        systemPrompt:
+          'أنت صانع محتوى طبي عراقي متخصص لعيادة د. مصطفى هادي لطب وتقويم الأسنان في بغداد. أرجع النتيجة حصراً ككائن JSON صالح بدون كتل نصية إضافية.',
+        userMessage: prompt,
+        jsonMode: true,
+        temperature: 0.7,
       });
 
-      const responseText = res.text?.trim();
-      if (responseText) {
-        const parsed = JSON.parse(responseText);
+      if (tieredRes && tieredRes.text) {
+        let cleanJson = tieredRes.text.trim();
+        if (cleanJson.startsWith('```json')) cleanJson = cleanJson.slice(7);
+        if (cleanJson.startsWith('```')) cleanJson = cleanJson.slice(3);
+        if (cleanJson.endsWith('```')) cleanJson = cleanJson.slice(0, -3);
+        cleanJson = cleanJson.trim();
+
+        const parsed = JSON.parse(cleanJson);
         return {
           id: `gen_${Date.now()}`,
           accountId: request.accountId,
@@ -560,7 +560,7 @@ export async function generateDentalContentAsync(request: {
         };
       }
     } catch (err) {
-      console.warn('[ContentGenerator] Gemini generation failed, using semantic match fallback:', err);
+      console.warn('[ContentGenerator] Multi-tier generation failed, using semantic match fallback:', err);
     }
   }
 

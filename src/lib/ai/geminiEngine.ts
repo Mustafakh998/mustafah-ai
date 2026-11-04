@@ -1,10 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
-import { AccountId, TreatmentType } from '@/types';
+import { AccountId } from '@/types';
 import { AIResponseResult } from './iraqiEngine';
-import { generateSmartContextualResponse, ChatHistoryMessage, detectGender } from './smartFallback';
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-const MODEL_NAME = process.env.AI_MODEL || 'gemini-2.5-flash';
+import { generateSmartContextualResponse, ChatHistoryMessage } from './smartFallback';
+import { callTieredAI } from './tieredEngine';
 
 const CLINIC_SYSTEM_PROMPT = `أنت المساعد الذكي الرسمي لعيادة د. مصطفى هادي (MustafaH-AI) في بغداد.
 د. مصطفى هادي هو طبيب أسنان وأخصائي تقويم الأسنان والفكين (Specialist Orthodontist).
@@ -31,8 +28,11 @@ const CLINIC_SYSTEM_PROMPT = `أنت المساعد الذكي الرسمي لع
 7. اجعل الردود طبيعية، موجزة، مرتبة (فقرتين إلى 3 فقرات قصيرة)، ومريحة للقراءة في رسائل الإنستغرام (DM).`;
 
 /**
- * Generate context-aware AI response using Google Gemini if API key is configured,
- * otherwise smoothly fallback to the smart contextual Baghdad dialect engine.
+ * Generate context-aware AI response using 3-Tier Multi-Engine:
+ * Tier 1: Google Gemini (gemini-3.5-flash-lite)
+ * Tier 2: GroqCloud (qwen/qwen3.8-27b)
+ * Tier 3: OpenRouter (meta-llama/llama-3.3-70b-instruct)
+ * Tier 4: Local Smart Contextual Baghdad Dialect Engine
  */
 export async function generateGeminiDialectResponse(
   userMessage: string,
@@ -40,60 +40,31 @@ export async function generateGeminiDialectResponse(
   patientName?: string,
   history: ChatHistoryMessage[] = []
 ): Promise<AIResponseResult> {
-  // 1. Get structured baseline from smart reasoning engine
+  // 1. Get structured baseline metadata from smart clinical engine
   const baseResult = generateSmartContextualResponse(userMessage, accountId, patientName, history);
 
-  // 2. If Gemini API key is missing or blank, use the smart contextual engine
-  if (!GEMINI_API_KEY || GEMINI_API_KEY.includes('your_gemini') || GEMINI_API_KEY.length < 10) {
-    return baseResult;
-  }
-
-  // 3. Call Google Gemini via @google/genai SDK
+  // 2. Call Multi-Tier Cascade (Tier 1 Gemini -> Tier 2 Groq -> Tier 3 OpenRouter)
   try {
-    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-
-    // Format conversation history for Gemini
-    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
-
-    // Add previous turns if available
-    for (const msg of history.slice(-6)) {
-      contents.push({
-        role: msg.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }],
-      });
-    }
-
-    // Add current user prompt
     const userPrompt = patientName
       ? `[اسم المراجع في الإنستغرام: ${patientName}]\nرسالة المراجع: ${userMessage}`
       : `رسالة المراجع: ${userMessage}`;
 
-    contents.push({
-      role: 'user',
-      parts: [{ text: userPrompt }],
+    const tieredResponse = await callTieredAI({
+      systemPrompt: CLINIC_SYSTEM_PROMPT,
+      userMessage: userPrompt,
+      history,
+      temperature: 0.7,
     });
 
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents,
-      config: {
-        systemInstruction: CLINIC_SYSTEM_PROMPT,
-        temperature: 0.7,
-        maxOutputTokens: 600,
-      },
-    });
-
-    const generatedText = response.text?.trim();
-    if (generatedText) {
+    if (tieredResponse && tieredResponse.text) {
       return {
         ...baseResult,
-        replyText: generatedText,
+        replyText: tieredResponse.text,
       };
     }
   } catch (err) {
-    console.warn('[GeminiEngine] Gemini API call failed, using smart contextual fallback:', err);
+    console.warn('[TieredEngine] Cascade error, using smart contextual fallback:', err);
   }
 
   return baseResult;
 }
-
