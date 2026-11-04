@@ -628,3 +628,90 @@ export const INITIAL_ANALYTICS: AnalyticsMetrics = {
   followerGrowth: 185,
 };
 
+export const INITIAL_COMMENT_RULES: import('@/types').CommentAutomationRule[] = [
+  {
+    id: 'rule_ortho',
+    accountId: 'drmustafa_hadi',
+    keyword: 'تقويم',
+    publicReplyAr: 'تدلل عيوني 💚 دزينا لحضرتك رسالة بالخاص بيها تفاصيل الخطة وتشخيص التقويم مع د. مصطفى ✉️',
+    privateDmReplyAr:
+      'أهلاً وسهلاً بيك 🌸 بخصوص استفسارك عن تقويم الأسنان، د. مصطفى هادي يعتمد على الفحص السريري الدقيق وأشعة السيفالومتريك لتحديد الخطة المناسبة (عادي، دامون، أو شفاف) بدون خلع جراحي غير ضروري.\n\nحتى نرفع طلب موعد الاستشارة لمكتب الاستقبال بعيادتنا في زيونة، يا يوم يناسبك ورقم تليفونك؟ 📍 خدمي دريم سيتي مول',
+    isActive: true,
+    triggersCount: 64,
+    targetTreatment: 'orthodontics',
+  },
+  {
+    id: 'rule_smile',
+    accountId: 'drmustafa_hadi',
+    keyword: 'ابتسامة',
+    publicReplyAr: 'نورتنا 🤍 شيك الدايركت عيوني، تفاصيل وخيارات الابتسامة التجميلية وصلتك بالخاص 📩',
+    privateDmReplyAr:
+      'مرحباً بك عيوني ✨ إذا مهتم بابتسامة ناصعة ومتناسقة، وفرنا خيارات ابتسامة الإيماكس الألمانية بجلستين فقط أو جلسات التبييض البارد. تكدر تدزلنا صورة واضحة لابتسامتك أو تزورنا بالعيادة لتشخيص دقيق.',
+    isActive: true,
+    triggersCount: 38,
+    targetTreatment: 'cosmetic_emax',
+  },
+  {
+    id: 'rule_price',
+    accountId: 'drmustafa_hadi',
+    keyword: 'سعر',
+    publicReplyAr: 'عيوني الأسعار تعتمد على فحص الحالة السريري، دزينا تفاصيل نظام الأقساط الميسرة بالخاص 💬',
+    privateDmReplyAr:
+      'تدلل من عيوني 💚 بالنسبة للأسعار والأقساط، تختلف حسب نوع التقويم (معدني، دامون، أو شفاف) وصعوبة إطباق الفكين. نظامنا مرن بأقساط شهرية مريحة بعد دفعة أولى بسيطة.\n\nلحجز كشفية الفحص وتحديد التكلفة الدقيقة، يا وقت يناسبك ورقم تليفونك؟',
+    isActive: true,
+    triggersCount: 92,
+    targetTreatment: 'consultation',
+  },
+  {
+    id: 'rule_booking',
+    accountId: 'drmustafa_hadi',
+    keyword: 'حجز',
+    publicReplyAr: 'أهلاً بيك 🦷 تم إرسال رابط تأكيد الحجز ومواعيد العيادة بالخاص ✉️',
+    privateDmReplyAr:
+      'أهلاً بحضرتك 🩺 أوقات دوام د. مصطفى هادي من السبت إلى الخميس: 2:00 ظهراً إلى 9:00 مساءً.\n\nأرسل لنا اسمك الكريم ورقم هاتفك واليوم المفضل ليتصل بك كادر الاستقبال فوراً لتأكيد الموعد 💚',
+    isActive: true,
+    triggersCount: 45,
+    targetTreatment: 'consultation',
+  },
+];
+
+export const INITIAL_REVIEW_REQUESTS: import('@/types').ReviewRequest[] = [
+  {
+    id: 'rev_1',
+    patientName: 'أحمد علي العبيدي',
+    phone: '07701234567',
+    treatment: 'orthodontics',
+    treatmentNameAr: 'جلسة شد تقويم الأسنان',
+    visitedDate: '2026-11-03',
+    googleMapsUrl: 'https://maps.google.com/?q=Dr+Mustafa+Hadi+Clinic+Baghdad+Zayouna',
+    status: 'reviewed',
+    rating: 5,
+    messageAr:
+      'مرحباً أخ أحمد 🌸 عيادة د. مصطفى هادي تشكرك على زيارتك اليوم لشد التقويم. رأيك وتجربتك تهمنا جداً، نتمنى تدعمنا بتقييم 5 نجوم على خرائط Google لمساعدة مراجعين جدد:\nhttps://maps.google.com/?q=Dr+Mustafa+Hadi+Clinic+Baghdad+Zayouna',
+  },
+  {
+    id: 'rev_2',
+    patientName: 'مريم حيدر الخفاجي',
+    phone: '07809876543',
+    treatment: 'orthodontics',
+    treatmentNameAr: 'تركيب حاصرات دامون',
+    visitedDate: '2026-11-04',
+    googleMapsUrl: 'https://maps.google.com/?q=Dr+Mustafa+Hadi+Clinic+Baghdad+Zayouna',
+    status: 'sent',
+    messageAr:
+      'مرحباً أخت مريم 🌸 نورتينا بعيادة د. مصطفى هادي لتركيب حاصرات الدامون. نتمنى تكونين مرتاحة بالإجراء، رأيك على خرائط Google يسعدنا ويدعم العيادة 💚\nhttps://maps.google.com/?q=Dr+Mustafa+Hadi+Clinic+Baghdad+Zayouna',
+  },
+  {
+    id: 'rev_3',
+    patientName: 'زينب حسين الموسوي',
+    phone: '07712349876',
+    treatment: 'cosmetic_emax',
+    treatmentNameAr: 'جلسة تبييض وتجميل',
+    visitedDate: '2026-11-04',
+    googleMapsUrl: 'https://maps.google.com/?q=Dr+Mustafa+Hadi+Clinic+Baghdad+Zayouna',
+    status: 'pending',
+    messageAr:
+      'مرحباً أخت زينب 🌸 نتمنى تكون نتيجة تبييض الأسنان بالعيادة نالت رضاكِ! كلمة طيبة وتقييم على Google Maps يساعدنا نستمر بتقديم أفضل خدمة ✨\nhttps://maps.google.com/?q=Dr+Mustafa+Hadi+Clinic+Baghdad+Zayouna',
+  },
+];
+

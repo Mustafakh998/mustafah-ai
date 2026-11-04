@@ -12,6 +12,7 @@ import {
   TrendingUp,
   ShieldCheck,
   Sparkles,
+  Compass,
 } from 'lucide-react';
 import { InstagramIcon } from '@/components/icons/InstagramIcon';
 import { AccountId, Language, NavTabId } from '@/types';
@@ -52,6 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'content_studio', labelAr: 'استوديو المحتوى', labelEn: 'Content Studio', icon: Video },
     { id: 'content_calendar', labelAr: 'تقويم النشر (30 يوم)', labelEn: 'Content Calendar', icon: Calendar },
     { id: 'ad_campaigns', labelAr: 'حملات الإعلانات (<$100)', labelEn: 'Ad Campaigns', icon: DollarSign },
+    { id: 'marketing_strategy', labelAr: 'استراتيجية التسويق والنمو', labelEn: 'Marketing Strategy', icon: Compass, highlightBadge: 'PLAYBOOK' },
     { id: 'analytics', labelAr: 'إحصائيات النمو', labelEn: 'Growth Analytics', icon: TrendingUp },
     { id: 'admin', labelAr: 'الإدارة وتشخيص الربط', labelEn: 'Administration', icon: ShieldCheck },
   ];

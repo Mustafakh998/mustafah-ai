@@ -13,6 +13,8 @@ import {
   AppointmentStatus,
   SubscriptionTier,
   TreatmentType,
+  CommentAutomationRule,
+  ReviewRequest,
 } from '@/types';
 import {
   INITIAL_ACCOUNTS,
@@ -22,6 +24,8 @@ import {
   INITIAL_CONTENT_ITEMS,
   INITIAL_CAMPAIGNS,
   INITIAL_ANALYTICS,
+  INITIAL_COMMENT_RULES,
+  INITIAL_REVIEW_REQUESTS,
 } from '@/lib/data/initialData';
 import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
 
@@ -35,6 +39,8 @@ export interface AppState {
   activeConversationId: string;
   contentItems: ContentItem[];
   campaigns: AdCampaign[];
+  commentRules: CommentAutomationRule[];
+  reviewRequests: ReviewRequest[];
   analytics: AnalyticsMetrics;
   isAiAutoReplyEnabled: boolean;
   webhookEventsLog: Array<{
@@ -76,6 +82,8 @@ export const CLEAN_INITIAL_STATE: AppState = {
   activeConversationId: '',
   contentItems: [],
   campaigns: [],
+  commentRules: INITIAL_COMMENT_RULES,
+  reviewRequests: INITIAL_REVIEW_REQUESTS,
   analytics: CLEAN_ANALYTICS,
   isAiAutoReplyEnabled: true,
   webhookEventsLog: [],
@@ -546,6 +554,124 @@ export function useAppStore() {
     }));
   };
 
+  const addCampaign = (camp: AdCampaign) => {
+    setState((prev) => ({
+      ...prev,
+      campaigns: [camp, ...prev.campaigns],
+    }));
+  };
+
+  const boostPostOrProfile = (params: {
+    accountId: AccountId;
+    objective: AdCampaign['objective'];
+    headline: string;
+    body: string;
+    targetNeighborhoods: string[];
+    dailyBudgetUSD: number;
+    durationDays: number;
+    boostedContentId?: string;
+  }) => {
+    const totalBudget = params.dailyBudgetUSD * params.durationDays;
+    const isProfile = params.objective === 'profile_visits';
+    const newCamp: AdCampaign = {
+      id: `boost_${Date.now()}`,
+      name: isProfile ? 'Boost Instagram Profile Visits' : 'Boost High-Retention Reel / Post',
+      nameAr: isProfile
+        ? `ترويج الملف الشخصي (@${params.accountId})`
+        : `ترويج منشور سريري عالي التفاعل ($${totalBudget})`,
+      accountId: params.accountId,
+      objective: params.objective,
+      allocatedBudgetUSD: totalBudget,
+      spentUSD: 0,
+      status: 'active',
+      targetLocation: `Baghdad (${params.targetNeighborhoods.join(', ')})`,
+      targetAudienceAr: `بغداد (${params.targetNeighborhoods.join('، ')}) — الفئة المستهدفة للأعمار 18-40 سنة`,
+      reach: 0,
+      impressions: 0,
+      conversationsStarted: 0,
+      qualifiedInquiries: 0,
+      appointmentRequests: 0,
+      confirmedAppointments: 0,
+      attendedPatients: 0,
+      requiresHumanApproval: false,
+      boostedContentId: params.boostedContentId,
+      dailyBudgetUSD: params.dailyBudgetUSD,
+      durationDays: params.durationDays,
+      targetNeighborhoods: params.targetNeighborhoods,
+      adCreativeHeadline: params.headline,
+      adCreativeBody: params.body,
+      callToActionType: isProfile ? 'visit_profile' : 'send_message',
+    };
+
+    setState((prev) => ({
+      ...prev,
+      campaigns: [newCamp, ...prev.campaigns],
+    }));
+    return newCamp;
+  };
+
+  // Automation: Comment-to-DM Rules
+  const toggleCommentRule = (ruleId: string) => {
+    setState((prev) => ({
+      ...prev,
+      commentRules: (prev.commentRules || INITIAL_COMMENT_RULES).map((r) =>
+        r.id === ruleId ? { ...r, isActive: !r.isActive } : r
+      ),
+    }));
+  };
+
+  const addCommentRule = (rule: CommentAutomationRule) => {
+    setState((prev) => ({
+      ...prev,
+      commentRules: [rule, ...(prev.commentRules || INITIAL_COMMENT_RULES)],
+    }));
+  };
+
+  // Local SEO: Google Maps Review Requests
+  const sendReviewRequest = (requestId: string) => {
+    setState((prev) => {
+      const updated = (prev.reviewRequests || INITIAL_REVIEW_REQUESTS).map((req) =>
+        req.id === requestId ? { ...req, status: 'sent' as const } : req
+      );
+      return {
+        ...prev,
+        reviewRequests: updated,
+      };
+    });
+  };
+
+  // CRM: Lapsed Patient Re-engagement
+  const reengageLead = (leadId: string, customMessage?: string) => {
+    const lead = state.leads.find((l) => l.id === leadId);
+    if (!lead) return;
+
+    const patientName = lead.patientName || 'عزيزي المراجع';
+    const msgText =
+      customMessage ||
+      `مرحباً عيوني ${patientName} 🌸 إن شاء الله تكون بألف خير وصحة.\nتواصلت ويانا قبل فترة بخصوص استفسارك عن ${lead.treatmentNameAr || 'علاج الأسنان'} وحبينا نتطمن عليك ونشوف إذا تحب نجدول لحضرتك موعد كشفية واستشارة مجانية بالعيادة هذا الأسبوع.\nعيادة د. مصطفى هادي بزيونة بخدمتك دائماً 💚`;
+
+    // Send or queue message in conversation
+    const activeConv = state.conversations.find((c) => c.instagramUsername === lead.instagramUsername);
+    if (activeConv) {
+      sendMessage(activeConv.id, msgText, 'staff');
+    }
+
+    setState((prev) => ({
+      ...prev,
+      leads: prev.leads.map((l) =>
+        l.id === leadId
+          ? {
+              ...l,
+              status: 'qualified',
+              staffNotes: `${l.staffNotes || ''}\n[${new Date().toLocaleDateString('ar-IQ')}]: تم إرسال رسالة إعادة تنشيط دافئة.`,
+              lastMessageText: msgText,
+              lastMessageTime: new Date().toISOString(),
+            }
+          : l
+      ),
+    }));
+  };
+
   const registerClinic = (params: {
     name: string;
     city: string;
@@ -617,6 +743,8 @@ export function useAppStore() {
       activeConversationId: 'conv_1',
       contentItems: INITIAL_CONTENT_ITEMS,
       campaigns: INITIAL_CAMPAIGNS,
+      commentRules: INITIAL_COMMENT_RULES,
+      reviewRequests: INITIAL_REVIEW_REQUESTS,
       analytics: INITIAL_ANALYTICS,
       isAiAutoReplyEnabled: true,
       webhookEventsLog: [],
@@ -638,6 +766,12 @@ export function useAppStore() {
     addContentItem,
     updateContentStatus,
     toggleCampaignStatus,
+    addCampaign,
+    boostPostOrProfile,
+    toggleCommentRule,
+    addCommentRule,
+    sendReviewRequest,
+    reengageLead,
     registerClinic,
     resetAllData,
     loadDemoData,

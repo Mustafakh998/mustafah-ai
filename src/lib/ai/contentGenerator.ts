@@ -495,30 +495,42 @@ export async function generateDentalContentAsync(request: {
   accountId: AccountId;
   topic?: string;
   series?: string;
-  format?: 'reel' | 'carousel' | 'story';
+  format?: 'reel' | 'carousel' | 'story' | 'post';
 }): Promise<ContentItem> {
   // 1. If topic provided, call Tiered AI Cascade (Tier 1 Gemini -> Tier 2 Groq -> Tier 3 OpenRouter)
   if (request.topic && request.topic.trim()) {
     try {
+      const formatLabel =
+        request.format === 'story'
+          ? 'سلسلة ستوري تفاعلية (Instagram Story Sequence)'
+          : request.format === 'carousel'
+          ? 'منشور كاروسيل تعليمي شرائح (Instagram Carousel 5 Slides)'
+          : request.format === 'post'
+          ? 'منشور صورة/إنفوجرافيك مفرد (Single Image Post with visual prompt)'
+          : 'فيديو ريلز عالي الاحتفاظ (Instagram Reel)';
+
       const prompt = `أنت المخرج الطبي والمستشار الإبداعي لعيادة د. مصطفى هادي (أخصائي تقويم الأسنان والفكين في بغداد).
 شعار العيادة الثابت: "د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك" 📐✨.
 
-المطلوب: كتابة سكربت ريل (Instagram Reel) احترافي وكامل باللهجة العراقية البغدادية الراقية والذكية للموضوع التالي:
+المطلوب: إنتاج محتوى احترافي وكامل من نوع (${formatLabel}) باللهجة العراقية البغدادية الراقية والذكية للموضوع التالي:
 الموضوع: "${request.topic}"
 السلسلة: "${request.series || 'خل نحچي عن التقويم'}"
 الصيغة: "${request.format || 'reel'}"
 
-يجب أن يعكس السكربت الخبرة السريرية المتقدمة (Damon, TADs, Open bite, Biomechanics) ويبسطها للمريض بأسلوب هندسي دقيق وجذاب.
+يجب أن يعكس المحتوى الخبرة السريرية المتقدمة (Damon, TADs, Open bite, Biomechanics) ويبسطها للمريض بأسلوب هندسي دقيق وجذاب.
 أرجع النتيجة حصراً بصيغة JSON صالح ومباشر بالمفاتيح التالية:
 {
   "titleAr": "عنوان علمي وجذاب",
   "coverHeadlineAr": "نص غلاف الكفر مع إيموجي",
-  "hookAr": "هوك أول 3 ثواني باللهجة العراقية",
-  "scriptAr": "السيناريو الكامل باللهجة العراقية البغدادية",
-  "visualDirectionAr": "توجيهات بصرية لحركات الدكتور والمجسمات بالعيادة",
+  "hookAr": "هوك أول 3 ثواني باللهجة العراقية (أو السؤال التفاعلي للستوري/البوست)",
+  "scriptAr": "السيناريو الكامل باللهجة العراقية البغدادية أو نص الشرح التوضيحي",
+  "visualDirectionAr": "توجيهات بصرية لحركات الدكتور، المشاهد، أو وصف تصميم الصورة بدقة",
   "captionAr": "كابشن احترافي مع هاشتاغات بغداد",
-  "ctaAr": "دعوة لاتخاذ إجراء CTA",
-  "targetAudienceAr": "الجمهور المستهدف"
+  "ctaAr": "دعوة لاتخاذ إجراء CTA (مثل: علق بكلمة كذا أو راسلنا خاص)",
+  "targetAudienceAr": "الجمهور المستهدف",
+  "audioRecommendationAr": "توصية بالموسيقى/الصوت المناسب",
+  "slidesAr": ["شريحة 1", "شريحة 2", "شريحة 3", "شريحة 4", "شريحة 5"],
+  "storyStickersAr": ["ستيكر استفتاء/تصويت", "ستيكر سؤال للدكتور", "ستيكر رابط الحجز والدايركت"]
 }`;
 
       const tieredRes = await callTieredAI({
@@ -551,6 +563,19 @@ export async function generateDentalContentAsync(request: {
           ctaAr: parsed.ctaAr || '',
           coverHeadlineAr: parsed.coverHeadlineAr || '',
           targetAudienceAr: parsed.targetAudienceAr || 'متابعو ومراجعو العيادة في بغداد',
+          audioRecommendationAr: parsed.audioRecommendationAr || 'موسيقى هادئة طبية وتكنولوجية بنبرة راقية',
+          slidesAr: parsed.slidesAr || [
+            'الغطاء: المشكلة الحقيقية',
+            'التشخيص السريري والأشعة',
+            'خطة العلاج والميكانيكا الحيوية',
+            'النتيجة الطبيعية المتوقعة',
+            'كيف تحجز موعدك بالعيادة',
+          ],
+          storyStickersAr: parsed.storyStickersAr || [
+            'استفتاء: تعاني من نفس الحالة؟ (نعم / لا)',
+            'سؤال: اسأل د. مصطفى بالخاص',
+            'حجز: رابط الحجز 07768886667',
+          ],
           scheduledDate: new Date().toISOString().split('T')[0],
           status: 'draft',
           views: 0,
@@ -572,12 +597,12 @@ export function generateDentalContent(request: {
   accountId: AccountId;
   topic?: string;
   series?: string;
-  format?: 'reel' | 'carousel' | 'story';
+  format?: 'reel' | 'carousel' | 'story' | 'post';
 }): ContentItem {
   // If a topic is provided, match or dynamically generate for that topic
   if (request.topic && request.topic.trim()) {
     const matched = matchSemanticTopic(request.topic, request.series);
-    if (matched) return matched;
+    if (matched) return { ...matched, format: request.format || matched.format };
   }
 
   // If requesting pilot content for Dr. Mustafa, pick or match from the master pilot catalog
@@ -589,10 +614,25 @@ export function generateDentalContent(request: {
       if (match) return { ...match, id: `gen_${Date.now()}` };
     }
 
-    // Default to the first high-yield reel
+    // Default to high-yield template configured for requested format
+    const base = DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT[0];
     return {
-      ...DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT[0],
+      ...base,
       id: `gen_${Date.now()}`,
+      format: request.format || 'reel',
+      audioRecommendationAr: 'صوت هادئ وموثوق يعكس رصانة د. مصطفى هادي',
+      slidesAr: [
+        'العضة المفتوحة: هل هي مشكلة عظمية أم سنية؟',
+        'أهمية أشعة السيفالومتريك ثلاثية الأبعاد',
+        'دور تقنية الدامون والرافعات الخلفية',
+        'إغلاق الفراغ دون أي تدخل جراحي',
+        'علق بكلمة (تقويم) لحجز موعد استشارتك',
+      ],
+      storyStickersAr: [
+        'تصويت: أسنانك الأمامية تلتقي لو معلقة بالهواء؟',
+        'سؤال: اكتب استفسارك لدكتور مصطفى',
+        'دايركت: راسلنا لحجز موعد كشفية',
+      ],
     };
   }
 

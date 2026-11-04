@@ -16,6 +16,7 @@ import { AppointmentsView } from '@/components/pages/AppointmentsView';
 import { ContentStudioView } from '@/components/pages/ContentStudioView';
 import { ContentCalendarView } from '@/components/pages/ContentCalendarView';
 import { AdCampaignsView } from '@/components/pages/AdCampaignsView';
+import { MarketingStrategyView } from '@/components/pages/MarketingStrategyView';
 import { AnalyticsView } from '@/components/pages/AnalyticsView';
 import { AdminView } from '@/components/pages/AdminView';
 import { SimulateMessageModal } from '@/components/modals/SimulateMessageModal';
@@ -37,6 +38,12 @@ export default function Home() {
     addContentItem,
     updateContentStatus,
     toggleCampaignStatus,
+    addCampaign,
+    boostPostOrProfile,
+    toggleCommentRule,
+    addCommentRule,
+    sendReviewRequest,
+    reengageLead,
     registerClinic,
     resetAllData,
     loadDemoData,
@@ -155,6 +162,20 @@ export default function Home() {
             <AdCampaignsView
               state={state}
               onToggleCampaignStatus={toggleCampaignStatus}
+              onAddCampaign={addCampaign}
+              onBoostPostOrProfile={boostPostOrProfile}
+              onNavigate={setCurrentTab}
+            />
+          )}
+
+          {currentTab === 'marketing_strategy' && (
+            <MarketingStrategyView
+              state={state}
+              onNavigate={setCurrentTab}
+              onToggleCommentRule={toggleCommentRule}
+              onAddCommentRule={addCommentRule}
+              onSendReviewRequest={sendReviewRequest}
+              onReengageLead={reengageLead}
             />
           )}
 

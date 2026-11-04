@@ -14,6 +14,7 @@ export type NavTabId =
   | 'content_studio'
   | 'content_calendar'
   | 'ad_campaigns'
+  | 'marketing_strategy'
   | 'analytics'
   | 'admin';
 
@@ -163,7 +164,10 @@ export interface ContentItem {
   accountId: AccountId;
   title: string;
   titleAr: string;
-  format: 'reel' | 'carousel' | 'story';
+  format: 'reel' | 'carousel' | 'story' | 'post';
+  slidesAr?: string[];
+  storyStickersAr?: string[];
+  audioRecommendationAr?: string;
   seriesNameAr: string;
   hookAr: string;
   scriptAr: string;
@@ -185,7 +189,19 @@ export interface AdCampaign {
   name: string;
   nameAr: string;
   accountId: AccountId;
-  objective: 'click_to_instagram_direct' | 'reel_engagement' | 'retargeting';
+  objective:
+    | 'click_to_instagram_direct'
+    | 'reel_engagement'
+    | 'retargeting'
+    | 'profile_visits'
+    | 'boost_post';
+  boostedContentId?: string;
+  dailyBudgetUSD?: number;
+  durationDays?: number;
+  targetNeighborhoods?: string[];
+  adCreativeHeadline?: string;
+  adCreativeBody?: string;
+  callToActionType?: 'send_message' | 'visit_profile' | 'book_now';
   allocatedBudgetUSD: number;
   spentUSD: number;
   status: 'active' | 'paused' | 'draft_pending_approval';
@@ -218,6 +234,31 @@ export interface AnalyticsMetrics {
   savesCount: number;
   profileVisits: number;
   followerGrowth: number;
+}
+
+export interface CommentAutomationRule {
+  id: string;
+  accountId: AccountId;
+  keyword: string;
+  publicReplyAr: string;
+  privateDmReplyAr: string;
+  isActive: boolean;
+  triggersCount: number;
+  targetTreatment: TreatmentType;
+}
+
+export interface ReviewRequest {
+  id: string;
+  appointmentId?: string;
+  patientName: string;
+  phone: string;
+  treatment: TreatmentType;
+  treatmentNameAr: string;
+  visitedDate: string;
+  googleMapsUrl: string;
+  status: 'pending' | 'sent' | 'reviewed';
+  messageAr: string;
+  rating?: number;
 }
 
 export * from './tenant';
