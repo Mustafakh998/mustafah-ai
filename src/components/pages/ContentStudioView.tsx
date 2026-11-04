@@ -33,6 +33,7 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
   const [customTopic, setCustomTopic] = useState('');
   const [generatedItem, setGeneratedItem] = useState<ContentItem | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const isPersonal = selectedAccount === 'drmustafa_hadi';
 
@@ -53,7 +54,34 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
         'معايير الثقة والتعقيم',
       ];
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      const res = await fetch('/api/ai/generate-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accountId: selectedAccount,
+          format: selectedFormat,
+          series: selectedSeries,
+          topic: customTopic,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.item) {
+          setGeneratedItem(data.item);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Network call failed, falling back to local generator:', err);
+    } finally {
+      setIsGenerating(false);
+    }
+
+    // Client-side fallback with semantic matching
     const item = generateDentalContent({
       accountId: selectedAccount,
       format: selectedFormat,
@@ -205,10 +233,23 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
 
           <button
             onClick={handleGenerate}
-            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
+            disabled={isGenerating}
+            className={`w-full py-2.5 font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 ${
+              isGenerating
+                ? 'bg-emerald-400 text-white cursor-not-allowed'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+            }`}
           >
-            <Sparkles className="w-4 h-4" />
-            <span>{isAr ? 'توليد السكربت بالعامية البغدادية' : 'Generate Complete Script'}</span>
+            <Sparkles className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+            <span>
+              {isGenerating
+                ? isAr
+                  ? 'جاري هندسة السكربت بالذكاء الاصطناعي...'
+                  : 'Generating Script...'
+                : isAr
+                ? 'توليد السكربت بالعامية البغدادية'
+                : 'Generate Complete Script'}
+            </span>
           </button>
         </div>
 

@@ -394,12 +394,192 @@ export const DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT: ContentItem[] = [
   },
 ];
 
+export const GUMMY_SMILE_SCRIPT: Omit<ContentItem, 'id' | 'accountId'> = {
+  title: 'Gummy Smile Treatment: Ortho Intrusion vs Gingivectomy vs Botox',
+  titleAr: 'علاج الابتسامة اللثوية: تقويم وغرز مصغرة لو قص لثة لو بوتوكس؟',
+  format: 'reel',
+  seriesNameAr: 'خل نحچي عن التقويم',
+  hookAr: 'لما تبتسم تحس لثتك العلوية تبين كلها وتغطي على جمال أسنانك؟ تعال نفهم الحل هندسياً 📐🦷',
+  scriptAr:
+    'هواية مراجعين يگولون: دكتور، ابتسامتي لثوية (Gummy Smile) وسامع إن الحل الوحيد هو بوتوكس كل 6 أشهر أو قص اللثة بالليزر!\nخل نوضح الحقيقة الطبية:\nإذا چان سبب الابتسامة اللثوية هو بروز الفك العلوي أو نزول الأسنان لأسفل (Vertical Maxillary Excess)، فقص اللثة وحده مراح يحل المشكلة، والبوتوكس حل مؤقت يروح بعد 4 أشهر.\nالحل الجذري والهندسي الدائم هو:\nتقويم الأسنان مع الغرز التقويمية المصغرة (TADs / Mini-screws)!\nبهاي التقنية الهندسية البسيطة وبدون أي ألم، نرفع الأسنان العلوية باتجاه عظم الفك (Intrusion)، واللثة تصعد وياها بطريقة بيولوجية طبيعية 100%.\nالنتيجة؟ ابتسامة متناسقة، ظهور لثة طبيعي، وحل دائمي يرافقك طول العمر بدون عمليات جراحية كبيرة!\nالتشخيص السريري الدقيق بالعيادة هو اللي يحدد الخطة الصح.',
+  visualDirectionAr:
+    'د. مصطفى باللابكوت الأبيض في العيادة، يمسك بمجسم فك يوضح تقنية غرز الـ TADs ورفع الأسنان للأعلى، ثم عرض حالة سريرية حقيقية لابتسامة لثوية تم علاجها بالتقويم بالعيادة (قبل وبعد) مع تركيز على تناسق الشفة واللثة.',
+  captionAr:
+    'الابتسامة اللثوية (Gummy Smile) مو حلها بس البوتوكس المؤقت.. الها حلول تقويمية جذرية دائمة 📐✨\nد. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك.\n\nعندك استفسار عن الابتسامة اللثوية أو حاب تعرف إذا چانت حالتك تتعالج بالتقويم؟ راسلنا دايركت أو اترك استفسارك بالتعليقات ✉️\n\n#دكتور_مصطفى_هادي #ابتسامة_لثوية #gummy_smile #تقويم_الاسنان #اسنان_بغداد #زيونة #TADs',
+  ctaAr: 'علق بكلمة (لثة) أو راسلنا دايركت لمعرفة الخطة الأنسب لعلاج ابتسامتك اللثوية 📩',
+  coverHeadlineAr: 'الابتسامة اللثوية.. تقويم لو قص لثة؟ 📐🦷',
+  targetAudienceAr: 'الشباب والبالغون في بغداد الذين يعانون من ظهور اللثة الزائد عند الابتسام',
+  scheduledDate: new Date().toISOString().split('T')[0],
+  status: 'draft',
+  views: 0,
+  likes: 0,
+  shares: 0,
+  inquiriesGenerated: 0,
+};
+
+export function matchSemanticTopic(topic: string, series?: string): ContentItem | null {
+  const t = topic.toLowerCase().trim();
+
+  // 1. Gummy Smile
+  if (/gummy|gum|لثة|لثوي|لثوية|ابتسامة لثوية/i.test(t)) {
+    return {
+      ...GUMMY_SMILE_SCRIPT,
+      id: `gen_${Date.now()}`,
+      accountId: 'drmustafa_hadi',
+      seriesNameAr: series || GUMMY_SMILE_SCRIPT.seriesNameAr,
+    };
+  }
+
+  // 2. Open Bite
+  if (/open bite|عضة مفتوحة|مفتوحة|متطابق/i.test(t)) {
+    const item = DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT.find((c) => c.id === 'pilot_reel_1');
+    if (item) return { ...item, id: `gen_${Date.now()}` };
+  }
+
+  // 3. Extractions
+  if (/extract|قلع|خلع|أقلع|نخلع/i.test(t)) {
+    const item = DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT.find((c) => c.id === 'pilot_reel_2');
+    if (item) return { ...item, id: `gen_${Date.now()}` };
+  }
+
+  // 4. Damon System
+  if (/damon|دامون|ديمون|ذاتي|self ligating/i.test(t)) {
+    const item = DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT.find((c) => c.id === 'pilot_reel_3');
+    if (item) return { ...item, id: `gen_${Date.now()}` };
+  }
+
+  // 5. Retainers & Relapse
+  if (/retain|تثبيت|ريتينر|رجعت تخرب|انتكاس/i.test(t)) {
+    const item = DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT.find((c) => c.id === 'pilot_reel_6');
+    if (item) return { ...item, id: `gen_${Date.now()}` };
+  }
+
+  // 6. Palatal Expansion / Crossbite
+  if (/expand|توسيع|ضيق|فك ضيق|عضة معكوسة|crossbite/i.test(t)) {
+    const item = DR_MUSTAFA_MONTH_ONE_PILOT_CONTENT.find((c) => c.id === 'pilot_carousel_3');
+    if (item) return { ...item, id: `gen_${Date.now()}` };
+  }
+
+  // 7. General custom topic dynamic builder
+  return {
+    id: `gen_${Date.now()}`,
+    accountId: 'drmustafa_hadi',
+    title: topic,
+    titleAr: `${topic}.. شنو الحل العلمي؟`,
+    format: 'reel',
+    seriesNameAr: series || 'خل نحچي عن التقويم',
+    hookAr: `سؤال متكرر يوصلنا بالعيادة عن ${topic}.. تعال نوضحه هندسياً 📐🦷`,
+    scriptAr:
+      `هواية ناس يستفسرون عن ${topic} وشلون نكدر نعالجه بطريقة علمية.\n` +
+      `بالتشخيص السريري الدقيق وأشعة الـ OPG، ندرس الحالة ونحدد الخطة الأنسب اللي تحافظ على صحة أسنانك وإطباقك.\n` +
+      `شعار د. مصطفى هادي دائماً: طبيب أسنان يشرحلك قبل لا يعالجك 📐✨.\n` +
+      `التشخيص هو الأساس، وخيارات العلاج المتطورة متوفرة دائماً بالعيادة بزيونة!`,
+    visualDirectionAr:
+      `د. مصطفى باللابكوت الأبيض بالعيادة، يشرح عن ${topic} باستخدام شاشة العرض الرقمية ومجسم الأسنان، مع لقطات قريبة لمراحل العلاج.`,
+    captionAr:
+      `خل نحچي علمياً وهندسياً عن ${topic} 📐✨\nد. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك.\n\nعندك استفسار عن هذا الموضوع؟ اكتبه بالتعليقات أو تواصل ويانا دايركت ✉️\n\n#دكتور_مصطفى_هادي #تقويم_الاسنان #اسنان_بغداد #زيونة`,
+    ctaAr: 'راسلنا على الدايركت أو علق باستفسارك للاطلاع على حالتك 📩',
+    coverHeadlineAr: `${topic.slice(0, 30)}.. شنو الحل؟ 🦷✨`,
+    targetAudienceAr: 'المهتمون بصحة وجمال الأسنان في بغداد',
+    scheduledDate: new Date().toISOString().split('T')[0],
+    status: 'draft',
+    views: 0,
+    likes: 0,
+    shares: 0,
+    inquiriesGenerated: 0,
+  };
+}
+
+export async function generateDentalContentAsync(request: {
+  accountId: AccountId;
+  topic?: string;
+  series?: string;
+  format?: 'reel' | 'carousel' | 'story';
+}): Promise<ContentItem> {
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+  // 1. If topic provided and Gemini API key is configured, use Gemini LLM
+  if (request.topic && GEMINI_API_KEY && !GEMINI_API_KEY.includes('your_gemini') && GEMINI_API_KEY.length > 10) {
+    try {
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+      const prompt = `أنت المخرج الطبي والمستشار الإبداعي لعيادة د. مصطفى هادي (أخصائي تقويم الأسنان والفكين في بغداد).
+شعار العيادة الثابت: "د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك" 📐✨.
+
+المطلوب: كتابة سكربت ريل (Instagram Reel) احترافي وكامل باللهجة العراقية البغدادية الراقية والذكية للموضوع التالي:
+الموضوع: "${request.topic}"
+السلسلة: "${request.series || 'خل نحچي عن التقويم'}"
+الصيغة: "${request.format || 'reel'}"
+
+يجب أن يعكس السكربت الخبرة السريرية المتقدمة (Damon, TADs, Open bite, Biomechanics) ويبسطها للمريض بأسلوب هندسي دقيق وجذاب.
+أرجع النتيجة حصراً بصيغة JSON صالح ومباشر بالمفاتيح التالية:
+{
+  "titleAr": "عنوان علمي وجذاب",
+  "coverHeadlineAr": "نص غلاف الكفر مع إيموجي",
+  "hookAr": "هوك أول 3 ثواني باللهجة العراقية",
+  "scriptAr": "السيناريو الكامل باللهجة العراقية البغدادية",
+  "visualDirectionAr": "توجيهات بصرية لحركات الدكتور والمجسمات بالعيادة",
+  "captionAr": "كابشن احترافي مع هاشتاغات بغداد",
+  "ctaAr": "دعوة لاتخاذ إجراء CTA",
+  "targetAudienceAr": "الجمهور المستهدف"
+}`;
+
+      const res = await ai.models.generateContent({
+        model: process.env.AI_MODEL || 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.7,
+          responseMimeType: 'application/json',
+        },
+      });
+
+      const responseText = res.text?.trim();
+      if (responseText) {
+        const parsed = JSON.parse(responseText);
+        return {
+          id: `gen_${Date.now()}`,
+          accountId: request.accountId,
+          title: request.topic,
+          titleAr: parsed.titleAr || request.topic,
+          format: request.format || 'reel',
+          seriesNameAr: request.series || 'خل نحچي عن التقويم',
+          hookAr: parsed.hookAr || '',
+          scriptAr: parsed.scriptAr || '',
+          visualDirectionAr: parsed.visualDirectionAr || '',
+          captionAr: parsed.captionAr || '',
+          ctaAr: parsed.ctaAr || '',
+          coverHeadlineAr: parsed.coverHeadlineAr || '',
+          targetAudienceAr: parsed.targetAudienceAr || 'متابعو ومراجعو العيادة في بغداد',
+          scheduledDate: new Date().toISOString().split('T')[0],
+          status: 'draft',
+          views: 0,
+          likes: 0,
+          shares: 0,
+          inquiriesGenerated: 0,
+        };
+      }
+    } catch (err) {
+      console.warn('[ContentGenerator] Gemini generation failed, using semantic match fallback:', err);
+    }
+  }
+
+  // 2. Semantic matching fallback
+  return generateDentalContent(request);
+}
+
 export function generateDentalContent(request: {
   accountId: AccountId;
   topic?: string;
   series?: string;
   format?: 'reel' | 'carousel' | 'story';
 }): ContentItem {
+  // If a topic is provided, match or dynamically generate for that topic
+  if (request.topic && request.topic.trim()) {
+    const matched = matchSemanticTopic(request.topic, request.series);
+    if (matched) return matched;
+  }
+
   // If requesting pilot content for Dr. Mustafa, pick or match from the master pilot catalog
   if (request.accountId === 'drmustafa_hadi') {
     if (request.series) {

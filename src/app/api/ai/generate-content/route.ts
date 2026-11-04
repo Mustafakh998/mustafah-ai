@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateDentalContent, generate30DayCalendar } from '@/lib/ai/contentGenerator';
+import { generateDentalContentAsync, generate30DayCalendar } from '@/lib/ai/contentGenerator';
 import { AccountId } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ calendar });
     }
 
-    const item = generateDentalContent({
+    const item = await generateDentalContentAsync({
       accountId: accountId as AccountId,
       topic,
       series,
