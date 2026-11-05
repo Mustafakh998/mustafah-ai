@@ -496,6 +496,8 @@ export async function generateDentalContentAsync(request: {
   topic?: string;
   series?: string;
   format?: 'reel' | 'carousel' | 'story' | 'post';
+  /** Short summary of what works on the account (from the audit), injected into the prompt. */
+  insightsAr?: string;
 }): Promise<ContentItem> {
   // 1. If topic provided, call Tiered AI Cascade (Tier 1 Gemini -> Tier 2 Groq -> Tier 3 OpenRouter)
   if (request.topic && request.topic.trim()) {
@@ -518,6 +520,14 @@ export async function generateDentalContentAsync(request: {
 الصيغة: "${request.format || 'reel'}"
 
 يجب أن يعكس المحتوى الخبرة السريرية المتقدمة (Damon, TADs, Open bite, Biomechanics) ويبسطها للمريض بأسلوب هندسي دقيق وجذاب.
+${request.insightsAr ? `\nبيانات من حساب العيادة الحقيقي (استفد منها):\n${request.insightsAr}\n` : ''}
+قواعد الانتشار على إنستغرام:
+- الهوك بأول ثانيتين: سؤال أو جملة صادمة، بدون مقدمة أو ترحيب.
+- الريل 15–45 ثانية، نص مكتوب على الشاشة لأن كثير يشاهدون بدون صوت.
+- اجعل المحتوى يستاهل يندز لصديق (مشكلة شائعة، معلومة مفاجئة) لأن الإرسال من أقوى إشارات الوصول.
+- كابشن 2–4 أسطر بكلمات يبحث عنها الناس (تقويم أسنان بغداد، زيونة)، دعوة واحدة واضحة، 3–5 هاشتاغات فقط.
+- محتوى أصلي، بدون أسعار محددة للتقويم، وبدون وعود بنتائج مضمونة.
+- الجمهور: بغداد، لهجة عراقية بغدادية طبيعية.
 أرجع النتيجة حصراً بصيغة JSON صالح ومباشر بالمفاتيح التالية:
 {
   "titleAr": "عنوان علمي وجذاب",
@@ -530,7 +540,9 @@ export async function generateDentalContentAsync(request: {
   "targetAudienceAr": "الجمهور المستهدف",
   "audioRecommendationAr": "توصية بالموسيقى/الصوت المناسب",
   "slidesAr": ["شريحة 1", "شريحة 2", "شريحة 3", "شريحة 4", "شريحة 5"],
-  "storyStickersAr": ["ستيكر استفتاء/تصويت", "ستيكر سؤال للدكتور", "ستيكر رابط الحجز والدايركت"]
+  "storyStickersAr": ["ستيكر استفتاء/تصويت", "ستيكر سؤال للدكتور", "ستيكر رابط الحجز والدايركت"],
+  "bestTimeAr": "أفضل يوم ووقت للنشر بتوقيت بغداد",
+  "rationaleAr": "جملة: ليش هذا المحتوى راح ينجح على حسابنا"
 }`;
 
       const tieredRes = await callTieredAI({
@@ -576,8 +588,11 @@ export async function generateDentalContentAsync(request: {
             'سؤال: اسأل د. مصطفى بالخاص',
             'حجز: رابط الحجز 07768886667',
           ],
+          bestTimeAr: parsed.bestTimeAr || undefined,
+          rationaleAr: parsed.rationaleAr || undefined,
           scheduledDate: new Date().toISOString().split('T')[0],
-          status: 'draft',
+          // AI-written medical content always goes to human review before publishing.
+          status: 'review_needed',
           views: 0,
           likes: 0,
           shares: 0,

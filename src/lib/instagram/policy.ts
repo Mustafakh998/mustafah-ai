@@ -64,7 +64,6 @@ export function resolveTargetAccount(recipientId?: string): {
   isLiveAllowed: boolean;
 } {
   const clinicId = process.env.ALMESWAK_CLINIC_INSTAGRAM_USER_ID || '17841400000000001';
-  const pilotId = process.env.DR_MUSTAFA_INSTAGRAM_USER_ID || '17841400000000000';
 
   if (recipientId === clinicId || recipientId === 'almeswaksmile_iq' || recipientId?.includes('almeswak')) {
     return {

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   MessageSquare,
   Search,
-  Filter,
   User,
   Bot,
   UserCheck,
@@ -13,20 +12,23 @@ import {
   MapPin,
   Clock,
   DollarSign,
-  AlertCircle,
-  CheckCircle2,
-  ExternalLink,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { AccountId, Language, Conversation, ChatMessage, TreatmentType } from '@/types';
+import { Appointment, NavTabId } from '@/types';
+import { toast } from '@/lib/toast';
 
 interface InboxViewProps {
   state: AppState;
-  onSendMessage: (conversationId: string, text: string, sender: 'assistant' | 'staff') => void;
+  onSendMessage: (
+    conversationId: string,
+    text: string,
+    sender: 'assistant' | 'staff',
+    approvedMessageId?: string
+  ) => Promise<boolean>;
   onToggleTakeover: (conversationId: string) => void;
   onSelectConversation: (id: string) => void;
-  onCreateAppointment: (apt: any) => void;
-  onNavigate: (tab: any) => void;
+  onCreateAppointment: (apt: Omit<Appointment, 'id' | 'createdAt'>) => void;
+  onNavigate: (tab: NavTabId) => void;
 }
 
 export const InboxView: React.FC<InboxViewProps> = ({
@@ -57,15 +59,25 @@ export const InboxView: React.FC<InboxViewProps> = ({
 
   const activeConv = conversations.find((c) => c.id === activeConversationId) || conversations[0];
 
-  const handleSend = () => {
+  const [editingDraftId, setEditingDraftId] = useState<string | undefined>();
+
+  const handleSend = async () => {
     if (!replyInput.trim() || !activeConv) return;
-    onSendMessage(activeConv.id, replyInput.trim(), 'staff');
+    const text = replyInput.trim();
     setReplyInput('');
+    const ok = await onSendMessage(activeConv.id, text, 'staff', editingDraftId);
+    if (ok) setEditingDraftId(undefined);
+    else setReplyInput(text); // keep the text so staff can retry
   };
 
-  const handleApplySuggested = (suggested: string) => {
+  const handleApplySuggested = (messageId: string, suggested: string) => {
     if (!activeConv) return;
-    onSendMessage(activeConv.id, suggested, 'assistant');
+    onSendMessage(activeConv.id, suggested, 'assistant', messageId);
+  };
+
+  const handleEditSuggested = (messageId: string, suggested: string) => {
+    setReplyInput(suggested);
+    setEditingDraftId(messageId);
   };
 
   const handleQuickBookAppointment = () => {
@@ -84,7 +96,7 @@ export const InboxView: React.FC<InboxViewProps> = ({
       status: 'new_request',
       receptionNotes: `تم الحجز السريع من صندوق المحادثات لمريض الإنستغرام @${activeConv.instagramUsername}`,
     });
-    alert(isAr ? 'تم تحويل المحادثة إلى طلب موعد في جدول الحجوزات بنجاح!' : 'Appointment created successfully!');
+    toast(isAr ? 'تم تحويل المحادثة إلى طلب موعد في جدول الحجوزات بنجاح!' : 'Appointment created successfully!');
     onNavigate('appointments');
   };
 
@@ -340,17 +352,25 @@ export const InboxView: React.FC<InboxViewProps> = ({
                           <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800">
                             <span className="flex items-center gap-1">
                               <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                              {isAr ? 'الرد المقترح بالعامية البغدادية:' : 'Suggested Iraqi Reply:'}
+                              {isAr ? 'رد مقترح بانتظار موافقتك:' : 'Draft reply — awaiting your approval:'}
                             </span>
-                            <button
-                              onClick={() => handleApplySuggested(msg.suggestedReply!)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-colors"
-                            >
-                              {isAr ? 'اعتماد وإرسال فوراً' : 'Accept & Send'}
-                            </button>
+                            <span className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleEditSuggested(msg.id, msg.suggestedReply!)}
+                                className="bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-colors"
+                              >
+                                {isAr ? 'تعديل' : 'Edit'}
+                              </button>
+                              <button
+                                onClick={() => handleApplySuggested(msg.id, msg.suggestedReply!)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-colors"
+                              >
+                                {isAr ? 'اعتماد وإرسال' : 'Approve & Send'}
+                              </button>
+                            </span>
                           </div>
                           <p className="font-sans leading-relaxed text-slate-700 italic">
-                            "{msg.suggestedReply}"
+                            &quot;{msg.suggestedReply}&quot;
                           </p>
                         </div>
                       )}

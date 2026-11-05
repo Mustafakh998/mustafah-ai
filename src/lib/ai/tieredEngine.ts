@@ -10,6 +10,7 @@ export interface TieredAIRequest {
   temperature?: number;
   jsonMode?: boolean;
   timeoutMs?: number;
+  maxTokens?: number;
 }
 
 export interface TieredAIResponse {
@@ -33,12 +34,13 @@ const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-7
  */
 async function callTier1Gemini(
   req: TieredAIRequest,
-  timeoutMs = 12000
+  timeoutMs = 15000
 ): Promise<string | null> {
   if (!GEMINI_API_KEY) return null;
 
+  const effectiveTimeout = req.timeoutMs ?? timeoutMs;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), effectiveTimeout);
 
   try {
     const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
@@ -59,6 +61,7 @@ async function callTier1Gemini(
       parts: [{ text: req.userMessage }],
     });
 
+    const defaultMaxTokens = req.jsonMode ? 3500 : 2000;
     const body: Record<string, unknown> = {
       contents,
       systemInstruction: {
@@ -66,7 +69,7 @@ async function callTier1Gemini(
       },
       generationConfig: {
         temperature: req.temperature ?? 0.7,
-        maxOutputTokens: 1000,
+        maxOutputTokens: req.maxTokens ?? defaultMaxTokens,
         ...(req.jsonMode ? { responseMimeType: 'application/json' } : {}),
       },
     };
@@ -102,16 +105,21 @@ async function callTier1Gemini(
  */
 async function callTier2Groq(
   req: TieredAIRequest,
-  timeoutMs = 5000
+  timeoutMs = 10000
 ): Promise<string | null> {
   if (!GROQ_API_KEY) return null;
 
+  const effectiveTimeout = req.timeoutMs ? Math.min(req.timeoutMs, 15000) : timeoutMs;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), effectiveTimeout);
 
   try {
+    const systemContent = req.jsonMode && !req.systemPrompt.toLowerCase().includes('json')
+      ? `${req.systemPrompt}\nYou must output a valid JSON object.`
+      : req.systemPrompt;
+
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-      { role: 'system', content: req.systemPrompt },
+      { role: 'system', content: systemContent },
     ];
 
     if (req.history && req.history.length > 0) {
@@ -125,6 +133,7 @@ async function callTier2Groq(
 
     messages.push({ role: 'user', content: req.userMessage });
 
+    const defaultMaxTokens = req.jsonMode ? 3500 : 2000;
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -135,7 +144,7 @@ async function callTier2Groq(
         model: GROQ_MODEL,
         messages,
         temperature: req.temperature ?? 0.7,
-        max_tokens: 1000,
+        max_tokens: req.maxTokens ?? defaultMaxTokens,
         ...(req.jsonMode ? { response_format: { type: 'json_object' } } : {}),
       }),
       signal: controller.signal,
@@ -164,16 +173,21 @@ async function callTier2Groq(
  */
 async function callTier3OpenRouter(
   req: TieredAIRequest,
-  timeoutMs = 6000
+  timeoutMs = 15000
 ): Promise<string | null> {
   if (!OPENROUTER_API_KEY) return null;
 
+  const effectiveTimeout = req.timeoutMs ?? timeoutMs;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = setTimeout(() => controller.abort(), effectiveTimeout);
 
   try {
+    const systemContent = req.jsonMode && !req.systemPrompt.toLowerCase().includes('json')
+      ? `${req.systemPrompt}\nYou must output a valid JSON object.`
+      : req.systemPrompt;
+
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-      { role: 'system', content: req.systemPrompt },
+      { role: 'system', content: systemContent },
     ];
 
     if (req.history && req.history.length > 0) {
@@ -187,6 +201,7 @@ async function callTier3OpenRouter(
 
     messages.push({ role: 'user', content: req.userMessage });
 
+    const defaultMaxTokens = req.jsonMode ? 3500 : 2000;
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -199,7 +214,7 @@ async function callTier3OpenRouter(
         model: OPENROUTER_MODEL,
         messages,
         temperature: req.temperature ?? 0.7,
-        max_tokens: 1000,
+        max_tokens: req.maxTokens ?? defaultMaxTokens,
         ...(req.jsonMode ? { response_format: { type: 'json_object' } } : {}),
       }),
       signal: controller.signal,
@@ -233,7 +248,7 @@ export async function callTieredAI(
   const startTime = Date.now();
 
   // --- Tier 1: Google Gemini ---
-  const tier1Text = await callTier1Gemini(req);
+  const tier1Text = await callTier1Gemini(req, req.timeoutMs ?? 20000);
   if (tier1Text) {
     return {
       text: tier1Text,
@@ -246,7 +261,7 @@ export async function callTieredAI(
   console.log('[TieredAI] Cascading to Tier 2: GroqCloud...');
 
   // --- Tier 2: GroqCloud ---
-  const tier2Text = await callTier2Groq(req);
+  const tier2Text = await callTier2Groq(req, req.timeoutMs ? Math.min(req.timeoutMs, 15000) : 10000);
   if (tier2Text) {
     return {
       text: tier2Text,
@@ -259,7 +274,7 @@ export async function callTieredAI(
   console.log('[TieredAI] Cascading to Tier 3: OpenRouter...');
 
   // --- Tier 3: OpenRouter ---
-  const tier3Text = await callTier3OpenRouter(req);
+  const tier3Text = await callTier3OpenRouter(req, req.timeoutMs ?? 20000);
   if (tier3Text) {
     return {
       text: tier3Text,

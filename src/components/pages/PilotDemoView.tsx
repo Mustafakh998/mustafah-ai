@@ -2,31 +2,20 @@ import React, { useState } from 'react';
 import {
   Sparkles,
   Bot,
-  User,
   ShieldCheck,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
   ArrowLeft,
-  ChevronRight,
   MessageSquare,
   Users,
   CalendarCheck,
   TrendingUp,
-  Clock,
-  Eye,
-  Share2,
   DollarSign,
-  Play,
-  RotateCcw,
-  Sliders,
   ExternalLink,
   Code,
-  Heart,
-  Bookmark,
   Check,
   FileText,
-  Lock,
 } from 'lucide-react';
 import { InstagramIcon } from '@/components/icons/InstagramIcon';
 import { AppState } from '@/lib/store';
@@ -513,7 +502,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
                     <li className="flex items-start gap-2">
                       <span className="text-emerald-600 font-bold">✓</span>
                       <span>
-                        <strong>هوية الدكتور:</strong> "د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك".
+                        <strong>هوية الدكتور:</strong> &quot;د. مصطفى هادي — طبيب أسنان يشرحلك قبل لا يعالجك&quot;.
                       </span>
                     </li>
                     <li className="flex items-start gap-2 text-red-700 font-semibold bg-red-50 p-2 rounded-lg border border-red-200">
@@ -531,7 +520,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
                     <li className="flex items-start gap-2 text-red-700 font-semibold bg-red-50 p-2 rounded-lg border border-red-200">
                       <AlertTriangle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
                       <span>
-                        <strong>مانع التجاوز الطبي:</strong> منع تشخيص الأشعة أو وصف أدوية ومسكنات أو إعطاء وعود مطلقة مثل "سنك ينعدل بشهرين".
+                        <strong>مانع التجاوز الطبي:</strong> منع تشخيص الأشعة أو وصف أدوية ومسكنات أو إعطاء وعود مطلقة مثل &quot;سنك ينعدل بشهرين&quot;.
                       </span>
                     </li>
                   </ul>
@@ -640,7 +629,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
                 <div className="bg-white p-4 rounded-xl border border-amber-200 text-xs space-y-2">
                   <div className="font-bold text-slate-800">{isAr ? 'رسالة المراجع التي فعّلت التحويل:' : 'Trigger Message:'}</div>
                   <div className="p-2.5 rounded-lg bg-slate-100 text-slate-800 font-medium">
-                    "زين دكتور انت متواجد بالعيادة السبت العصر؟ اريد افحص يمك شخصياً مو يم دكتور ثاني"
+                    &quot;زين دكتور انت متواجد بالعيادة السبت العصر؟ اريد افحص يمك شخصياً مو يم دكتور ثاني&quot;
                   </div>
                   <div className="flex items-center gap-2 text-emerald-700 font-semibold text-[11px] pt-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
@@ -770,7 +759,7 @@ export const PilotDemoView: React.FC<PilotDemoViewProps> = ({
 
                   <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs space-y-2">
                     <div className="font-bold text-slate-800">
-                      Reel #1: "ليش خطط علاج التقويم تختلف ببغداد؟ د. مصطفى هادي يشرحلك قبل لا يعالجك"
+                      Reel #1: &quot;ليش خطط علاج التقويم تختلف ببغداد؟ د. مصطفى هادي يشرحلك قبل لا يعالجك&quot;
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-center text-slate-600 pt-2 border-t border-slate-100">
                       <div>

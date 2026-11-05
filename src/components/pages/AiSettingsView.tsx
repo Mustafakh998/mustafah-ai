@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
 import {
-  Bot,
   Sliders,
   ShieldAlert,
   Sparkles,
-  CheckCircle2,
   RefreshCw,
   Cpu,
-  Layers,
-  FileText,
   AlertTriangle,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { Language } from '@/types';
+
 import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
 
 interface AiSettingsViewProps {
@@ -32,7 +28,7 @@ export const AiSettingsView: React.FC<AiSettingsViewProps> = ({ state }) => {
 
   // Test Playground
   const [testInput, setTestInput] = useState('شكد سعر التقويم ويصير فحص اونلاين بالصور؟');
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<ReturnType<typeof generateIraqiDialectResponse> | null>(null);
 
   const handleRunTest = () => {
     const res = generateIraqiDialectResponse(testInput, 'drmustafa_hadi', 'أحمد البغدادي');
@@ -77,7 +73,7 @@ export const AiSettingsView: React.FC<AiSettingsViewProps> = ({ state }) => {
                   {isAr ? 'بغدادي مؤدب وراقي (الموصى به)' : 'Polite Baghdad (Recommended)'}
                 </div>
                 <div className="text-[11px] text-slate-500 font-normal leading-relaxed">
-                  "أهلاً وسهلاً بيك نورتنا 💚 تدلل عيوني، كشفية التقويم يم دكتور مصطفى..."
+                  &quot;أهلاً وسهلاً بيك نورتنا 💚 تدلل عيوني، كشفية التقويم يم دكتور مصطفى...&quot;
                 </div>
               </button>
 
@@ -94,7 +90,7 @@ export const AiSettingsView: React.FC<AiSettingsViewProps> = ({ state }) => {
                   {isAr ? 'عامي شبابي عفوي' : 'Casual Street Slang'}
                 </div>
                 <div className="text-[11px] text-slate-500 font-normal leading-relaxed">
-                  "هلا عيني! شتكول نسويلك موعد السبت العصر يم د. مصطفى ونرتبلك الأسنان..."
+                  &quot;هلا عيني! شتكول نسويلك موعد السبت العصر يم د. مصطفى ونرتبلك الأسنان...&quot;
                 </div>
               </button>
 
@@ -111,7 +107,7 @@ export const AiSettingsView: React.FC<AiSettingsViewProps> = ({ state }) => {
                   {isAr ? 'فصحى طبية رسمية' : 'Formal Medical Arabic'}
                 </div>
                 <div className="text-[11px] text-slate-500 font-normal leading-relaxed">
-                  "أهلاً بحضرتك.. بالنسبة لأسعار تقويم الأسنان، تختلف حسب الحالة والخطة المناسبة إلك..."
+                  &quot;أهلاً بحضرتك.. بالنسبة لأسعار تقويم الأسنان، تختلف حسب الحالة والخطة المناسبة إلك...&quot;
                 </div>
               </button>
             </div>

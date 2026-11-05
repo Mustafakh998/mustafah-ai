@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { useAppStore } from '@/lib/store';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { NavTabId } from '@/types';
 import { Header } from '@/components/layout/Header';
+import { SectionTabs } from '@/components/layout/SectionTabs';
+import { Toaster } from '@/components/layout/Toaster';
 import { OverviewView } from '@/components/pages/OverviewView';
 import { PilotDemoView } from '@/components/pages/PilotDemoView';
 import { AccountsView } from '@/components/pages/AccountsView';
@@ -19,6 +22,10 @@ import { AdCampaignsView } from '@/components/pages/AdCampaignsView';
 import { MarketingStrategyView } from '@/components/pages/MarketingStrategyView';
 import { AnalyticsView } from '@/components/pages/AnalyticsView';
 import { AdminView } from '@/components/pages/AdminView';
+import { GrowthAuditView } from '@/components/pages/GrowthAuditView';
+import { SimilarPagesView } from '@/components/pages/SimilarPagesView';
+import { GrowthPlanView } from '@/components/pages/GrowthPlanView';
+import { ReplyStyleView } from '@/components/pages/ReplyStyleView';
 import { SimulateMessageModal } from '@/components/modals/SimulateMessageModal';
 import { ClinicOnboardingModal } from '@/components/modals/ClinicOnboardingModal';
 
@@ -52,6 +59,7 @@ export default function Home() {
   const [currentTab, setCurrentTab] = useState<NavTabId>('overview');
   const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
   const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Sync RTL / LTR document direction with language
   useEffect(() => {
@@ -66,6 +74,7 @@ export default function Home() {
   const newAppointmentsCount = state.appointments.filter((a) => a.status === 'new_request').length;
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans">
       {/* Sidebar Navigation */}
       <Sidebar
@@ -74,6 +83,8 @@ export default function Home() {
         language={state.currentLanguage}
         unreadCount={unreadMessagesCount}
         newAppointmentsCount={newAppointmentsCount}
+        isMobileOpen={isMobileNavOpen}
+        onCloseMobile={() => setIsMobileNavOpen(false)}
       />
 
       {/* Main Container */}
@@ -89,10 +100,31 @@ export default function Home() {
           onToggleAiAutoReply={toggleAiAutoReply}
           onOpenSimulateModal={() => setIsSimulateModalOpen(true)}
           onOpenOnboardModal={() => setIsOnboardModalOpen(true)}
+          onOpenMenu={() => setIsMobileNavOpen(true)}
+        />
+
+        <SectionTabs
+          currentTab={currentTab}
+          onSelectTab={setCurrentTab}
+          language={state.currentLanguage}
+          badges={{ inbox: unreadMessagesCount, appointments: newAppointmentsCount }}
         />
 
         {/* Tab View Container */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8">
+          <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={currentTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+          >
+          {currentTab === 'growth_audit' && <GrowthAuditView language={state.currentLanguage} onNavigate={setCurrentTab} />}
+          {currentTab === 'similar_pages' && <SimilarPagesView language={state.currentLanguage} onNavigate={setCurrentTab} />}
+          {currentTab === 'growth_plan' && <GrowthPlanView language={state.currentLanguage} onNavigate={setCurrentTab} />}
+          {currentTab === 'reply_style' && <ReplyStyleView language={state.currentLanguage} />}
+
           {currentTab === 'overview' && (
             <OverviewView
               state={state}
@@ -188,6 +220,8 @@ export default function Home() {
               onLoadDemoData={loadDemoData}
             />
           )}
+          </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
@@ -212,6 +246,9 @@ export default function Home() {
         language={state.currentLanguage}
         onClinicCreated={registerClinic}
       />
+
+      <Toaster />
     </div>
+    </MotionConfig>
   );
 }

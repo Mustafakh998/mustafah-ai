@@ -1,5 +1,10 @@
 import React from 'react';
-import { Trash2, ShieldCheck, Mail, Phone, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import {
+  Trash2,
+  ShieldCheck,
+  ArrowLeft,
+  CheckCircle2,
+} from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata = {

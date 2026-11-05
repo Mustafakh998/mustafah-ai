@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
 import {
-  Calendar as CalendarIcon,
-  Filter,
   CheckCircle2,
-  Clock,
   Sparkles,
   Film,
-  Layers,
   ArrowRight,
-  Eye,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { ContentItem, Language, AccountId } from '@/types';
+import { ContentItem, NavTabId } from '@/types';
 
 interface ContentCalendarViewProps {
   state: AppState;
   onUpdateStatus: (itemId: string, status: ContentItem['status']) => void;
-  onNavigate: (tab: any) => void;
+  onNavigate: (tab: NavTabId) => void;
 }
 
 export const ContentCalendarView: React.FC<ContentCalendarViewProps> = ({
@@ -160,7 +155,7 @@ export const ContentCalendarView: React.FC<ContentCalendarViewProps> = ({
 
             <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-600 space-y-1">
               <div className="font-bold text-slate-800 text-[11px]">{isAr ? 'الهوك (أول 3 ثوانٍ):' : 'Hook:'}</div>
-              <p className="line-clamp-2 italic">"{item.hookAr}"</p>
+              <p className="line-clamp-2 italic">&quot;{item.hookAr}&quot;</p>
             </div>
 
             {/* If published, show actual metrics */}

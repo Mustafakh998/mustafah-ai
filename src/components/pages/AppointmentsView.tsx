@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import {
-  CalendarCheck,
   Plus,
-  Search,
-  Filter,
   CheckCircle2,
   Clock,
   UserX,
-  Phone,
   MessageCircle,
   Calendar,
-  AlertCircle,
   Sparkles,
   Copy,
   Check,
@@ -20,12 +15,12 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { Appointment, AppointmentStatus, Language, TreatmentType } from '@/types';
+import { Appointment, AppointmentStatus, TreatmentType } from '@/types';
 
 interface AppointmentsViewProps {
   state: AppState;
   onUpdateStatus: (appointmentId: string, status: AppointmentStatus) => void;
-  onCreateAppointment: (apt: any) => void;
+  onCreateAppointment: (apt: Omit<Appointment, 'id' | 'createdAt'>) => void;
 }
 
 export const AppointmentsView: React.FC<AppointmentsViewProps> = ({

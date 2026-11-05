@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
 import {
-  Database,
   Search,
-  Plus,
   MapPin,
   Clock,
   Phone,
-  ShieldCheck,
-  Edit3,
-  DollarSign,
-  UserCheck,
-  CheckCircle2,
   HelpCircle,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
 import { CLINIC_SERVICES } from '@/lib/data/initialData';
-import { TreatmentService, Language } from '@/types';
+import { TreatmentService } from '@/types';
 
 interface KnowledgeBaseViewProps {
   state: AppState;
@@ -24,7 +17,7 @@ interface KnowledgeBaseViewProps {
 export const KnowledgeBaseView: React.FC<KnowledgeBaseViewProps> = ({ state }) => {
   const isAr = state.currentLanguage === 'ar';
   const [searchQuery, setSearchQuery] = useState('');
-  const [services, setServices] = useState<TreatmentService[]>(CLINIC_SERVICES);
+  const [services] = useState<TreatmentService[]>(CLINIC_SERVICES);
   const [selectedService, setSelectedService] = useState<TreatmentService>(CLINIC_SERVICES[0]);
 
   const filteredServices = services.filter((s) => {

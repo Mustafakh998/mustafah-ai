@@ -6,10 +6,8 @@ import {
   Sparkles,
   MessageSquare,
   DollarSign,
-  TrendingUp,
   Star,
   MapPin,
-  Clock,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
@@ -17,24 +15,27 @@ import {
   Send,
   Plus,
   RefreshCw,
-  Phone,
-  Eye,
-  Bookmark,
-  Share2,
-  Users,
-  Calendar,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { CommentAutomationRule, Language, ReviewRequest, TreatmentType } from '@/types';
+import { CommentAutomationRule, TreatmentType, NavTabId } from '@/types';
+import { toast } from '@/lib/toast';
 
 interface MarketingStrategyViewProps {
   state: AppState;
-  onNavigate: (tab: any) => void;
+  onNavigate: (tab: NavTabId) => void;
   onToggleCommentRule?: (id: string) => void;
   onAddCommentRule?: (rule: CommentAutomationRule) => void;
   onSendReviewRequest?: (id: string) => void;
   onReengageLead?: (id: string) => void;
 }
+
+type StrategySubTab =
+  | 'strategy_overview'
+  | 'content_matrix'
+  | 'boost_blueprint'
+  | 'comment_automation'
+  | 'google_reviews'
+  | 'lapsed_reactivation';
 
 export const MarketingStrategyView: React.FC<MarketingStrategyViewProps> = ({
   state,
@@ -45,11 +46,9 @@ export const MarketingStrategyView: React.FC<MarketingStrategyViewProps> = ({
   onReengageLead,
 }) => {
   const isAr = state.currentLanguage === 'ar';
-  const { commentRules = [], reviewRequests = [], leads = [], campaigns = [] } = state;
+  const { commentRules = [], reviewRequests = [], leads = [] } = state;
 
-  const [activeSubTab, setActiveSubTab] = useState<
-    'strategy_overview' | 'content_matrix' | 'boost_blueprint' | 'comment_automation' | 'google_reviews' | 'lapsed_reactivation'
-  >('strategy_overview');
+  const [activeSubTab, setActiveSubTab] = useState<StrategySubTab>('strategy_overview');
 
   // Comment simulator state
   const [testComment, setTestComment] = useState('');
@@ -162,7 +161,7 @@ export const MarketingStrategyView: React.FC<MarketingStrategyViewProps> = ({
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as any)}
+              onClick={() => setActiveSubTab(tab.id as StrategySubTab)}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center gap-2 transition-all ${
                 isActive
                   ? 'bg-emerald-600 text-white shadow-sm'
@@ -543,7 +542,7 @@ export const MarketingStrategyView: React.FC<MarketingStrategyViewProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-1 bg-slate-900 text-emerald-400 font-mono font-bold text-xs rounded-lg">
-                      "{rule.keyword}"
+                      &quot;{rule.keyword}&quot;
                     </span>
                     <span className="text-xs font-bold text-slate-700">
                       {rule.targetTreatment === 'orthodontics'
@@ -782,7 +781,7 @@ export const MarketingStrategyView: React.FC<MarketingStrategyViewProps> = ({
                     </span>
                   </div>
                   <div className="text-slate-500">
-                    {isAr ? 'آخر استفسار:' : 'Last message:'} "{lead.lastMessageText}"
+                    {isAr ? 'آخر استفسار:' : 'Last message:'} &quot;{lead.lastMessageText}&quot;
                   </div>
                   <div className="text-[11px] text-slate-400">
                     {lead.phone ? `هاتف: ${lead.phone}` : isAr ? 'لا يوجد رقم هاتف بعد' : 'No phone logged'}
@@ -792,7 +791,7 @@ export const MarketingStrategyView: React.FC<MarketingStrategyViewProps> = ({
                 <button
                   onClick={() => {
                     if (onReengageLead) onReengageLead(lead.id);
-                    alert(isAr ? `تم إرسال رسالة إعادة التنشيط إلى ${lead.patientName} بنجاح!` : `Reactivation sent!`);
+                    toast(isAr ? `تم إرسال رسالة إعادة التنشيط إلى ${lead.patientName} بنجاح!` : `Reactivation sent!`);
                   }}
                   className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-sm shrink-0"
                 >
@@ -892,3 +891,4 @@ export const MarketingStrategyView: React.FC<MarketingStrategyViewProps> = ({
     </div>
   );
 };
+

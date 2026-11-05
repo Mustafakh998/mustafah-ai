@@ -16,7 +16,7 @@ import {
   InstagramGraphApiDispatcher,
   defaultGraphApiDispatcher,
 } from './graphApi';
-import { generateIraqiDialectResponseAsync } from '@/lib/ai/iraqiEngine';
+import { generateStyledReply, holdingMessageFor } from '@/lib/ai/replyEngine';
 import {
   IPersistentStore,
   EscalationEventType,
@@ -335,11 +335,29 @@ export async function processInstagramWebhook(
           handoffReason,
           status: 'HUMAN_TAKEOVER_ACTIVE_NO_AI_REPLY',
         });
+        // Still save the message so staff see it in the inbox.
+        await persistWebhookEventToSupabase({
+          messageId,
+          senderId,
+          recipientId,
+          accountId: PILOT_ACCOUNT_ID,
+          messageText,
+          timestamp: eventTimestamp,
+          aiResponse: { replyText: '', requiresHumanHandoff: true },
+        }).catch((e) => console.error('[Meta Webhook] Failed to persist takeover message:', e));
         continue;
       }
 
       // 7. Iraqi Arabic AI Engine Execution with Strict Orthodontic Pricing Prohibition
-      const aiResponse = await generateIraqiDialectResponseAsync(messageText, PILOT_ACCOUNT_ID);
+      const aiResponse = await generateStyledReply(messageText, PILOT_ACCOUNT_ID);
+      // auto: send the AI reply. draft + handoff: send a short holding message, keep the AI reply as a draft.
+      // draft without handoff: send nothing until staff approve the draft in the inbox.
+      const textToSend =
+        aiResponse.mode === 'auto'
+          ? aiResponse.replyText
+          : aiResponse.requiresHumanHandoff
+          ? holdingMessageFor(aiResponse.intent)
+          : null;
       const isOrthoPriceInquiry =
         aiResponse.intent === 'orthodontic_inquiry' &&
         /سعر|أسعار|اسعار|تكلفة|تكلف|يكلف|بيش|شكد|كم|فلوس|قسط|أقساط|اقساط|تقسيط|دفعة|مقدمة|تمويل|دفعات|طريقة الدفع|price|cost|installment/i.test(
@@ -384,10 +402,10 @@ export async function processInstagramWebhook(
 
       // 9. Outbound Dispatch via Meta Graph API
       let outboundResult;
-      if (enableOutboundDispatch) {
+      if (enableOutboundDispatch && textToSend) {
         outboundResult = await dispatcher.sendDirectMessage({
           recipientId: senderId,
-          text: aiResponse.replyText,
+          text: textToSend,
           accountId: PILOT_ACCOUNT_ID,
           incomingMessageTimestamp: eventTimestamp,
           now,
@@ -424,6 +442,10 @@ export async function processInstagramWebhook(
         }
       }
 
+      if (!textToSend) {
+        await persistentStore.markMessageStatus(messageId, 'processed');
+      }
+
       // 10. Persist Conversation, Messages, and CRM Lead into Supabase
       try {
         await persistWebhookEventToSupabase({
@@ -442,6 +464,7 @@ export async function processInstagramWebhook(
             extractedPatientInfo: aiResponse.extractedPatientInfo,
           },
           outboundDispatched: outboundResult?.success,
+          sentText: outboundResult?.success && textToSend ? textToSend : undefined,
         });
       } catch (dbErr) {
         console.error('[Meta Webhook] Error persisting conversation to Supabase:', dbErr);
@@ -465,7 +488,11 @@ export async function processInstagramWebhook(
         requiresHumanHandoff: aiResponse.requiresHumanHandoff,
         handoffReason: aiResponse.handoffReason,
         outboundResult,
-        status: outboundResult?.success ? 'SUCCESS_DISPATCHED' : 'PROCESSED_NO_DISPATCH',
+        status: outboundResult?.success
+          ? 'SUCCESS_DISPATCHED'
+          : aiResponse.mode === 'draft'
+          ? 'DRAFT_AWAITING_APPROVAL'
+          : 'PROCESSED_NO_DISPATCH',
       });
     }
   }

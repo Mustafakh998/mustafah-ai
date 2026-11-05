@@ -1,21 +1,8 @@
 import React from 'react';
-import {
-  LayoutDashboard,
-  MessageSquare,
-  Bot,
-  Database,
-  Users,
-  CalendarCheck,
-  Video,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  ShieldCheck,
-  Sparkles,
-  Compass,
-} from 'lucide-react';
-import { InstagramIcon } from '@/components/icons/InstagramIcon';
-import { AccountId, Language, NavTabId } from '@/types';
+import { X } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Language, NavTabId } from '@/types';
+import { NAV_SECTIONS, sectionForTab } from '@/lib/navigation';
 
 interface SidebarProps {
   currentTab: NavTabId;
@@ -23,6 +10,8 @@ interface SidebarProps {
   language: Language;
   unreadCount: number;
   newAppointmentsCount: number;
+  isMobileOpen: boolean;
+  onCloseMobile: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -31,101 +20,89 @@ export const Sidebar: React.FC<SidebarProps> = ({
   language,
   unreadCount,
   newAppointmentsCount,
+  isMobileOpen,
+  onCloseMobile,
 }) => {
   const isAr = language === 'ar';
-
-  const NAV_ITEMS: {
-    id: NavTabId;
-    labelAr: string;
-    labelEn: string;
-    icon: React.ElementType;
-    badge?: number;
-    highlightBadge?: string;
-  }[] = [
-    { id: 'overview', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: LayoutDashboard },
-    { id: 'pilot_demo', labelAr: 'عرض الإدارة التفاعلي', labelEn: 'Management Live Demo', icon: Sparkles, highlightBadge: 'DEMO' },
-    { id: 'accounts', labelAr: 'حسابات إنستغرام', labelEn: 'Instagram Accounts', icon: InstagramIcon },
-    { id: 'inbox', labelAr: 'صندوق المحادثات', labelEn: 'DM Inbox', icon: MessageSquare, badge: unreadCount },
-    { id: 'ai_settings', labelAr: 'إعدادات المساعد الذكي', labelEn: 'AI Agent Settings', icon: Bot },
-    { id: 'knowledge_base', labelAr: 'قاعدة المعرفة الطبية', labelEn: 'Knowledge Base', icon: Database },
-    { id: 'leads_crm', labelAr: 'إدارة المراجعين (CRM)', labelEn: 'Leads CRM', icon: Users },
-    { id: 'appointments', labelAr: 'المواعيد والحجوزات', labelEn: 'Appointments', icon: CalendarCheck, badge: newAppointmentsCount },
-    { id: 'content_studio', labelAr: 'استوديو المحتوى', labelEn: 'Content Studio', icon: Video },
-    { id: 'content_calendar', labelAr: 'تقويم النشر (30 يوم)', labelEn: 'Content Calendar', icon: Calendar },
-    { id: 'ad_campaigns', labelAr: 'حملات الإعلانات (<$100)', labelEn: 'Ad Campaigns', icon: DollarSign },
-    { id: 'marketing_strategy', labelAr: 'استراتيجية التسويق والنمو', labelEn: 'Marketing Strategy', icon: Compass, highlightBadge: 'PLAYBOOK' },
-    { id: 'analytics', labelAr: 'إحصائيات النمو', labelEn: 'Growth Analytics', icon: TrendingUp },
-    { id: 'admin', labelAr: 'الإدارة وتشخيص الربط', labelEn: 'Administration', icon: ShieldCheck },
-  ];
+  const activeSection = sectionForTab(currentTab).id;
+  const badges: Record<string, number> = { patients: unreadCount + newAppointmentsCount };
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-100 flex flex-col border-e border-slate-800 shrink-0 select-none">
-      {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800/80 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-900/30 font-bold text-xl">
-          م
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-white tracking-wide text-base">MustafaH-AI</span>
-            <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-semibold px-1.5 py-0.5 rounded border border-emerald-500/30">
-              BAGHDAD
-            </span>
+    <>
+      {/* Mobile backdrop */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 z-30 lg:hidden" onClick={onCloseMobile} aria-hidden />
+      )}
+
+      <aside
+        className={`fixed lg:static inset-y-0 start-0 z-40 w-64 bg-slate-900 text-slate-100 flex flex-col border-e border-slate-800 shrink-0 select-none transition-transform lg:translate-x-0 ${
+          isMobileOpen ? 'translate-x-0' : isAr ? 'translate-x-full' : '-translate-x-full'
+        }`}
+      >
+        {/* Brand */}
+        <div className="p-5 border-b border-slate-800/80 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-900/30 font-bold text-xl">
+            م
           </div>
-          <p className="text-xs text-slate-400">
-            {isAr ? 'د. مصطفى هادي — نظام التحويل' : 'Dr. Mustafa Hadi Platform'}
-          </p>
+          <div className="flex-1 min-w-0">
+            <span className="font-bold text-white tracking-wide text-base block">MustafaH-AI</span>
+            <p className="text-xs text-slate-400 truncate">
+              {isAr ? 'د. مصطفى هادي — بغداد' : 'Dr. Mustafa Hadi — Baghdad'}
+            </p>
+          </div>
+          <button onClick={onCloseMobile} className="lg:hidden p-1 text-slate-400 hover:text-white" aria-label="Close menu">
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const isActive = currentTab === item.id;
+        {/* Sections */}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          {NAV_SECTIONS.map((section) => {
+            const Icon = section.icon;
+            const isActive = activeSection === section.id;
+            const badge = badges[section.id] ?? 0;
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSelectTab(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-start relative ${
-                isActive
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/40'
-                  : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
-              }`}
-            >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-              <span className="flex-1 truncate">{isAr ? item.labelAr : item.labelEn}</span>
-              {item.highlightBadge && !isActive && (
-                <span className="text-[10px] font-black tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                  {item.highlightBadge}
-                </span>
-              )}
-              {item.badge && item.badge > 0 ? (
-                <span
-                  className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                    isActive ? 'bg-white text-emerald-700' : 'bg-emerald-500 text-white'
-                  }`}
-                >
-                  {item.badge}
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
-      </nav>
+            return (
+              <button
+                key={section.id}
+                onClick={() => {
+                  if (!isActive) onSelectTab(section.tabs[0].id);
+                  onCloseMobile();
+                }}
+                aria-current={isActive ? 'page' : undefined}
+                className={`relative w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors text-start ${
+                  isActive ? 'text-white' : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
+                }`}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="sidebar-active"
+                    className="absolute inset-0 rounded-xl bg-emerald-600 shadow-md shadow-emerald-950/40"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  />
+                )}
+                <Icon className={`relative w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <span className="relative flex-1 truncate">{isAr ? section.labelAr : section.labelEn}</span>
+                {badge > 0 && (
+                  <span
+                    className={`relative text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isActive ? 'bg-white text-emerald-700' : 'bg-emerald-500 text-white'
+                    }`}
+                  >
+                    {badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Footer Info */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-950/40 text-xs text-slate-400">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-slate-500">{isAr ? 'نسخة النظام' : 'Version'}</span>
-          <span className="text-emerald-400 font-mono text-[11px]">v2.6-Baghdad</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+        <div className="p-4 border-t border-slate-800/80 text-[11px] text-slate-400 flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>{isAr ? 'الويب هوك و Meta متصلان' : 'Meta Webhooks Active'}</span>
+          <span>{isAr ? 'متصل بـ Meta' : 'Connected to Meta'}</span>
+          <span className="ms-auto font-mono text-slate-500">v2.6</span>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 };

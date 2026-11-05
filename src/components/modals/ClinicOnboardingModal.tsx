@@ -3,13 +3,10 @@ import {
   X,
   Building2,
   CheckCircle2,
-  ShieldAlert,
   Sparkles,
-  CreditCard,
   MapPin,
   Phone,
   User,
-  ArrowRight,
   ShieldCheck,
 } from 'lucide-react';
 import { Language, SubscriptionTier } from '@/types';

@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import {
   CheckCircle2,
-  AlertTriangle,
-  Clock,
   ShieldCheck,
   Key,
-  ExternalLink,
   RefreshCw,
-  Sparkles,
-  Info,
   Lock,
 } from 'lucide-react';
 import { InstagramIcon } from '@/components/icons/InstagramIcon';
 import { AppState } from '@/lib/store';
-import { AccountId, Language } from '@/types';
+import { AccountId } from '@/types';
+import { toast } from '@/lib/toast';
 
 interface AccountsViewProps {
   state: AppState;
@@ -21,10 +17,9 @@ interface AccountsViewProps {
 
 export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
   const isAr = state.currentLanguage === 'ar';
-  const { accounts } = state;
 
   const [isOAuthModalOpen, setIsOAuthModalOpen] = useState(false);
-  const [selectedTargetAccount, setSelectedTargetAccount] = useState<AccountId>('almeswaksmile_iq');
+  const [, setSelectedTargetAccount] = useState<AccountId>('almeswaksmile_iq');
   const [isRefreshingToken, setIsRefreshingToken] = useState(false);
   const [tokenTestResult, setTokenTestResult] = useState<string | null>(null);
 
@@ -90,7 +85,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
                 {isAr ? 'أخصائي تقويم أسنان وفكين' : 'Specialist Orthodontist'}
               </p>
               <p className="text-xs text-slate-500 mt-2 line-clamp-2">
-                "Orthodontist | Smiles guided by science & technology | IT & Programming Enthusiast | 📍 Iraq"
+                &quot;Orthodontist | Smiles guided by science & technology | IT & Programming Enthusiast | 📍 Iraq&quot;
               </p>
             </div>
           </div>
@@ -152,7 +147,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
                 <span>{isAr ? 'مساحة العيادة المستقبلية — بغداد زيونة' : 'Future Clinic Target — Zayouna'}</span>
               </p>
               <p className="text-xs text-slate-500 mt-2 line-clamp-2">
-                "ابتسامة | عناية | علاج | ثقة | 📍 بغداد – زيونة – خدمي دريم سيتي مول | للحجز: 07768886667"
+                &quot;ابتسامة | عناية | علاج | ثقة | 📍 بغداد – زيونة – خدمي دريم سيتي مول | للحجز: 07768886667&quot;
               </p>
             </div>
           </div>
@@ -310,7 +305,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ state }) => {
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => {
-                  alert(
+                  toast(
                     isAr
                       ? 'تم تسجيل محاكاة الربط بنجاح عبر بروتوكول Meta OAuth v21.0!'
                       : 'Meta OAuth simulation completed!'

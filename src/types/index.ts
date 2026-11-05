@@ -15,6 +15,10 @@ export type NavTabId =
   | 'content_calendar'
   | 'ad_campaigns'
   | 'marketing_strategy'
+  | 'growth_audit'
+  | 'similar_pages'
+  | 'growth_plan'
+  | 'reply_style'
   | 'analytics'
   | 'admin';
 
@@ -176,6 +180,10 @@ export interface ContentItem {
   ctaAr: string;
   coverHeadlineAr: string;
   targetAudienceAr: string;
+  /** AI suggestion: best day/time to post (Baghdad time). */
+  bestTimeAr?: string;
+  /** AI explanation of why this piece should perform on the account. */
+  rationaleAr?: string;
   scheduledDate: string;
   status: 'draft' | 'review_needed' | 'approved' | 'published';
   views?: number;
@@ -215,6 +223,13 @@ export interface AdCampaign {
   confirmedAppointments: number;
   attendedPatients: number;
   requiresHumanApproval: boolean;
+  /** Meta Marketing API campaign id, once actually created on Meta. Absent = never sent to Meta. */
+  metaCampaignId?: string;
+  metaAdSetId?: string;
+  /** Set while create/activate/pause is in flight, so the UI can disable buttons and show a spinner. */
+  metaSyncPending?: boolean;
+  /** Last error message from Meta, if a create/activate/pause call failed. */
+  metaSyncError?: string;
 }
 
 export interface AnalyticsMetrics {

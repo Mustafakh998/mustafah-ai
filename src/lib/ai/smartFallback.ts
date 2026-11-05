@@ -1,4 +1,4 @@
-import { AccountId, PilotIntentType, TreatmentType } from '@/types';
+import { AccountId } from '@/types';
 import { AIResponseResult } from './iraqiEngine';
 
 export interface ChatHistoryMessage {
@@ -51,7 +51,6 @@ export function generateSmartContextualResponse(
   history: ChatHistoryMessage[] = []
 ): AIResponseResult {
   const text = userMessage.trim();
-  const lower = text.toLowerCase();
   const gender = detectGender(patientName);
 
   // Pronouns based on gender

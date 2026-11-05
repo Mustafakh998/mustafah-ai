@@ -1,27 +1,21 @@
 import React, { useState } from 'react';
 import {
   DollarSign,
-  TrendingUp,
-  Target,
   ShieldAlert,
   Play,
   Pause,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
-  Info,
   Plus,
   Flame,
-  Smartphone,
-  Eye,
-  Send,
-  Users,
   Compass,
-  Sparkles,
   Check,
+  Loader2,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { AccountId, AdCampaign, Language } from '@/types';
+import { AccountId, AdCampaign, NavTabId } from '@/types';
+import { toast } from '@/lib/toast';
 
 interface AdCampaignsViewProps {
   state: AppState;
@@ -36,8 +30,8 @@ interface AdCampaignsViewProps {
     dailyBudgetUSD: number;
     durationDays: number;
     boostedContentId?: string;
-  }) => AdCampaign;
-  onNavigate?: (tab: any) => void;
+  }) => AdCampaign | Promise<AdCampaign>;
+  onNavigate?: (tab: NavTabId) => void;
 }
 
 export const AdCampaignsView: React.FC<AdCampaignsViewProps> = ({
@@ -110,6 +104,8 @@ export const AdCampaignsView: React.FC<AdCampaignsViewProps> = ({
   const handleCreateAdSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onBoostPostOrProfile) {
+      // Sent to Meta as a PAUSED campaign — it does not spend yet. Store shows a toast once
+      // Meta confirms creation (or reports an error), since this is a real network call.
       onBoostPostOrProfile({
         accountId: 'drmustafa_hadi',
         objective: adObjective,
@@ -121,6 +117,7 @@ export const AdCampaignsView: React.FC<AdCampaignsViewProps> = ({
         boostedContentId: selectedContentId || undefined,
       });
     } else if (onAddCampaign) {
+      // Fallback path (no Meta wiring provided by the parent): local-only draft, never active.
       const newCamp: AdCampaign = {
         id: `boost_${Date.now()}`,
         name: 'Targeted Baghdad Dental Ad',
@@ -129,7 +126,7 @@ export const AdCampaignsView: React.FC<AdCampaignsViewProps> = ({
         objective: adObjective,
         allocatedBudgetUSD: plannedNewBudget,
         spentUSD: 0,
-        status: 'active',
+        status: 'draft_pending_approval',
         targetLocation: `Baghdad (${targetNeighborhoods.join(', ')})`,
         targetAudienceAr: `بغداد (${targetNeighborhoods.join('، ')}) للأعمار 18-38`,
         reach: 0,
@@ -139,7 +136,7 @@ export const AdCampaignsView: React.FC<AdCampaignsViewProps> = ({
         appointmentRequests: 0,
         confirmedAppointments: 0,
         attendedPatients: 0,
-        requiresHumanApproval: false,
+        requiresHumanApproval: true,
         dailyBudgetUSD,
         durationDays,
         targetNeighborhoods,
@@ -147,15 +144,16 @@ export const AdCampaignsView: React.FC<AdCampaignsViewProps> = ({
         adCreativeBody: customBody,
       };
       onAddCampaign(newCamp);
+      toast(isAr ? 'تم حفظ الحملة كمسودة بانتظار الموافقة.' : 'Campaign saved as a draft awaiting approval.');
     }
 
     setIsCreateModalOpen(false);
-    alert(isAr ? 'تم إنشاء الحملة وتفعيلها وفق الضوابط المالية المحددة بنجاح!' : 'Ad launched successfully!');
   };
 
   const handleToggleClick = (camp: AdCampaign) => {
+    if (camp.metaSyncPending) return; // a create/activate/pause call is already in flight
     if (camp.status !== 'active') {
-      // Human approval gate required to turn on/spend
+      // Human approval gate required to turn on/spend real budget
       setConfirmModalCampaign(camp);
     } else {
       onToggleCampaignStatus(camp.id);
@@ -422,7 +420,7 @@ export const AdCampaignsView: React.FC<AdCampaignsViewProps> = ({
                         <button
                           key={obj.id}
                           type="button"
-                          onClick={() => setAdObjective(obj.id as any)}
+                          onClick={() => setAdObjective(obj.id as AdCampaign['objective'])}
                           className={`p-2 rounded-xl border text-[11px] font-bold transition-all text-center ${
                             adObjective === obj.id
                               ? 'border-emerald-600 bg-emerald-50 text-emerald-950 shadow-sm'

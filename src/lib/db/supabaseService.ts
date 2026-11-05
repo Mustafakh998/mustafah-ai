@@ -9,6 +9,70 @@ const SERVICE_KEY =
 const DEFAULT_DRMUSTAFA_ORG_ID = 'a0000000-0000-0000-0000-000000000001';
 const ALMESWAK_ORG_ID = 'a0000000-0000-0000-0000-000000000002';
 
+// Raw row shapes returned by the Supabase REST API (snake_case columns).
+interface ChatMessageRow {
+  id: string;
+  conversation_id: string;
+  sender: string;
+  text: string;
+  timestamp: string;
+  intent?: string | null;
+  confidence?: number | string | null;
+  suggested_reply?: string | null;
+}
+
+interface ConversationRow {
+  id: string;
+  account_id: string;
+  instagram_username: string;
+  patient_name: string;
+  status: Conversation['status'];
+  treatment_interest?: TreatmentType | null;
+  unread?: boolean | null;
+  last_message?: string | null;
+  last_message_time?: string | null;
+  created_at: string;
+  patient_phone?: string | null;
+  preferred_date?: string | null;
+  chat_messages?: ChatMessageRow[] | null;
+}
+
+interface LeadRow {
+  id: string;
+  account_id: string;
+  instagram_username: string;
+  patient_name: string;
+  phone?: string | null;
+  treatment: string;
+  treatment_name_ar: string;
+  status: Lead['status'];
+  inquiry_date: string;
+  campaign_source?: string | null;
+  estimated_value_iqd?: number | string | null;
+  staff_notes?: string | null;
+  confidence_score?: number | string | null;
+  last_message_text?: string | null;
+  is_handed_over_to_human?: boolean | null;
+}
+
+interface AppointmentRow {
+  id: string;
+  lead_id?: string | null;
+  patient_name: string;
+  phone: string;
+  account_id: string;
+  treatment: string;
+  treatment_name_ar: string;
+  preferred_date: string;
+  preferred_time: string;
+  assigned_doctor: string;
+  assigned_doctor_ar: string;
+  status: Appointment['status'];
+  reception_notes?: string | null;
+  created_at: string;
+  confirmed_at?: string | null;
+}
+
 function getHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -65,6 +129,8 @@ export interface InboundMessageEvent {
     };
   };
   outboundDispatched?: boolean;
+  /** Text actually delivered to the patient. If set, it is saved as an assistant message. */
+  sentText?: string;
 }
 
 /**
@@ -83,6 +149,7 @@ export async function persistWebhookEventToSupabase(event: InboundMessageEvent):
     messageText,
     timestamp,
     aiResponse,
+    sentText,
   } = event;
 
   const orgId = accountId === 'almeswaksmile_iq' ? ALMESWAK_ORG_ID : DEFAULT_DRMUSTAFA_ORG_ID;
@@ -132,7 +199,8 @@ export async function persistWebhookEventToSupabase(event: InboundMessageEvent):
       text: messageText,
       intent: aiResponse.intent || null,
       confidence: aiResponse.confidence || 0.9,
-      suggested_reply: aiResponse.replyText,
+      // Keep the AI reply as an approvable draft unless that exact text was already sent.
+      suggested_reply: aiResponse.replyText && aiResponse.replyText !== sentText ? aiResponse.replyText : null,
       timestamp: eventIsoTime,
     };
 
@@ -150,13 +218,13 @@ export async function persistWebhookEventToSupabase(event: InboundMessageEvent):
       console.error('[SupabaseService] Failed to insert user message:', userMsgRes.status, errText);
     }
 
-    // 3. Insert AI Assistant Response Message
-    if (aiResponse.replyText) {
+    // 3. Insert the message actually sent to the patient (auto reply or holding message)
+    if (sentText) {
       const aiMsgPayload = {
         conversation_id: convId,
         organization_id: orgId,
         sender: 'assistant',
-        text: aiResponse.replyText,
+        text: sentText,
         intent: aiResponse.intent || null,
         confidence: aiResponse.confidence || 0.9,
         timestamp: new Date().toISOString(),
@@ -191,14 +259,22 @@ export async function persistWebhookEventToSupabase(event: InboundMessageEvent):
       is_handed_over_to_human: Boolean(aiResponse.requiresHumanHandoff),
     };
 
-    await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
-      method: 'POST',
-      headers: {
-        ...getHeaders(),
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify([leadPayload]),
-    });
+    // One lead per patient: only insert if this username has no lead yet.
+    const existingLeadRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/leads?select=id&limit=1&account_id=eq.${encodeURIComponent(accountId)}&instagram_username=eq.${encodeURIComponent(username)}`,
+      { headers: getHeaders(), cache: 'no-store' }
+    );
+    const existingLeads: unknown[] = existingLeadRes.ok ? await existingLeadRes.json() : [];
+    if (existingLeads.length === 0) {
+      await fetch(`${SUPABASE_URL}/rest/v1/leads`, {
+        method: 'POST',
+        headers: {
+          ...getHeaders(),
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify([leadPayload]),
+      });
+    }
 
     console.log(`[SupabaseService] Persisted DM event successfully for ${senderId} (convId: ${convId}).`);
     return true;
@@ -226,15 +302,15 @@ export async function fetchLiveDashboardData(targetAccountId: string = 'drmustaf
       cache: 'no-store',
     });
 
-    let rawConvs: any[] = [];
+    let rawConvs: ConversationRow[] = [];
     if (convRes.ok) {
       rawConvs = await convRes.json();
     }
 
-    const conversations: Conversation[] = (rawConvs || []).map((c: any) => {
+    const conversations: Conversation[] = (rawConvs || []).map((c) => {
       const messages: ChatMessage[] = (c.chat_messages || [])
-        .sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-        .map((m: any) => ({
+        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+        .map((m) => ({
           id: m.id,
           conversationId: m.conversation_id,
           sender: m.sender as 'user' | 'assistant' | 'staff',
@@ -264,12 +340,12 @@ export async function fetchLiveDashboardData(targetAccountId: string = 'drmustaf
     // 2. Fetch Leads
     const leadUrl = `${SUPABASE_URL}/rest/v1/leads?select=*&order=inquiry_date.desc${accountFilter}`;
     const leadRes = await fetch(leadUrl, { headers: getHeaders(), cache: 'no-store' });
-    let rawLeads: any[] = [];
+    let rawLeads: LeadRow[] = [];
     if (leadRes.ok) {
       rawLeads = await leadRes.json();
     }
 
-    const leads: Lead[] = (rawLeads || []).map((l: any) => ({
+    const leads: Lead[] = (rawLeads || []).map((l) => ({
       id: l.id,
       accountId: l.account_id as AccountId,
       instagramUsername: l.instagram_username,
@@ -291,12 +367,12 @@ export async function fetchLiveDashboardData(targetAccountId: string = 'drmustaf
     // 3. Fetch Appointments
     const aptUrl = `${SUPABASE_URL}/rest/v1/appointments?select=*&order=preferred_date.desc${accountFilter}`;
     const aptRes = await fetch(aptUrl, { headers: getHeaders(), cache: 'no-store' });
-    let rawApts: any[] = [];
+    let rawApts: AppointmentRow[] = [];
     if (aptRes.ok) {
       rawApts = await aptRes.json();
     }
 
-    const appointments: Appointment[] = (rawApts || []).map((a: any) => ({
+    const appointments: Appointment[] = (rawApts || []).map((a) => ({
       id: a.id,
       leadId: a.lead_id || '',
       patientName: a.patient_name,
@@ -372,3 +448,30 @@ export async function saveStaffReplyToSupabase(
   }
 }
 
+
+/** Time (ms) of the patient's latest message, used for Meta's 24-hour reply window. */
+export async function getLastUserMessageTime(conversationId: string): Promise<number | null> {
+  if (!SERVICE_KEY || !SUPABASE_URL) return null;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/chat_messages?select=timestamp&sender=eq.user&conversation_id=eq.${encodeURIComponent(conversationId)}&order=timestamp.desc&limit=1`,
+      { headers: getHeaders(), cache: 'no-store' }
+    );
+    if (!res.ok) return null;
+    const rows: { timestamp: string }[] = await res.json();
+    return rows[0] ? new Date(rows[0].timestamp).getTime() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Removes an AI draft from a patient message once staff approved and sent it. */
+export async function clearSuggestedReply(messageId: string): Promise<void> {
+  // Only database ids (UUIDs) exist in Supabase; local demo ids are skipped.
+  if (!SERVICE_KEY || !SUPABASE_URL || !/^[0-9a-f-]{36}$/i.test(messageId)) return;
+  await fetch(`${SUPABASE_URL}/rest/v1/chat_messages?id=eq.${messageId}`, {
+    method: 'PATCH',
+    headers: { ...getHeaders(), Prefer: 'return=minimal' },
+    body: JSON.stringify({ suggested_reply: null }),
+  }).catch((e) => console.error('[SupabaseService] Failed to clear draft:', e));
+}

@@ -38,7 +38,8 @@ export async function generateGeminiDialectResponse(
   userMessage: string,
   accountId: AccountId = 'drmustafa_hadi',
   patientName?: string,
-  history: ChatHistoryMessage[] = []
+  history: ChatHistoryMessage[] = [],
+  stylePrompt = ''
 ): Promise<AIResponseResult> {
   // 1. Get structured baseline metadata from smart clinical engine
   const baseResult = generateSmartContextualResponse(userMessage, accountId, patientName, history);
@@ -50,7 +51,7 @@ export async function generateGeminiDialectResponse(
       : `رسالة المراجع: ${userMessage}`;
 
     const tieredResponse = await callTieredAI({
-      systemPrompt: CLINIC_SYSTEM_PROMPT,
+      systemPrompt: CLINIC_SYSTEM_PROMPT + stylePrompt,
       userMessage: userPrompt,
       history,
       temperature: 0.7,

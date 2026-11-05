@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   fetchLiveDashboardData,
   saveStaffReplyToSupabase,
+  getLastUserMessageTime,
+  clearSuggestedReply,
   persistWebhookEventToSupabase,
   mapIntentToTreatment,
 } from '@/lib/db/supabaseService';
-import { generateIraqiDialectResponseAsync } from '@/lib/ai/iraqiEngine';
+import { generateStyledReply } from '@/lib/ai/replyEngine';
+import { defaultGraphApiDispatcher } from '@/lib/instagram/graphApi';
 import { AccountId } from '@/types';
+
+/** Real Instagram conversations use the numeric IGSID as id (conv_123...). Demo/simulated ones don't. */
+const instagramRecipientOf = (conversationId: string) => {
+  const id = conversationId.replace(/^conv_/, '');
+  return /^\d{6,}$/.test(id) ? id : null;
+};
 
 /**
  * GET /api/conversations
@@ -43,7 +52,7 @@ export async function POST(request: NextRequest) {
     const { action = 'staff_reply' } = body;
 
     if (action === 'staff_reply') {
-      const { conversationId, text, sender = 'staff' } = body;
+      const { conversationId, text, sender = 'staff', approvedMessageId } = body;
       if (!conversationId || !text) {
         return NextResponse.json(
           { error: 'conversationId and text are required.' },
@@ -51,8 +60,32 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (typeof text !== 'string' || text.length > 1000) {
+        return NextResponse.json({ error: 'Reply must be text under 1000 characters.' }, { status: 400 });
+      }
+
+      // Deliver to Instagram first for real conversations; only save if delivery worked.
+      const recipientId = instagramRecipientOf(String(conversationId));
+      let delivered: boolean | null = null;
+      if (recipientId) {
+        const lastUserAt = await getLastUserMessageTime(String(conversationId));
+        const result = await defaultGraphApiDispatcher.sendDirectMessage({
+          recipientId,
+          text,
+          incomingMessageTimestamp: lastUserAt ?? undefined,
+        });
+        if (!result.success) {
+          return NextResponse.json(
+            { success: false, delivered: false, error: result.error, message: result.message },
+            { status: 502 }
+          );
+        }
+        delivered = true;
+      }
+
       await saveStaffReplyToSupabase(conversationId, text, sender);
-      return NextResponse.json({ success: true, timestamp: new Date().toISOString() });
+      if (typeof approvedMessageId === 'string') await clearSuggestedReply(approvedMessageId);
+      return NextResponse.json({ success: true, delivered, timestamp: new Date().toISOString() });
     }
 
     if (action === 'simulate') {
@@ -72,12 +105,7 @@ export async function POST(request: NextRequest) {
       const patientName = username === 'patient_iq' ? 'مراجع إنستغرام تجريبي' : `@${username}`;
 
       // 1. Run Iraqi AI Dialect Engine (Async with Gemini + context history)
-      const aiResponse = await generateIraqiDialectResponseAsync(
-        text,
-        accountId as AccountId,
-        patientName,
-        history
-      );
+      const aiResponse = await generateStyledReply(text, accountId as AccountId, patientName, history);
 
       // 2. Persist to Supabase
       await persistWebhookEventToSupabase({
@@ -96,7 +124,8 @@ export async function POST(request: NextRequest) {
           treatmentDetected: aiResponse.treatmentDetected || mapIntentToTreatment(aiResponse.intent),
           extractedPatientInfo: aiResponse.extractedPatientInfo,
         },
-        outboundDispatched: true,
+        // Simulated chats are never sent anywhere; mirror what the live webhook would do.
+        sentText: aiResponse.mode === 'auto' ? aiResponse.replyText : undefined,
       });
 
       return NextResponse.json({

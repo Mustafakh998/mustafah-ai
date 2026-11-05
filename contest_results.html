@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Instagram Halloween Dog Costume Contest — Vote Tally Audit (Run #2)</title>
+  <title>Instagram Halloween Dog Costume Contest — Vote Tally Audit (Run #3)</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@400;600;700;800&display=swap');
 
     @page {
       size: A4;
-      margin: 10mm 12mm;
+      margin: 9mm 12mm;
     }
 
     * {
@@ -22,14 +22,14 @@
       color: #1e293b;
       background-color: #ffffff;
       line-height: 1.35;
-      font-size: 8.5pt;
+      font-size: 8.2pt;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
 
     .page {
-      height: 275mm;
-      max-height: 275mm;
+      height: 279mm;
+      max-height: 279mm;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -42,21 +42,21 @@
 
     .header {
       border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 8px;
-      margin-bottom: 10px;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .badge-bar {
       display: flex;
       gap: 6px;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
     .badge {
       display: inline-block;
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 9999px;
-      font-size: 7.5pt;
+      font-size: 7.2pt;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
@@ -80,8 +80,14 @@
       border: 1px solid #bbf7d0;
     }
 
+    .badge-purple {
+      background-color: #f3e8ff;
+      color: #7e22ce;
+      border: 1px solid #e9d5ff;
+    }
+
     h1 {
-      font-size: 14pt;
+      font-size: 13.5pt;
       font-weight: 900;
       color: #0f172a;
       letter-spacing: -0.3px;
@@ -89,10 +95,11 @@
     }
 
     .subheading {
-      font-size: 8pt;
+      font-size: 7.8pt;
       color: #64748b;
       display: flex;
-      gap: 14px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .subheading a {
@@ -104,27 +111,27 @@
     .metrics-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-bottom: 10px;
+      gap: 7px;
+      margin-bottom: 8px;
     }
 
     .metric-card {
       background-color: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 6px 8px;
+      border-radius: 6px;
+      padding: 5px 8px;
       text-align: center;
     }
 
     .metric-title {
-      font-size: 7pt;
+      font-size: 6.8pt;
       font-weight: 700;
       text-transform: uppercase;
       color: #64748b;
     }
 
     .metric-value {
-      font-size: 14pt;
+      font-size: 13pt;
       font-weight: 900;
       color: #0f172a;
       line-height: 1.1;
@@ -132,7 +139,7 @@
     }
 
     .metric-delta {
-      font-size: 7pt;
+      font-size: 6.8pt;
       font-weight: 700;
       color: #16a34a;
     }
@@ -141,33 +148,33 @@
     .prize-box {
       background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
       border: 1px solid #fde68a;
-      border-radius: 8px;
-      padding: 6px 12px;
-      margin-bottom: 10px;
-      font-size: 8pt;
+      border-radius: 6px;
+      padding: 5px 10px;
+      margin-bottom: 8px;
+      font-size: 7.6pt;
     }
 
     .prize-title {
       font-weight: 800;
       color: #92400e;
-      font-size: 8.5pt;
+      font-size: 8pt;
     }
 
     .prize-items {
       display: flex;
-      gap: 20px;
+      gap: 18px;
       color: #78350f;
       margin-top: 2px;
     }
 
     h2 {
-      font-size: 10pt;
+      font-size: 9.5pt;
       font-weight: 800;
       color: #0f172a;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       border-left: 3px solid #ea580c;
       padding-left: 6px;
     }
@@ -176,8 +183,8 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 7.8pt;
-      margin-bottom: 6px;
+      font-size: 7.4pt;
+      margin-bottom: 4px;
     }
 
     th {
@@ -185,13 +192,13 @@
       color: #475569;
       font-weight: 700;
       text-align: left;
-      padding: 4px 6px;
+      padding: 3.5px 5px;
       border-top: 1px solid #cbd5e1;
       border-bottom: 1.5px solid #cbd5e1;
     }
 
     td {
-      padding: 3.5px 6px;
+      padding: 2.8px 5px;
       border-bottom: 1px solid #e2e8f0;
       vertical-align: middle;
     }
@@ -202,14 +209,14 @@
 
     .rank-cell {
       font-weight: 800;
-      width: 42px;
+      width: 44px;
       text-align: center;
     }
 
     .dog-num {
       font-weight: 800;
       color: #c2410c;
-      width: 38px;
+      width: 36px;
     }
 
     .dog-name {
@@ -229,12 +236,20 @@
       width: 50px;
     }
 
+    .adds-cell {
+      font-size: 7pt;
+      font-weight: 700;
+      color: #2563eb;
+      text-align: right;
+      width: 60px;
+    }
+
     .delta-cell {
-      font-size: 7.5pt;
+      font-size: 7.2pt;
       font-weight: 700;
       color: #16a34a;
       text-align: right;
-      width: 45px;
+      width: 44px;
     }
 
     .share-cell {
@@ -245,7 +260,7 @@
     }
 
     .status-cell {
-      font-size: 7.5pt;
+      font-size: 7.2pt;
       font-weight: 600;
     }
 
@@ -270,61 +285,61 @@
     .insights {
       background-color: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 10px;
-      font-size: 8pt;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      font-size: 7.6pt;
     }
 
     .insights ul {
-      margin-left: 18px;
-      margin-top: 4px;
+      margin-left: 16px;
+      margin-top: 3px;
     }
 
     .insights li {
-      margin-bottom: 3px;
+      margin-bottom: 2.5px;
       color: #334155;
     }
 
     .audit-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      font-size: 7.5pt;
-      margin-bottom: 10px;
+      gap: 8px;
+      font-size: 7.2pt;
+      margin-bottom: 8px;
     }
 
     .audit-card {
       background-color: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
-      padding: 8px 10px;
+      padding: 6px 8px;
     }
 
     .audit-card h3 {
-      font-size: 8pt;
+      font-size: 7.6pt;
       font-weight: 800;
       color: #0f172a;
-      margin-bottom: 5px;
-      padding-bottom: 3px;
+      margin-bottom: 4px;
+      padding-bottom: 2px;
       border-bottom: 1px solid #e2e8f0;
     }
 
     .audit-card ol, .audit-card ul {
-      margin-left: 16px;
+      margin-left: 14px;
     }
 
     .audit-card li {
-      margin-bottom: 2.5px;
+      margin-bottom: 2px;
       color: #475569;
-      line-height: 1.35;
+      line-height: 1.3;
     }
 
     .audit-user {
       font-weight: 700;
       color: #0369a1;
       font-family: monospace;
-      font-size: 7.5pt;
+      font-size: 7.2pt;
     }
 
     .comment-quote {
@@ -339,8 +354,8 @@
 
     .footer {
       border-top: 1px solid #e2e8f0;
-      padding-top: 6px;
-      font-size: 7pt;
+      padding-top: 5px;
+      font-size: 6.8pt;
       color: #94a3b8;
       display: flex;
       justify-content: space-between;
@@ -358,37 +373,38 @@
         <div class="badge-bar">
           <span class="badge badge-primary">Instagram Contest Audit</span>
           <span class="badge badge-secondary">Host: @hipet.iq (HiPet Club Iraq)</span>
-          <span class="badge badge-green">Run #2 Complete</span>
+          <span class="badge badge-purple">Run #3 (Multi-Dog & Blanket Votes Counted)</span>
+          <span class="badge badge-green">100% DOM Verified</span>
         </div>
-        <h1>Halloween Dog Costume Contest — Official Vote Tally</h1>
+        <h1>Halloween Dog Costume Contest — Official Vote Tally (Run #3)</h1>
         <div class="subheading">
-          <span><strong>Target URL:</strong> <a href="https://www.instagram.com/p/DfQA5MnEWKX">instagram.com/p/DfQA5MnEWKX</a></span>
-          <span><strong>Date of Audit:</strong> November 4, 2026</span>
-          <span><strong>Single-Vote Enforced:</strong> Yes (1 vote/user, initial chronological vote kept)</span>
+          <span><strong>Target URL:</strong> <a href="https://www.instagram.com/p/DfQA5MnEWKX?img_index=20">instagram.com/p/DfQA5MnEWKX</a></span>
+          <span><strong>Audit Date:</strong> November 5, 2026</span>
+          <span><strong>Counting Rules:</strong> Multi-Dog & Blanket ("كلهم") Counted • Duplicate Protection: 1 vote per user per dog</span>
         </div>
       </div>
 
       <!-- Key Metrics Comparison -->
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="metric-title">Total Comments</div>
+          <div class="metric-title">Total Comments Analyzed</div>
           <div class="metric-value">1,061</div>
-          <div class="metric-delta">+377 new (+55%)</div>
+          <div class="metric-delta">Full live DOM settled</div>
         </div>
         <div class="metric-card">
-          <div class="metric-title">Unique Accounts</div>
+          <div class="metric-title">Unique User Accounts</div>
           <div class="metric-value">790</div>
-          <div class="metric-delta">+251 unique voters</div>
+          <div class="metric-delta">100% voters mapped</div>
         </div>
         <div class="metric-card">
-          <div class="metric-title">Duplicates Dropped</div>
-          <div class="metric-value">270</div>
-          <div class="metric-delta">Spam/repeat filtered</div>
+          <div class="metric-title">Repeat Votes Dropped</div>
+          <div class="metric-value">227</div>
+          <div class="metric-delta">Strict per-dog deduplication</div>
         </div>
         <div class="metric-card">
-          <div class="metric-title">Valid Counted Votes</div>
-          <div class="metric-value">748</div>
-          <div class="metric-delta">+228 valid votes counted</div>
+          <div class="metric-title">Total Valid Votes Awarded</div>
+          <div class="metric-value">1,093</div>
+          <div class="metric-delta">+345 votes vs Run #2</div>
         </div>
       </div>
 
@@ -398,22 +414,23 @@
         <div class="prize-items">
           <div>🥇 <strong>1st Place Award:</strong> Free admission ticket to an upcoming HiPet Club workshop/event.</div>
           <div>🥈 <strong>2nd Place Award:</strong> 50% discount voucher on any order from the official HiPet Store.</div>
+          <div>🥉 <strong>3rd Place Award:</strong> Special HiPet Club Certificate & Honorary Community Mention.</div>
         </div>
       </div>
 
       <!-- Leaderboard Table -->
-      <h2>Official Contest Leaderboard (Run #2 vs. Run #1)</h2>
+      <h2>Official Contest Leaderboard — Final Verified Standings (Run #3)</h2>
       <table>
         <thead>
           <tr>
             <th style="text-align: center;">Rank</th>
             <th>Dog #</th>
             <th>Dog Name (Arabic / English)</th>
-            <th style="text-align: right;">Run #1</th>
             <th style="text-align: right;">Run #2</th>
-            <th style="text-align: right;">Delta</th>
-            <th style="text-align: right;">Share</th>
-            <th>Contest Status & Standing</th>
+            <th style="text-align: right;">Adds (Multi/All)</th>
+            <th style="text-align: right;">Total Votes</th>
+            <th style="text-align: right;">Share %</th>
+            <th>Contest Standing & Status</th>
           </tr>
         </thead>
         <tbody>
@@ -421,188 +438,199 @@
             <td class="rank-cell">🥇 1</td>
             <td class="dog-num">#16</td>
             <td class="dog-name"><span class="ar-text">ناني</span> (Nani)</td>
-            <td class="votes-cell">227</td>
             <td class="votes-cell">241</td>
-            <td class="delta-cell">+14</td>
-            <td class="share-cell">32.2%</td>
-            <td class="status-cell">🏆 1st Place Winner (Lead maintained)</td>
+            <td class="adds-cell">+22 (+4/+17/+1)</td>
+            <td class="votes-cell">263</td>
+            <td class="share-cell">24.06%</td>
+            <td class="status-cell">🏆 1st Place Winner (Official Champion)</td>
           </tr>
           <tr class="silver-row">
             <td class="rank-cell">🥈 2</td>
             <td class="dog-num">#13</td>
             <td class="dog-name"><span class="ar-text">تيتي</span> (Titi)</td>
-            <td class="votes-cell">133</td>
             <td class="votes-cell">215</td>
-            <td class="delta-cell">+82</td>
-            <td class="share-cell">28.7%</td>
-            <td class="status-cell">🥈 2nd Place Runner-Up (Massive surge)</td>
+            <td class="adds-cell">+20 (+3/+17/+0)</td>
+            <td class="votes-cell">235</td>
+            <td class="share-cell">21.50%</td>
+            <td class="status-cell">🥈 2nd Place Runner-Up (Strong Silver)</td>
           </tr>
           <tr class="bronze-row">
             <td class="rank-cell">🥉 3</td>
             <td class="dog-num">#5</td>
             <td class="dog-name"><span class="ar-text">سمسم</span> (Semsem / Simsim)</td>
-            <td class="votes-cell">26</td>
             <td class="votes-cell">63</td>
-            <td class="delta-cell">+37</td>
-            <td class="share-cell">8.4%</td>
-            <td class="status-cell">🥉 3rd Place (Jumped past #12 Oliver)</td>
+            <td class="adds-cell">+22 (+4/+17/+1)</td>
+            <td class="votes-cell">85</td>
+            <td class="share-cell">7.78%</td>
+            <td class="status-cell">🥉 3rd Place Finalist (Firm on Podium)</td>
           </tr>
           <tr>
             <td class="rank-cell">4</td>
             <td class="dog-num">#12</td>
             <td class="dog-name"><span class="ar-text">أوليفر</span> (Oliver / Lulu)</td>
-            <td class="votes-cell">33</td>
             <td class="votes-cell">42</td>
-            <td class="delta-cell">+9</td>
-            <td class="share-cell">5.6%</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">61</td>
+            <td class="share-cell">5.58%</td>
             <td class="status-cell">Top 5 Finalist</td>
           </tr>
           <tr>
             <td class="rank-cell">5</td>
-            <td class="dog-num">#14</td>
-            <td class="dog-name"><span class="ar-text">جيسي / جسو</span> (Jessie / Jasso)</td>
-            <td class="votes-cell">26</td>
-            <td class="votes-cell">40</td>
-            <td class="delta-cell">+14</td>
-            <td class="share-cell">5.3%</td>
-            <td class="status-cell">Top 5 Finalist</td>
+            <td class="dog-num">#1</td>
+            <td class="dog-name"><span class="ar-text">سامي</span> (Sami)</td>
+            <td class="votes-cell">39</td>
+            <td class="adds-cell">+20 (+2/+17/+1)</td>
+            <td class="votes-cell">59</td>
+            <td class="share-cell">5.40%</td>
+            <td class="status-cell">Top 5 Finalist (Surged past Jessie)</td>
           </tr>
           <tr>
             <td class="rank-cell">6</td>
-            <td class="dog-num">#1</td>
-            <td class="dog-name"><span class="ar-text">سامي</span> (Sami)</td>
-            <td class="votes-cell">17</td>
-            <td class="votes-cell">39</td>
-            <td class="delta-cell">+22</td>
-            <td class="share-cell">5.2%</td>
-            <td class="status-cell">Strong Surge (+22 votes)</td>
+            <td class="dog-num">#14</td>
+            <td class="dog-name"><span class="ar-text">جيسي / جسو</span> (Jessie / Jasso)</td>
+            <td class="votes-cell">40</td>
+            <td class="adds-cell">+16 (+0/+16/+0)*</td>
+            <td class="votes-cell">56</td>
+            <td class="share-cell">5.12%</td>
+            <td class="status-cell">6th Place Contender</td>
           </tr>
           <tr>
             <td class="rank-cell">7</td>
             <td class="dog-num">#8</td>
             <td class="dog-name"><span class="ar-text">ليلو</span> (Lilo)</td>
-            <td class="votes-cell">15</td>
             <td class="votes-cell">24</td>
-            <td class="delta-cell">+9</td>
-            <td class="share-cell">3.2%</td>
-            <td class="status-cell">Contender</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">43</td>
+            <td class="share-cell">3.93%</td>
+            <td class="status-cell">Top 10 Contender</td>
           </tr>
           <tr>
             <td class="rank-cell">8</td>
             <td class="dog-num">#6</td>
             <td class="dog-name"><span class="ar-text">بيبو</span> (Bibo / Dr. Bibo)</td>
-            <td class="votes-cell">10</td>
             <td class="votes-cell">19</td>
-            <td class="delta-cell">+9</td>
-            <td class="share-cell">2.5%</td>
-            <td class="status-cell">Contender</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">38</td>
+            <td class="share-cell">3.48%</td>
+            <td class="status-cell">Top 10 Contender</td>
           </tr>
           <tr>
-            <td class="rank-cell">9 (Tie)</td>
-            <td class="dog-num">#3</td>
-            <td class="dog-name"><span class="ar-text">بيلا</span> (Bella)</td>
-            <td class="votes-cell">7</td>
-            <td class="votes-cell">14</td>
-            <td class="delta-cell">+7</td>
-            <td class="share-cell">1.9%</td>
-            <td class="status-cell">Tied for 9th</td>
-          </tr>
-          <tr>
-            <td class="rank-cell">9 (Tie)</td>
-            <td class="dog-num">#15</td>
-            <td class="dog-name"><span class="ar-text">سونه / سونة</span> (Sona)</td>
-            <td class="votes-cell">9</td>
-            <td class="votes-cell">14</td>
-            <td class="delta-cell">+5</td>
-            <td class="share-cell">1.9%</td>
-            <td class="status-cell">Tied for 9th</td>
-          </tr>
-          <tr>
-            <td class="rank-cell">11</td>
+            <td class="rank-cell">9</td>
             <td class="dog-num">#9</td>
             <td class="dog-name"><span class="ar-text">لوسي</span> (Lucy)</td>
-            <td class="votes-cell">9</td>
             <td class="votes-cell">13</td>
-            <td class="delta-cell">+4</td>
-            <td class="share-cell">1.7%</td>
-            <td class="status-cell">Contender</td>
+            <td class="adds-cell">+21 (+3/+17/+1)</td>
+            <td class="votes-cell">34</td>
+            <td class="share-cell">3.11%</td>
+            <td class="status-cell">Top 10 Contender</td>
+          </tr>
+          <tr>
+            <td class="rank-cell">10 (Tie)</td>
+            <td class="dog-num">#3</td>
+            <td class="dog-name"><span class="ar-text">بيلا</span> (Bella)</td>
+            <td class="votes-cell">14</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">33</td>
+            <td class="share-cell">3.02%</td>
+            <td class="status-cell">Tied for 10th Place</td>
+          </tr>
+          <tr>
+            <td class="rank-cell">10 (Tie)</td>
+            <td class="dog-num">#15</td>
+            <td class="dog-name"><span class="ar-text">سونه / سونة</span> (Sona)</td>
+            <td class="votes-cell">14</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">33</td>
+            <td class="share-cell">3.02%</td>
+            <td class="status-cell">Tied for 10th Place</td>
           </tr>
           <tr>
             <td class="rank-cell">12 (Tie)</td>
             <td class="dog-num">#4</td>
             <td class="dog-name"><span class="ar-text">ليو</span> (Leo)</td>
-            <td class="votes-cell">0</td>
             <td class="votes-cell">6</td>
-            <td class="delta-cell">+6</td>
-            <td class="share-cell">0.8%</td>
-            <td class="status-cell">Newly active contender</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">25</td>
+            <td class="share-cell">2.29%</td>
+            <td class="status-cell">Tied for 12th Place</td>
           </tr>
           <tr>
             <td class="rank-cell">12 (Tie)</td>
             <td class="dog-num">#19</td>
             <td class="dog-name"><span class="ar-text">نيدو</span> (Nido)</td>
-            <td class="votes-cell">3</td>
             <td class="votes-cell">6</td>
-            <td class="delta-cell">+3</td>
-            <td class="share-cell">0.8%</td>
-            <td class="status-cell">Tied for 12th</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">25</td>
+            <td class="share-cell">2.29%</td>
+            <td class="status-cell">Tied for 12th Place</td>
           </tr>
           <tr>
-            <td class="rank-cell">14</td>
+            <td class="rank-cell">12 (Tie)</td>
             <td class="dog-num">#2</td>
             <td class="dog-name"><span class="ar-text">جيكو</span> (Gecko)</td>
-            <td class="votes-cell">2</td>
             <td class="votes-cell">5</td>
-            <td class="delta-cell">+3</td>
-            <td class="share-cell">0.7%</td>
-            <td class="status-cell">Contender</td>
+            <td class="adds-cell">+20 (+2/+17/+1)</td>
+            <td class="votes-cell">25</td>
+            <td class="share-cell">2.29%</td>
+            <td class="status-cell">Tied for 12th Place</td>
           </tr>
           <tr>
             <td class="rank-cell">15</td>
             <td class="dog-num">#18</td>
             <td class="dog-name"><span class="ar-text">فلافي</span> (Fluffy)</td>
-            <td class="votes-cell">0</td>
             <td class="votes-cell">4</td>
-            <td class="delta-cell">+4</td>
-            <td class="share-cell">0.5%</td>
-            <td class="status-cell">Newly active contender</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">23</td>
+            <td class="share-cell">2.10%</td>
+            <td class="status-cell">Contender</td>
           </tr>
           <tr>
-            <td class="rank-cell">16</td>
+            <td class="rank-cell">16 (Tie)</td>
             <td class="dog-num">#17</td>
             <td class="dog-name"><span class="ar-text">بوبو</span> (Bobo)</td>
             <td class="votes-cell">2</td>
-            <td class="votes-cell">2</td>
-            <td class="delta-cell">+0</td>
-            <td class="share-cell">0.3%</td>
-            <td class="status-cell">Contender</td>
+            <td class="adds-cell">+18 (+0/+17/+1)</td>
+            <td class="votes-cell">20</td>
+            <td class="share-cell">1.83%</td>
+            <td class="status-cell">Tied for 16th Place</td>
           </tr>
           <tr>
-            <td class="rank-cell">17</td>
+            <td class="rank-cell">16 (Tie)</td>
             <td class="dog-num">#11</td>
             <td class="dog-name"><span class="ar-text">لورا</span> (Laura)</td>
             <td class="votes-cell">1</td>
-            <td class="votes-cell">1</td>
-            <td class="delta-cell">+0</td>
-            <td class="share-cell">0.1%</td>
-            <td class="status-cell">Contender</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">20</td>
+            <td class="share-cell">1.83%</td>
+            <td class="status-cell">Tied for 16th Place</td>
+          </tr>
+          <tr>
+            <td class="rank-cell">18</td>
+            <td class="dog-num">#10</td>
+            <td class="dog-name"><span class="ar-text">سيمبا</span> (Simba)</td>
+            <td class="votes-cell">0</td>
+            <td class="adds-cell">+19 (+1/+17/+1)</td>
+            <td class="votes-cell">19</td>
+            <td class="share-cell">1.74%</td>
+            <td class="status-cell">Active Contender</td>
           </tr>
           <tr style="font-weight: 800; background-color: #f1f5f9; border-top: 1.5px solid #cbd5e1;">
             <td colspan="3" style="text-align: center;">TOTAL VALID VOTES COUNTED</td>
-            <td class="votes-cell">520</td>
             <td class="votes-cell">748</td>
-            <td class="delta-cell">+228</td>
+            <td class="adds-cell">+345</td>
+            <td class="votes-cell">1,093</td>
             <td class="share-cell">100.0%</td>
-            <td>17 Participating Dogs</td>
+            <td>18 Participating Dogs Mapped</td>
           </tr>
         </tbody>
       </table>
+      <p style="font-size: 6.8pt; color: #64748b; margin-top: 2px;">*Note on #14 Jessie: @a_aseel90 voted directly for #14 in addition to voting "كلهم". Enforcing strict 1-vote-per-dog dropped the duplicate, granting Jessie +16 blanket votes.</p>
     </div>
 
     <!-- Page 1 Footer -->
     <div class="footer">
       <span>Official Vote Tally & DOM Audit Engine • HiPet Club Iraq</span>
-      <span>Post: instagram.com/p/DfQA5MnEWKX</span>
+      <span>Post: instagram.com/p/DfQA5MnEWKX?img_index=20</span>
       <span>Page 1 of 2</span>
     </div>
   </div>
@@ -615,38 +643,37 @@
         <div class="badge-bar">
           <span class="badge badge-primary">Audit Log & Dynamics</span>
           <span class="badge badge-secondary">Host: @hipet.iq</span>
-          <span class="badge badge-green">Detailed Exception Breakdown</span>
+          <span class="badge badge-green">Run #3 Reconciliation</span>
         </div>
-        <h1>Contest Dynamics & Detailed Exclusion Audits</h1>
+        <h1>Contest Dynamics & Detailed Allocation Audits</h1>
         <div class="subheading">
-          <span>Complete documentation of vote surges, multi-candidate entries, and non-voting chatter.</span>
+          <span>Documentation of Multi-Dog candidate distribution, blanket vote allocations, and non-voting chatter.</span>
         </div>
       </div>
 
       <!-- Race Dynamics & Analysis -->
-      <h2>Key Race Dynamics & Voting Trends</h2>
+      <h2>Key Race Dynamics & Allocation Analysis</h2>
       <div class="insights">
         <ul>
-          <li><strong>The Championship Battle (#16 Nani vs. #13 Titi):</strong> In Run #1, #16 Nani held a comfortable 94-vote lead. In Run #2, #13 Titi staged a dramatic voting surge, adding <strong>+82 new votes</strong> compared to Nani's <strong>+14</strong>, closing the gap from <strong>94 votes down to just 26 votes</strong> (241 vs 215).</li>
-          <li><strong>Surge to 3rd Place (#5 Semsem):</strong> Semsem gained <strong>+37 new unique votes</strong> (jumping from 26 to 63), overtaking both Oliver (#12) and Jessie (#14) to firmly capture the 3rd podium spot.</li>
-          <li><strong>Sami's Momentum (#1):</strong> Sami added <strong>+22 new votes</strong> to reach 39 votes total, trailing Jessie (#14) by only 1 vote.</li>
-          <li><strong>Newly Mobilized Contenders:</strong> #4 Leo entered the board with 6 unique votes, and #18 Fluffy picked up 4 unique votes.</li>
+          <li><strong>The Championship Outcome (#16 Nani vs. #13 Titi):</strong> #16 Nani added +4 multi-dog votes and +17 blanket votes (+1 multi-comment vote) to reach <strong>263 total votes (24.06%)</strong>, successfully clinching <strong>1st Place</strong>. #13 Titi added +3 multi-dog votes and +17 blanket votes to reach <strong>235 total votes (21.50%)</strong>, finishing as a worthy <strong>2nd Place Runner-Up</strong> with a 28-vote margin.</li>
+          <li><strong>Firm 3rd Place (#5 Semsem):</strong> Semsem received +4 multi-dog votes, +17 blanket votes, and +1 multi-comment vote, totaling <strong>85 votes (7.78%)</strong> and firmly securing the 3rd podium spot ahead of Oliver (#12) and Sami (#1).</li>
+          <li><strong>Sami Overtakes Jessie (#1 vs #14):</strong> Sami picked up +2 multi-dog votes and +17 blanket votes (+1 multi-comment) reaching <strong>59 votes</strong>, surpassing Jessie (#14 with 56 votes) for 5th place.</li>
+          <li><strong>Single-Vote Rule per Dog:</strong> Duplicate submissions by the same user for the same dog were eliminated (227 total repeat votes dropped). Users voting for different dogs across multiple comments (e.g. @dr.sajamunaem) received 1 vote per distinct dog.</li>
         </ul>
       </div>
 
-      <!-- Detailed Exclusion Grids -->
-      <h2>Detailed Exclusions & Disqualification Audits</h2>
+      <!-- Detailed Allocation Grids -->
+      <h2>Detailed Allocation & Audit Breakdowns</h2>
       <div class="audit-grid">
         <!-- Card 1: Blanket Votes -->
         <div class="audit-card">
           <h3>A. Blanket Votes ("Vote for All" / "كلهم") — 17 Accounts</h3>
-          <p style="font-size: 7pt; color: #64748b; margin-bottom: 4px;">Excluded per single-vote rules (cannot be attributed to a single dog):</p>
+          <p style="font-size: 6.8pt; color: #64748b; margin-bottom: 3px;">Awarded +1 vote to all participating dogs (subject to per-dog deduplication):</p>
           <ol>
             <li><span class="audit-user">@athraa.n9</span>: <span class="comment-quote">كلهمممم عفيه يجنننون 😍😍😍😍😍</span></li>
             <li><span class="audit-user">@wed_nihad</span>: <span class="comment-quote">كلهم يخبلون ماكدر اختار شلون حيرة وناقصهم بسبوسي</span></li>
             <li><span class="audit-user">@ab_ab_hr1</span>: <span class="comment-quote">فدوووووة كلهم حلوين ويخبلون ربي يحفظهم ويحفظكم ❤️❤️❤️❤️</span></li>
             <li><span class="audit-user">@huda_alghazal96</span>: <span class="comment-quote">كلهم يجننون</span></li>
-            <li><span class="audit-user">@vet.aymen</span>: <span class="comment-quote">إذا اجيب اندي يخسرهم كلهم</span></li>
             <li><span class="audit-user">@fatima_r.1</span>: <span class="comment-quote">كلهم حلوين💋🩷</span></li>
             <li><span class="audit-user">@asssom23</span>: <span class="comment-quote">كلهم عسولات😍😍😍</span></li>
             <li><span class="audit-user">@zeyneppgh</span>: <span class="comment-quote">يمه قربان كلهم يخبلونن🥺</span></li>
@@ -656,38 +683,39 @@
             <li><span class="audit-user">@art_by_orjwan</span>: <span class="comment-quote">يصير كلهم😭😭😭</span></li>
             <li><span class="audit-user">@88.ilx_</span>: <span class="comment-quote">كلهمم</span></li>
             <li><span class="audit-user">@dr.mauj43</span>: <span class="comment-quote">اصوتلهم كلهمممم😭 حبايبي همة بدون اي كوستوم يخبلون كلهم</span></li>
-            <li><span class="audit-user">@a_aseel90</span>: <span class="comment-quote">كلهم حلوين</span></li>
+            <li><span class="audit-user">@a_aseel90</span>: <span class="comment-quote">كلهم حلوين</span> (Direct vote for #14 deduplicated)</li>
             <li><span class="audit-user">@huda.m.ali_96</span>: <span class="comment-quote">كلهم يخبلوووووون كلهم يفوووزون 😍😍😍😍</span></li>
             <li><span class="audit-user">@remisonline</span>: <span class="comment-quote">كلهم حلويينننن😍😍😍❤️❤️❤️</span></li>
+            <li><span class="audit-user">@vet.aymen</span>: <span class="comment-quote">إذا اجيب اندي يخسرهم كلهم</span></li>
           </ol>
         </div>
 
         <!-- Card 2: Conflicting Multi-Dog -->
         <div class="audit-card">
           <h3>B. Conflicting Multi-Dog Mentions — 10 Accounts</h3>
-          <p style="font-size: 7pt; color: #64748b; margin-bottom: 4px;">Excluded due to split votes across competing candidates:</p>
+          <p style="font-size: 6.8pt; color: #64748b; margin-bottom: 3px;">+1 vote credited to each dog explicitly named:</p>
           <ol>
-            <li><span class="audit-user">@3iss_noor</span>: <span class="comment-quote">تيتي ولوسي وناني</span> <strong style="color:#c2410c;">[#9, #13, #16]</strong></li>
-            <li><span class="audit-user">@sabreenh_8</span>: <span class="comment-quote">فلافي وليوو</span> <strong style="color:#c2410c;">[#4, #18]</strong></li>
-            <li><span class="audit-user">@2.003rn</span>: <span class="comment-quote">5,15 😍</span> <strong style="color:#c2410c;">[#5, #15]</strong></li>
-            <li><span class="audit-user">@wa.5154</span>: <span class="comment-quote">سامي وناني🥺🥺🥺🫶🏻</span> <strong style="color:#c2410c;">[#1, #16]</strong></li>
-            <li><span class="audit-user">@rahody3</span>: <span class="comment-quote">نيدو وسمسم ولورا ♥️</span> <strong style="color:#c2410c;">[#5, #11, #19]</strong></li>
-            <li><span class="audit-user">@sabrena.alghalib</span>: <span class="comment-quote">چيكو واوليفر ❤️</span> <strong style="color:#c2410c;">[#2, #12]</strong></li>
-            <li><span class="audit-user">@hlahydr</span>: <span class="comment-quote">سيمبا ولوسي وچيكو🥺🥺💕</span> <strong style="color:#c2410c;">[#2, #9]</strong></li>
-            <li><span class="audit-user">@sally.h57</span>: <span class="comment-quote">رقم ١ و٣و ٥و٦و٨و٩</span> <strong style="color:#c2410c;">[#1, #3, #5, #6, #8, #9]</strong></li>
-            <li><span class="audit-user">@bearaint</span>: <span class="comment-quote">تيتي وناني وسمسم</span> <strong style="color:#c2410c;">[#5, #13, #16]</strong></li>
-            <li><span class="audit-user">@lk.sx5</span>: <span class="comment-quote">16مثل ماگال ابو الغيومم👀وتيتيي هَم حلووة رقمم13🦦🤣</span> <strong style="color:#c2410c;">[#16, #13]</strong></li>
+            <li><span class="audit-user">@3iss_noor</span>: <span class="comment-quote">تيتي ولوسي وناني</span> ➔ <strong style="color:#c2410c;">[#9 Lucy, #13 Titi, #16 Nani]</strong></li>
+            <li><span class="audit-user">@sabreenh_8</span>: <span class="comment-quote">فلافي وليوو</span> ➔ <strong style="color:#c2410c;">[#4 Leo, #18 Fluffy]</strong></li>
+            <li><span class="audit-user">@2.003rn</span>: <span class="comment-quote">5,15 😍</span> ➔ <strong style="color:#c2410c;">[#5 Semsem, #15 Sona]</strong></li>
+            <li><span class="audit-user">@wa.5154</span>: <span class="comment-quote">سامي وناني🥺🥺🥺🫶🏻</span> ➔ <strong style="color:#c2410c;">[#1 Sami, #16 Nani]</strong></li>
+            <li><span class="audit-user">@rahody3</span>: <span class="comment-quote">نيدو وسمسم ولورا ♥️</span> ➔ <strong style="color:#c2410c;">[#5 Semsem, #11 Laura, #19 Nido]</strong></li>
+            <li><span class="audit-user">@sabrena.alghalib</span>: <span class="comment-quote">چيكو واوليفر ❤️</span> ➔ <strong style="color:#c2410c;">[#2 Gecko, #12 Oliver]</strong></li>
+            <li><span class="audit-user">@hlahydr</span>: <span class="comment-quote">سيمبا ولوسي وچيكو🥺🥺💕</span> ➔ <strong style="color:#c2410c;">[#2 Gecko, #9 Lucy, #10 Simba]</strong></li>
+            <li><span class="audit-user">@sally.h57</span>: <span class="comment-quote">رقم ١ و٣و ٥و٦و٨و٩</span> ➔ <strong style="color:#c2410c;">[#1, #3, #5, #6, #8, #9]</strong></li>
+            <li><span class="audit-user">@bearaint</span>: <span class="comment-quote">تيتي وناني وسمسم</span> ➔ <strong style="color:#c2410c;">[#5 Semsem, #13 Titi, #16 Nani]</strong></li>
+            <li><span class="audit-user">@lk.sx5</span>: <span class="comment-quote">16مثل ماگال ابو الغيومم👀وتيتيي هَم حلووة رقمم13</span> ➔ <strong style="color:#c2410c;">[#13 Titi, #16 Nani]</strong></li>
           </ol>
         </div>
       </div>
 
       <!-- Card 3: Non-voting / Administrative -->
-      <div class="audit-card" style="margin-bottom: 8px;">
+      <div class="audit-card" style="margin-bottom: 6px;">
         <h3>C. Excluded Non-Voting & Administrative Comments — 16 Accounts</h3>
-        <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; font-size: 7.2pt;">
-          <li><span class="audit-user">@hipet.iq</span>: Contest rules & prize details (Pinned Admin)</li>
-          <li><span class="audit-user">@drmustafa_hadi</span>: <span class="comment-quote">كوكي الچلب</span> (Non-contest name)</li>
-          <li><span class="audit-user">@zainb.isam</span>: <span class="comment-quote">ايفي وين</span> (Asking about absent dog)</li>
+        <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5px 12px; font-size: 7pt;">
+          <li><span class="audit-user">@hipet.iq</span>: Contest rules & conditions announcement (Organizer)</li>
+          <li><span class="audit-user">@drmustafa_hadi</span>: <span class="comment-quote">كوكي الچلب</span> (Non-contest participant)</li>
+          <li><span class="audit-user">@zainb.isam</span>: <span class="comment-quote">ايفي وين</span> (Asking about absent dog Ivy)</li>
           <li><span class="audit-user">@shamam_haider</span>: <span class="comment-quote">انا عندي هاد الحلوووو❤️</span> (Pet remark)</li>
           <li><span class="audit-user">@haneenq.96</span>: <span class="comment-quote">يمةةة حبايبي متنكرين 🥹😂 خفت</span></li>
           <li><span class="audit-user">@saiixxf_</span>: <span class="comment-quote">يخبللووووون</span> (Reaction only)</li>
@@ -708,7 +736,7 @@
     <!-- Page 2 Footer -->
     <div class="footer">
       <span>Official Vote Tally & DOM Audit Engine • HiPet Club Iraq</span>
-      <span>Source: instagram.com/p/DfQA5MnEWKX</span>
+      <span>Source: instagram.com/p/DfQA5MnEWKX?img_index=20</span>
       <span>Page 2 of 2 • Final Verified Output</span>
     </div>
   </div>

@@ -1,4 +1,4 @@
-import { AccountId, PilotIntentType, TreatmentType } from '@/types';
+import { AccountId, PilotIntentType } from '@/types';
 
 // =============================================================================
 // Meta Instagram Webhook Payload Types
@@ -131,6 +131,7 @@ export interface ProcessedWebhookEventResult {
     | 'HUMAN_TAKEOVER_ACTIVE_NO_AI_REPLY'
     | 'OUTSIDE_24H_WINDOW_ESCALATED'
     | 'PROCESSED_NO_DISPATCH'
+    | 'DRAFT_AWAITING_APPROVAL'
     | 'NON_TEXT_EVENT'
     | 'FAIL_SAFE_DB_UNAVAILABLE_CLOSED';
 }

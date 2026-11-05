@@ -10,15 +10,13 @@ import {
   Clock,
   Bookmark,
   Share2,
-  Heart,
   ArrowUpRight,
   Phone,
   Sparkles,
-  AlertCircle,
   Bot,
 } from 'lucide-react';
-import { AppState, useAppStore } from '@/lib/store';
-import { Language, NavTabId } from '@/types';
+import { AppState } from '@/lib/store';
+import { NavTabId } from '@/types';
 
 interface OverviewViewProps {
   state: AppState;
@@ -32,11 +30,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onOpenSimulateModal,
 }) => {
   const isAr = state.currentLanguage === 'ar';
-  const { analytics, leads, appointments, accounts } = state;
+  const { analytics, appointments } = state;
 
   // Filter based on active account selection if needed
-  const personalAcc = accounts.find((a) => a.id === 'drmustafa_hadi');
-  const clinicAcc = accounts.find((a) => a.id === 'almeswaksmile_iq');
 
   // Conversion calculations
   const inquiryToQualifiedRate =

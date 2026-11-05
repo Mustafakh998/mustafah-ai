@@ -28,6 +28,8 @@ import {
   INITIAL_REVIEW_REQUESTS,
 } from '@/lib/data/initialData';
 import { generateIraqiDialectResponse } from '@/lib/ai/iraqiEngine';
+import { decideReplyMode } from '@/lib/ai/replyPolicy';
+import { toast } from '@/lib/toast';
 
 export interface AppState {
   currentLanguage: Language;
@@ -164,7 +166,7 @@ export function useAppStore() {
             };
           });
         }
-      } catch (err) {
+      } catch {
         // Quietly ignore network polling errors
       }
     };
@@ -305,7 +307,17 @@ export function useAppStore() {
   };
 
   // Chat Actions
-  const sendMessage = (conversationId: string, text: string, sender: 'assistant' | 'staff' = 'staff') => {
+  /**
+   * Sends a reply. For real Instagram conversations the server delivers it via the Graph API;
+   * if delivery fails the message is removed again and an error toast is shown.
+   * Pass approvedMessageId when approving an AI draft so the draft is cleared.
+   */
+  const sendMessage = async (
+    conversationId: string,
+    text: string,
+    sender: 'assistant' | 'staff' = 'staff',
+    approvedMessageId?: string
+  ): Promise<boolean> => {
     const messageId = `msg_${Date.now()}`;
     const newMsg = {
       id: messageId,
@@ -323,7 +335,10 @@ export function useAppStore() {
             lastMessage: text,
             lastMessageTime: newMsg.timestamp,
             unread: false,
-            messages: [...conv.messages, newMsg],
+            messages: [
+              ...conv.messages.map((m) => (m.id === approvedMessageId ? { ...m, suggestedReply: undefined } : m)),
+              newMsg,
+            ],
           };
         }
         return conv;
@@ -331,17 +346,29 @@ export function useAppStore() {
       return { ...prev, conversations: convs };
     });
 
-    // Persist staff reply to backend/Supabase
-    fetch('/api/conversations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'staff_reply',
-        conversationId,
-        text,
-        sender,
-      }),
-    }).catch((err) => console.error('Failed to sync staff reply to Supabase:', err));
+    const isAr = state.currentLanguage === 'ar';
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'staff_reply', conversationId, text, sender, approvedMessageId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+      if (data.delivered) toast(isAr ? 'تم الإرسال إلى إنستغرام ✓' : 'Delivered to Instagram');
+      return true;
+    } catch (err) {
+      // Roll back the optimistic message so the inbox never shows an undelivered reply as sent.
+      setState((prev) => ({
+        ...prev,
+        conversations: prev.conversations.map((c) =>
+          c.id === conversationId ? { ...c, messages: c.messages.filter((m) => m.id !== messageId) } : c
+        ),
+      }));
+      const reason = err instanceof Error ? err.message : '';
+      toast(isAr ? `ما انرسلت الرسالة: ${reason}` : `Message not sent: ${reason}`, 'error');
+      return false;
+    }
   };
 
   // Simulate user incoming message (or real webhook event)
@@ -386,6 +413,7 @@ export function useAppStore() {
     // 2. Run Iraqi AI Language Engine (context-aware with conversation history)
     const historySnippet = (activeConv?.messages || []).map((m) => ({ sender: m.sender, text: m.text }));
     const aiResult = generateIraqiDialectResponse(userText, targetAccountId, patientName, historySnippet);
+    const replyMode = decideReplyMode(aiResult, userText);
 
     // 3. Log webhook event
     const webhookEvt = {
@@ -401,9 +429,12 @@ export function useAppStore() {
       let convs = prev.conversations;
       const existingConv = convs.find((c) => c.id === convId);
 
-      const msgs = existingConv ? [...existingConv.messages, userMsg] : [userMsg];
+      const canReply = prev.isAiAutoReplyEnabled && (!existingConv || existingConv.status !== 'human_takeover');
+      // Drafts wait on the patient's message for one-tap approval; simple questions are answered directly.
+      const draftedUserMsg = canReply && replyMode === 'draft' ? { ...userMsg, suggestedReply: aiResult.replyText, intent: aiResult.intent, confidence: aiResult.confidence } : userMsg;
+      const msgs = existingConv ? [...existingConv.messages, draftedUserMsg] : [draftedUserMsg];
 
-      if (prev.isAiAutoReplyEnabled && (!existingConv || existingConv.status !== 'human_takeover')) {
+      if (canReply && replyMode === 'auto') {
         const aiMsg = {
           id: `ai_${Date.now() + 1}`,
           conversationId: convId,
@@ -412,7 +443,6 @@ export function useAppStore() {
           timestamp: new Date(Date.now() + 1000).toISOString(),
           intent: aiResult.intent,
           confidence: aiResult.confidence,
-          suggestedReply: aiResult.replyText,
         };
         msgs.push(aiMsg);
       }
@@ -538,20 +568,59 @@ export function useAppStore() {
     }));
   };
 
-  // Campaign Actions (with Human Approval Gate)
-  const toggleCampaignStatus = (campaignId: string) => {
+  // Campaign Actions (real Meta spend — always requires this explicit human click to go live)
+  const toggleCampaignStatus = async (campaignId: string) => {
+    const isAr = state.currentLanguage === 'ar';
+    const camp = state.campaigns.find((c) => c.id === campaignId);
+    if (!camp) return;
+
+    // Local-only draft that never reached Meta (e.g. a create call failed earlier): just toggle locally.
+    if (!camp.metaCampaignId) {
+      setState((prev) => ({
+        ...prev,
+        campaigns: prev.campaigns.map((c) =>
+          c.id === campaignId ? { ...c, status: c.status === 'active' ? 'paused' : 'active', requiresHumanApproval: false } : c
+        ),
+      }));
+      return;
+    }
+
+    const turningOn = camp.status !== 'active';
     setState((prev) => ({
       ...prev,
-      campaigns: prev.campaigns.map((camp) =>
-        camp.id === campaignId
-          ? {
-              ...camp,
-              status: camp.status === 'active' ? 'paused' : 'active',
-              requiresHumanApproval: false,
-            }
-          : camp
-      ),
+      campaigns: prev.campaigns.map((c) => (c.id === campaignId ? { ...c, metaSyncPending: true, metaSyncError: undefined } : c)),
     }));
+
+    try {
+      const res = await fetch('/api/ads/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: turningOn ? 'activate' : 'pause', accountId: camp.accountId, campaignId: camp.metaCampaignId }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+
+      setState((prev) => ({
+        ...prev,
+        campaigns: prev.campaigns.map((c) =>
+          c.id === campaignId
+            ? { ...c, status: turningOn ? 'active' : 'paused', requiresHumanApproval: false, metaSyncPending: false }
+            : c
+        ),
+      }));
+      toast(
+        turningOn
+          ? isAr ? 'الحملة فعّالة الآن وتصرف من الميزانية الحقيقية على Meta ✓' : 'Campaign is now live and spending real budget on Meta ✓'
+          : isAr ? 'تم إيقاف الحملة على Meta' : 'Campaign paused on Meta'
+      );
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({
+        ...prev,
+        campaigns: prev.campaigns.map((c) => (c.id === campaignId ? { ...c, metaSyncPending: false, metaSyncError: reason } : c)),
+      }));
+      toast(isAr ? `فشل تغيير حالة الحملة على Meta: ${reason}` : `Failed to update campaign on Meta: ${reason}`, 'error');
+    }
   };
 
   const addCampaign = (camp: AdCampaign) => {
@@ -561,7 +630,12 @@ export function useAppStore() {
     }));
   };
 
-  const boostPostOrProfile = (params: {
+  /**
+   * Creates a real Meta campaign + ad set for a Baghdad-radius boost. The campaign is always
+   * created PAUSED on Meta (enforced server-side too) — it only starts spending once a human
+   * explicitly clicks Activate, which calls toggleCampaignStatus above.
+   */
+  const boostPostOrProfile = async (params: {
     accountId: AccountId;
     objective: AdCampaign['objective'];
     headline: string;
@@ -571,10 +645,12 @@ export function useAppStore() {
     durationDays: number;
     boostedContentId?: string;
   }) => {
+    const isAr = state.currentLanguage === 'ar';
     const totalBudget = params.dailyBudgetUSD * params.durationDays;
     const isProfile = params.objective === 'profile_visits';
+    const localId = `boost_${Date.now()}`;
     const newCamp: AdCampaign = {
-      id: `boost_${Date.now()}`,
+      id: localId,
       name: isProfile ? 'Boost Instagram Profile Visits' : 'Boost High-Retention Reel / Post',
       nameAr: isProfile
         ? `ترويج الملف الشخصي (@${params.accountId})`
@@ -583,7 +659,8 @@ export function useAppStore() {
       objective: params.objective,
       allocatedBudgetUSD: totalBudget,
       spentUSD: 0,
-      status: 'active',
+      // Always starts as a draft awaiting approval — never "active" at creation time.
+      status: 'draft_pending_approval',
       targetLocation: `Baghdad (${params.targetNeighborhoods.join(', ')})`,
       targetAudienceAr: `بغداد (${params.targetNeighborhoods.join('، ')}) — الفئة المستهدفة للأعمار 18-40 سنة`,
       reach: 0,
@@ -593,7 +670,7 @@ export function useAppStore() {
       appointmentRequests: 0,
       confirmedAppointments: 0,
       attendedPatients: 0,
-      requiresHumanApproval: false,
+      requiresHumanApproval: true,
       boostedContentId: params.boostedContentId,
       dailyBudgetUSD: params.dailyBudgetUSD,
       durationDays: params.durationDays,
@@ -601,12 +678,47 @@ export function useAppStore() {
       adCreativeHeadline: params.headline,
       adCreativeBody: params.body,
       callToActionType: isProfile ? 'visit_profile' : 'send_message',
+      metaSyncPending: true,
     };
 
-    setState((prev) => ({
-      ...prev,
-      campaigns: [newCamp, ...prev.campaigns],
-    }));
+    setState((prev) => ({ ...prev, campaigns: [newCamp, ...prev.campaigns] }));
+
+    try {
+      const res = await fetch('/api/ads/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          accountId: params.accountId,
+          name: newCamp.nameAr,
+          objective: isProfile ? 'OUTCOME_TRAFFIC' : 'OUTCOME_ENGAGEMENT',
+          dailyBudgetUSD: params.dailyBudgetUSD,
+          // Zayouna clinic coordinates, 8km default radius across the targeted neighborhoods.
+          targeting: { latitude: 33.3375, longitude: 44.4475, radiusKm: 8, ageMin: 18, ageMax: 45 },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+
+      setState((prev) => ({
+        ...prev,
+        campaigns: prev.campaigns.map((c) =>
+          c.id === localId ? { ...c, metaCampaignId: data.campaignId, metaAdSetId: data.adSetId, metaSyncPending: false } : c
+        ),
+      }));
+      toast(
+        isAr
+          ? 'تم إنشاء الحملة على Meta وهي متوقفة مؤقتاً. اضغط "تفعيل" لبدء الصرف الحقيقي.'
+          : 'Campaign created on Meta, currently paused. Click "Activate" to start real spend.'
+      );
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      setState((prev) => ({
+        ...prev,
+        campaigns: prev.campaigns.map((c) => (c.id === localId ? { ...c, metaSyncPending: false, metaSyncError: reason } : c)),
+      }));
+      toast(isAr ? `فشل إنشاء الحملة على Meta: ${reason}` : `Failed to create campaign on Meta: ${reason}`, 'error');
+    }
     return newCamp;
   };
 

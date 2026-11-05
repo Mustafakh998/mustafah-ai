@@ -1,24 +1,18 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheck,
   Webhook,
-  Key,
   Users,
-  Database,
   RefreshCw,
   CheckCircle2,
-  AlertTriangle,
-  Code2,
   Trash2,
   Terminal,
   Building2,
-  GitBranch,
   Lock,
   Layers,
   Sparkles,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { Language, TenantAnomalyReportItem } from '@/types';
+import { TenantAnomalyReportItem } from '@/types';
 
 interface AdminViewProps {
   state: AppState;
@@ -69,8 +63,8 @@ export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData, onLoad
           isAr ? 'فشل الفحص: تأكد من رمز التحقق META_VERIFY_TOKEN' : 'Failed: Check verification token.'
         );
       }
-    } catch (err: any) {
-      setTestWebhookStatus(`Error testing webhook: ${err.message}`);
+    } catch (err) {
+      setTestWebhookStatus(`Error testing webhook: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsTestingWebhook(false);
     }
@@ -402,7 +396,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ state, onResetData, onLoad
                   <div className="font-mono text-slate-800 font-bold">
                     {evt.eventType} • @{evt.senderId}
                   </div>
-                  <div className="text-slate-500 font-sans mt-0.5 text-[11px]">"{evt.payloadSnippet}"</div>
+                  <div className="text-slate-500 font-sans mt-0.5 text-[11px]">&quot;{evt.payloadSnippet}&quot;</div>
                 </div>
               </div>
               <div className="text-end">

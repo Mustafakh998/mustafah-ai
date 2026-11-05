@@ -1,4 +1,4 @@
-import { CLINIC_SERVICES, INITIAL_ACCOUNTS } from '@/lib/data/initialData';
+
 import { AccountId, PilotIntentType, TreatmentType } from '@/types';
 import { generateSmartContextualResponse, ChatHistoryMessage } from './smartFallback';
 import { generateGeminiDialectResponse } from './geminiEngine';

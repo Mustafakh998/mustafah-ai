@@ -76,7 +76,7 @@ export class WebhookQueueWorker {
       return null;
     }
 
-    const { id: jobId, messageId, accountId, senderId, recipientId, payload, attempts } = job;
+    const { id: jobId, messageId, accountId, senderId, payload, attempts } = job;
 
     // 2. Account Isolation Check: Strictly prohibit clinic account dispatch
     if (accountId === 'almeswaksmile_iq') {

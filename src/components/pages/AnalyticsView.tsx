@@ -5,15 +5,11 @@ import {
   Clock,
   Bookmark,
   Share2,
-  Heart,
   Users,
-  Film,
-  Sparkles,
   Info,
-  CheckCircle2,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { Language } from '@/types';
+
 
 interface AnalyticsViewProps {
   state: AppState;
@@ -21,7 +17,7 @@ interface AnalyticsViewProps {
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({ state }) => {
   const isAr = state.currentLanguage === 'ar';
-  const { analytics, contentItems } = state;
+  const { analytics } = state;
 
   return (
     <div className="space-y-6">

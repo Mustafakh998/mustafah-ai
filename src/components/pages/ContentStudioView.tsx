@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { STUDIO_HANDOFF_KEY } from '@/components/pages/GrowthPlanView';
 import {
   Video,
   Sparkles,
@@ -7,11 +8,8 @@ import {
   Check,
   Film,
   Layers,
-  Target,
   FileText,
-  Share2,
   Smartphone,
-  Eye,
   Heart,
   MessageCircle,
   Bookmark,
@@ -23,13 +21,14 @@ import {
   Camera,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { AccountId, ContentItem, Language } from '@/types';
+import { AccountId, ContentItem, NavTabId } from '@/types';
+import { toast } from '@/lib/toast';
 import { generateDentalContent } from '@/lib/ai/contentGenerator';
 
 interface ContentStudioViewProps {
   state: AppState;
   onAddContentItem: (item: ContentItem) => void;
-  onNavigate: (tab: any) => void;
+  onNavigate: (tab: NavTabId) => void;
 }
 
 export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
@@ -39,12 +38,30 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
 }) => {
   const isAr = state.currentLanguage === 'ar';
   const [selectedAccount, setSelectedAccount] = useState<AccountId>('drmustafa_hadi');
-  const [selectedFormat, setSelectedFormat] = useState<'reel' | 'post' | 'carousel' | 'story'>('reel');
+  // An idea picked in the Growth Plan arrives pre-filled. This view only mounts on the client after a tab click.
+  const [handoff] = useState<{ format?: string; topic?: string } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return JSON.parse(sessionStorage.getItem(STUDIO_HANDOFF_KEY) || 'null');
+    } catch {
+      return null;
+    }
+  });
+  const [selectedFormat, setSelectedFormat] = useState<'reel' | 'post' | 'carousel' | 'story'>(() =>
+    handoff?.format && ['reel', 'post', 'carousel', 'story'].includes(handoff.format)
+      ? (handoff.format as 'reel' | 'post' | 'carousel' | 'story')
+      : 'reel'
+  );
   const [selectedSeries, setSelectedSeries] = useState('خل نحچي عن التقويم');
-  const [customTopic, setCustomTopic] = useState('');
+  const [customTopic, setCustomTopic] = useState(() => (typeof handoff?.topic === 'string' ? handoff.topic : ''));
   const [generatedItem, setGeneratedItem] = useState<ContentItem | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [usedAccountData, setUsedAccountData] = useState(false);
+
+  useEffect(() => {
+    sessionStorage.removeItem(STUDIO_HANDOFF_KEY); // use the handoff once
+  }, []);
 
   // Tab switch between Script and Live Instagram Simulator
   const [outputTab, setOutputTab] = useState<'script' | 'simulator'>('script');
@@ -87,6 +104,7 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
         const data = await res.json();
         if (data.item) {
           setGeneratedItem(data.item);
+          setUsedAccountData(Boolean(data.usedAccountData));
           setActiveSlideIndex(0);
           return;
         }
@@ -98,6 +116,7 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
     }
 
     // Client-side fallback with semantic matching
+    setUsedAccountData(false);
     const item = generateDentalContent({
       accountId: selectedAccount,
       format: selectedFormat,
@@ -117,7 +136,7 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
   const handleScheduleToCalendar = () => {
     if (!generatedItem) return;
     onAddContentItem(generatedItem);
-    alert(isAr ? 'تمت إضافة المحتوى إلى تقويم النشر بنجاح!' : 'Scheduled to calendar!');
+    toast(isAr ? 'تمت إضافة المحتوى إلى تقويم النشر بنجاح!' : 'Scheduled to calendar!');
     onNavigate('content_calendar');
   };
 
@@ -385,6 +404,17 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
               {/* View 1: SCRIPT TAB */}
               {outputTab === 'script' && (
                 <div className="space-y-4">
+                  {(generatedItem.rationaleAr || generatedItem.bestTimeAr) && (
+                    <div className="p-3 rounded-xl bg-violet-50 border border-violet-200 text-xs text-violet-950 space-y-1" dir="rtl">
+                      {generatedItem.rationaleAr && <div>💡 {generatedItem.rationaleAr}</div>}
+                      {generatedItem.bestTimeAr && <div>🕒 {generatedItem.bestTimeAr}</div>}
+                    </div>
+                  )}
+                  {generatedItem.status === 'review_needed' && (
+                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-900">
+                      {isAr ? '⚠️ محتوى طبي من الذكاء الاصطناعي: راجعه قبل النشر.' : '⚠️ AI-written medical content: review before posting.'}
+                    </div>
+                  )}
                   {/* Header Details */}
                   <div className="flex items-center justify-between">
                     <div>
@@ -400,6 +430,11 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
                         </span>
                       </div>
                       <h3 className="font-black text-slate-900 text-base">{generatedItem.titleAr}</h3>
+                      {usedAccountData && (
+                        <span className="inline-block mt-1 text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
+                          {isAr ? 'مبني على بيانات حسابك' : 'Based on your account data'}
+                        </span>
+                      )}
                     </div>
 
                     <button
@@ -637,12 +672,12 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
                                 {generatedItem.hookAr || 'أسنانك الأمامية تلتقي لو معلقة بالهواء؟'}
                               </span>
                               <div className="grid grid-cols-2 gap-2 text-xs font-black">
-                                <button className="p-2 rounded-xl bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                <span className="p-2 rounded-xl bg-emerald-100 text-emerald-900 border border-emerald-300">
                                   نعم متطابقة 👍
-                                </button>
-                                <button className="p-2 rounded-xl bg-rose-100 text-rose-900 border border-rose-300">
+                                </span>
+                                <span className="p-2 rounded-xl bg-rose-100 text-rose-900 border border-rose-300">
                                   لا بيها عضة 🦷
-                                </button>
+                                </span>
                               </div>
                             </div>
 

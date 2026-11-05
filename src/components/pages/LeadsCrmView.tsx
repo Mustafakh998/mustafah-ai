@@ -1,25 +1,17 @@
 import React, { useState } from 'react';
 import {
-  Users,
   Search,
-  Filter,
   Download,
-  CalendarCheck,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
   Phone,
   MessageSquare,
-  AlertCircle,
-  ExternalLink,
 } from 'lucide-react';
 import { AppState } from '@/lib/store';
-import { Lead, LeadStatus, Language } from '@/types';
+import { Lead, LeadStatus, NavTabId } from '@/types';
 
 interface LeadsCrmViewProps {
   state: AppState;
   onUpdateStatus: (leadId: string, status: LeadStatus) => void;
-  onNavigate: (tab: any) => void;
+  onNavigate: (tab: NavTabId) => void;
 }
 
 const COLUMNS: { id: LeadStatus; labelAr: string; labelEn: string; color: string }[] = [
@@ -195,7 +187,7 @@ export const LeadsCrmView: React.FC<LeadsCrmViewProps> = ({
                     </div>
 
                     <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed bg-slate-50 p-1.5 rounded">
-                      "{lead.lastMessageText}"
+                      &quot;{lead.lastMessageText}&quot;
                     </p>
 
                     {lead.phone && (

@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HiPet Club — Halloween Dog Costume Contest Winner Wheel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+Arabic:wght@600;800;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #1e1035 0%, #0d0718 60%, #05020a 100%);
+      color: #ffffff;
+      font-family: 'Fredoka', 'Noto Sans Arabic', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Ambient Festive Lights */
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      opacity: 0.35;
+      z-index: 0;
+    }
+    .orb-1 { width: 350px; height: 350px; background: #ff7700; top: -50px; left: 10%; }
+    .orb-2 { width: 400px; height: 400px; background: #9d4edd; top: 200px; right: 5%; }
+    .orb-3 { width: 300px; height: 300px; background: #ff0055; bottom: 50px; left: 20%; }
+
+    /* Header Bar */
+    header {
+      width: 100%;
+      max-width: 1200px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 3px solid #ff9e00;
+      box-shadow: 0 0 16px rgba(255, 158, 0, 0.6);
+      object-fit: cover;
+      background: #110726;
+    }
+
+    .brand-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-text p {
+      font-size: 13px;
+      color: #c77dff;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-sound, .btn-mode {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-sound:hover, .btn-mode:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: #ff9e00;
+      transform: translateY(-1px);
+    }
+
+    /* Main Stage */
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 1200px;
+      padding: 10px 20px 40px;
+      z-index: 10;
+    }
+
+    /* Winner Podium Bar (Appears when winners are chosen) */
+    .podium-bar {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      width: 100%;
+      max-width: 780px;
+      margin-bottom: 25px;
+    }
+
+    .podium-slot {
+      background: rgba(255, 255, 255, 0.04);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .podium-slot.active-slot {
+      border-style: solid;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .podium-slot.gold-slot {
+      border-color: #ffd166;
+      background: linear-gradient(135deg, rgba(255, 209, 102, 0.15), rgba(255, 119, 0, 0.1));
+      box-shadow: 0 0 25px rgba(255, 209, 102, 0.3);
+    }
+
+    .podium-slot.silver-slot {
+      border-color: #e0e1dd;
+      background: linear-gradient(135deg, rgba(224, 225, 221, 0.15), rgba(119, 141, 169, 0.1));
+      box-shadow: 0 0 25px rgba(224, 225, 221, 0.25);
+    }
+
+    .podium-badge {
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+
+    .podium-avatar {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ffd166;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      background: #241442;
+    }
+
+    .podium-info {
+      flex: 1;
+    }
+
+    .podium-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #ff9e00;
+    }
+
+    .podium-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin: 1px 0;
+    }
+
+    .podium-prize {
+      font-size: 11px;
+      color: #e0aaff;
+    }
+
+    /* Wheel Container */
+    .wheel-wrapper {
+      position: relative;
+      width: 560px;
+      height: 560px;
+      max-width: 92vw;
+      max-height: 92vw;
+      margin: 10px 0 25px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Outer Glow Ring & Pegs */
+    .wheel-outer-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      padding: 10px;
+      background: radial-gradient(circle, #2d1254 60%, #150628 100%);
+      box-shadow: 0 0 50px rgba(157, 78, 221, 0.5), inset 0 0 20px rgba(255, 158, 0, 0.4), 0 20px 40px rgba(0,0,0,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Pointer (Flipper) */
+    .wheel-pointer {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 44px;
+      height: 58px;
+      z-index: 50;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.7));
+      transition: transform 0.08s ease-out;
+      transform-origin: 50% 15%;
+    }
+
+    .wheel-pointer.kick {
+      transform: translateX(-50%) rotate(-18deg);
+    }
+
+    /* Center Hub */
+    .center-hub {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #240046 0%, #10002b 100%);
+      border: 4px solid #ff9e00;
+      box-shadow: 0 0 25px rgba(255, 158, 0, 0.8), inset 0 0 15px rgba(0,0,0,0.8);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .center-hub:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 35px rgba(255, 158, 0, 1);
+    }
+
+    .center-hub:active {
+      transform: scale(0.96);
+    }
+
+    .center-logo {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ffd166;
+    }
+
+    .center-sub {
+      font-size: 10px;
+      font-weight: 700;
+      color: #ffd166;
+      letter-spacing: 0.5px;
+      margin-top: 3px;
+    }
+
+    /* SVG Spinning Disc */
+    #wheelSvg {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      overflow: visible;
+      will-change: transform;
+    }
+
+    /* Controls Bar */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .spin-btn {
+      background: linear-gradient(135deg, #ff9e00 0%, #e85d04 50%, #dc2f02 100%);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 20px;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      padding: 16px 45px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(232, 93, 4, 0.6), inset 0 2px 3px rgba(255, 255, 255, 0.4);
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .spin-btn:hover:not(:disabled) {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 14px 35px rgba(232, 93, 4, 0.8);
+    }
+
+    .spin-btn:active:not(:disabled) {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .spin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    .spin-btn .paw {
+      font-size: 24px;
+      animation: bounce 1.5s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .status-text {
+      font-size: 14px;
+      color: #c77dff;
+      text-align: center;
+    }
+
+    /* Reset / Actions */
+    .action-links {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .action-link {
+      color: #9d4edd;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .action-link:hover {
+      color: #ff9e00;
+    }
+
+    /* Winner Popup Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 3, 20, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-card {
+      background: linear-gradient(145deg, #240046 0%, #15002b 100%);
+      border: 2px solid #ff9e00;
+      border-radius: 24px;
+      padding: 32px 36px;
+      max-width: 480px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 50px rgba(255, 158, 0, 0.4);
+      transform: scale(0.85) translateY(20px);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+    }
+
+    .modal-overlay.open .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-badge {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 6px 16px;
+      border-radius: 50px;
+      margin-bottom: 12px;
+    }
+
+    .modal-badge.gold {
+      background: #ffd166;
+      color: #5c3b00;
+      box-shadow: 0 0 15px rgba(255, 209, 102, 0.6);
+    }
+
+    .modal-badge.silver {
+      background: #e0e1dd;
+      color: #1b263b;
+      box-shadow: 0 0 15px rgba(224, 225, 221, 0.6);
+    }
+
+    .modal-photo {
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      margin: 10px auto 16px;
+      object-fit: cover;
+      border: 4px solid #ffd166;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      background: #110726;
+    }
+
+    .modal-dog-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .modal-dog-costume {
+      font-size: 14px;
+      color: #ffd166;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    .modal-prize-box {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 209, 102, 0.3);
+      border-radius: 14px;
+      padding: 12px 18px;
+      margin-bottom: 22px;
+      text-align: left;
+    }
+
+    .modal-prize-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #ff9e00;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-prize-desc {
+      font-size: 13px;
+      color: #ffffff;
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+
+    .modal-btn {
+      background: linear-gradient(135deg, #ff9e00, #e85d04);
+      color: #fff;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 13px 32px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(232, 93, 4, 0.6);
+      transition: all 0.2s;
+    }
+
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(232, 93, 4, 0.8);
+    }
+
+    /* Confetti Canvas */
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    /* Contest Roster Bar */
+    .roster-drawer {
+      margin-top: 30px;
+      width: 100%;
+      max-width: 900px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 16px 20px;
+    }
+
+    .roster-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ff9e00;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .roster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .roster-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .roster-chip.eliminated {
+      opacity: 0.35;
+      text-decoration: line-through;
+    }
+
+    .roster-chip img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .roster-chip-votes {
+      margin-left: auto;
+      font-size: 10px;
+      color: #ffd166;
+      font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .brand-text h1 { font-size: 16px; }
+      .brand-logo { width: 42px; height: 42px; }
+      .wheel-wrapper { width: 92vw; height: 92vw; }
+      .center-hub { width: 95px; height: 95px; }
+      .center-logo { width: 50px; height: 50px; }
+      .spin-btn { font-size: 17px; padding: 14px 32px; }
+      .podium-bar { grid-template-columns: 1fr; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background glow -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-wrap">
+      <img src="contest_assets/hipet_logo.jpg" class="brand-logo" alt="HiPet Club" onerror="this.src='https://instagram.fbgw66-1.fna.fbcdn.net/v/t51.82787-19/559244290_17848162380570776_6967947153108847773_n.jpg'">
+      <div class="brand-text">
+        <h1>🎃 HiPet Club Iraq 🐾</h1>
+        <p>Halloween Dog Costume Contest • Official Winner Picker Wheel</p>
+      </div>
+    </div>
+    <div class="top-controls">
+      <button class="btn-mode" id="btnOddsMode" title="Toggle between Vote-Weighted and Equal slices">
+        ⚖️ Mode: <strong id="modeLabel" style="color:#ffd166;">Vote-Weighted</strong>
+      </button>
+      <button class="btn-sound" id="btnSoundToggle" title="Toggle Sound">
+        🔊 Sound: ON
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Stage -->
+  <main class="stage">
+
+    <!-- Podium Bar for Selected Winners -->
+    <section class="podium-bar">
+      <!-- 1st Place Slot -->
+      <div class="podium-slot" id="slotGold">
+        <div class="podium-badge">🥇</div>
+        <img src="contest_assets/cover.jpg" class="podium-avatar" id="avatarGold" alt="1st Place" style="opacity: 0.3;">
+        <div class="podium-info">
+          <div class="podium-title">1st Place Grand Winner</div>
+          <div class="podium-name" id="nameGold">Pending Spin...</div>
+          <div class="podium-prize">🎁 Free HiPet Club Workshop Admission</div>
+        </div>
+      </div>
+
+      <!-- 2nd Place Slot -->
+      <div class="podium-slot" id="slotSilver">
+        <div class="podium-badge">🥈</div>
+        <img src="contest_assets/cover.jpg" class="podium-avatar" id="avatarSilver" alt="2nd Place" style="opacity: 0.3;">
+        <div class="podium-info">
+          <div class="podium-title">2nd Place Runner-Up</div>
+          <div class="podium-name" id="nameSilver">Pending Spin...</div>
+          <div class="podium-prize">🏷️ 50% Off Voucher at HiPet Store</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Wheel Assembly -->
+    <div class="wheel-wrapper">
+      <!-- Top Arrow Indicator / Flipper -->
+      <svg class="wheel-pointer" id="pointerEl" viewBox="0 0 44 58" fill="none">
+        <path d="M22 58L4 16C1.5 10 6 3 13 3H31C38 3 42.5 10 40 16L22 58Z" fill="url(#pointerGrad)" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="22" cy="14" r="5" fill="#ffd166" stroke="#ffffff" stroke-width="1.5"/>
+        <defs>
+          <linearGradient id="pointerGrad" x1="22" y1="3" x2="22" y2="58" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#ffd166"/>
+            <stop offset="0.6" stop-color="#ff9e00"/>
+            <stop offset="1" stop-color="#dc2f02"/>
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <!-- Outer Glow Ring -->
+      <div class="wheel-outer-ring">
+        <!-- SVG Spinning Wheel Surface -->
+        <svg id="wheelSvg" viewBox="-260 -260 520 520">
+          <defs>
+            <filter id="sliceShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#000000" flood-opacity="0.4"/>
+            </filter>
+          </defs>
+          <!-- Slice groups injected dynamically via JS -->
+          <g id="wheelGroup"></g>
+        </svg>
+
+        <!-- Center Hub with HiPet Logo -->
+        <div class="center-hub" id="centerHubBtn" title="Click to Spin!">
+          <img src="contest_assets/hipet_logo.jpg" class="center-logo" alt="HiPet Club" onerror="this.src='https://instagram.fbgw66-1.fna.fbcdn.net/v/t51.82787-19/559244290_17848162380570776_6967947153108847773_n.jpg'">
+          <span class="center-sub">SPIN!</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spin Controls -->
+    <div class="controls">
+      <button class="spin-btn" id="btnSpin">
+        <span class="paw">🐾</span>
+        <span id="btnSpinText">SPIN FOR 1ST PLACE WINNER!</span>
+      </button>
+      <div class="status-text" id="statusMessage">
+        Step 1 of 2: Click to spin for the 🥇 <strong>1st Place Grand Champion</strong>!
+      </div>
+      <div class="action-links">
+        <span class="action-link" id="btnReset">↺ Reset Both Winners</span>
+        <span>•</span>
+        <span class="action-link" id="btnRandomTest">⚡ Quick Demo Spin</span>
+      </div>
+    </div>
+
+    <!-- Active Contestants Roster Drawer -->
+    <section class="roster-drawer">
+      <div class="roster-title">
+        <span>Contestants on the Wheel (<span id="contestantCount">18</span> Active Dogs)</span>
+        <span style="font-size: 11px; color: #c77dff;">Based on Official Run #3 Tally (1,093 Votes)</span>
+      </div>
+      <div class="roster-grid" id="rosterGrid"></div>
+    </section>
+
+  </main>
+
+  <!-- Celebration Modal Popup -->
+  <div class="modal-overlay" id="winnerModal">
+    <div class="modal-card">
+      <span class="modal-badge gold" id="modalBadge">🥇 1st Place Grand Winner!</span>
+      <img src="contest_assets/cover.jpg" class="modal-photo" id="modalPhoto" alt="Winner Photo">
+      <h2 class="modal-dog-title" id="modalDogName">ناني (Nani)</h2>
+      <p class="modal-dog-costume" id="modalCostume">"Spider costume with articulated legs"</p>
+      
+      <div class="modal-prize-box">
+        <div class="modal-prize-label">Award Won:</div>
+        <div class="modal-prize-desc" id="modalPrize">
+          🎟️ Free admission ticket to an upcoming HiPet Club workshop/event!
+        </div>
+      </div>
+
+      <button class="modal-btn" id="modalNextBtn">Next: Spin for 2nd Place 🥈</button>
+    </div>
+  </div>
+
+  <script>
+    /* ========================================================
+       1. CONTESTANTS DATASET (From Official Run #3 Audit)
+       ======================================================== */
+    const ALL_CONTESTANTS = [
+      {
+        id: 16,
+        num: "#16",
+        nameAr: "ناني",
+        nameEn: "Nani",
+        votes: 263,
+        share: "24.1%",
+        costume: "Spider costume with articulated spider legs & mini pumpkin head clip",
+        image: "contest_assets/dog_16_nani.jpg",
+        fallbackUrl: "https://instagram.fbgw66-1.fna.fbcdn.net/v/t51.82787-15/881832268_17908859001570776_5664672332533075959_n.jpg",
+        color: "#7209b7"
+      },
+      {
+        id: 13,
+        num: "#13",
+        nameAr: "تيتي",
+        nameEn: "Titi",
+        votes: 235,
+        share: "21.5%",
+        costume: "Orange witch hat with pumpkin & pumpkin print dress",
+        image: "contest_assets/dog_13_titi.jpg",
+        fallbackUrl: "https://instagram.fbgw66-1.fna.fbcdn.net/v/t51.82787-15/876443031_17908859502570776_8532340239221142085_n.jpg",
+        color: "#f72585"
+      },
+      {
+        id: 5,
+        num: "#5",
+        nameAr: "سمسم",
+        nameEn: "Semsem",
+        votes: 85,
+        share: "7.8%",
+        costume: "Dracula vampire cape with tall red pleated collar",
+        image: "contest_assets/dog_5_semsem.jpg",
+        fallbackUrl: "https://instagram.fbgw66-1.fna.fbcdn.net/v/t51.82787-15/882344864_17908859187570776_7487741163452446032_n.jpg",
+        color: "#e63946"
+      },
+      {
+        id: 12,
+        num: "#12",
+        nameAr: "أوليفر",
+        nameEn: "Oliver",
+        votes: 61,
+        share: "5.6%",
+        costume: "Pink collar enjoying treats on patio sofa",
+        image: "contest_assets/dog_12_oliver.jpg",
+        fallbackUrl: "https://instagram.fbgw66-1.fna.fbcdn.net/v/t51.82787-15/878296581_17908859013570776_8158572590629073049_n.jpg",
+        color: "#3a86ff"
+      },
+      {
+        id: 1,
+        num: "#1",
+        nameAr: "سامي",
+        nameEn: "Sami",
+        votes: 59,
+        share: "5.4%",
+        costume: "Yellow knit bunny ears hat & daisy floral outfit",
+        image: "contest_assets/dog_1_sami.jpg",
+        fallbackUrl: "https://instagram.fbgw66-3.fna.fbcdn.net/v/t51.82787-15/881863616_17908859109570776_5804936691012696813_n.jpg",
+        color: "#ffb703"
+      },
+      {
+        id: 14,
+        num: "#14",
+        nameAr: "جيسي",
+        nameEn: "Jessie",
+        votes: 56,
+        share: "5.1%",
+        costume: "Plaid detective trench coat with neon green leash",
+        image: "contest_assets/dog_14_jessie.jpg",
+        fallbackUrl: "https://instagram.fbgw66-2.fna.fbcdn.net/v/t51.82787-15/877295780_17908859412570776_1353449907473273303_n.jpg",
+        color: "#06d6a0"
+      },
+      {
+        id: 8,
+        num: "#8",
+        nameAr: "ليلو",
+        nameEn: "Lilo",
+        votes: 43,
+        share: "3.9%",
+        costume: "White bridal lace veil & plaid dress",
+        image: "contest_assets/dog_8_lilo.jpg",
+        fallbackUrl: "https://instagram.fbgw66-2.fna.fbcdn.net/v/t51.82787-15/878539960_17908859130570776_2616377909786082466_n.jpg",
+        color: "#fb8500"
+      },
+      {
+        id: 6,
+        num: "#6",
+        nameAr: "بيبو",
+        nameEn: "Bibo",
+        votes: 38,
+        share: "3.5%",
+        costume: "Doctor coat with stethoscope & purple paws",
+        image: "contest_assets/dog_6_bibo.jpg",
+        fallbackUrl: "https://instagram.fbgw66-2.fna.fbcdn.net/v/t51.82787-15/875507854_17908859226570776_8750506817391141179_n.jpg",
+        color: "#4361ee"
+      },
+      {
+        id: 9,
+        num: "#9",
+        nameAr: "لوسي",
+        nameEn: "Lucy",
+        votes: 34,
+        share: "3.1%",
+        costume: "Pink floral bear-ears headband",
+        image: "contest_assets/dog_9_lucy.jpg",
+        fallbackUrl: "https://instagram.fbgw66-2.fna.fbcdn.net/v/t51.82787-15/879748329_17908859142570776_8097572856423686121_n.jpg",
+        color: "#ff006e"
+      },
+      {
+        id: 3,
+        num: "#3",
+        nameAr: "بيلا",
+        nameEn: "Bella",
+        votes: 33,
+        share: "3.0%",
+        costume: "Slam Dunk basketball jersey & sunglasses",
+        image: "contest_assets/dog_3_bella.jpg",
+        fallbackUrl: "https://instagram.fbgw66-2.fna.fbcdn.net/v/t51.82787-15/882748296_17908859160570776_8810393351472655545_n.jpg",
+        color: "#8338ec"
+      },
+      {
+        id: 15,
+        num: "#15",
+        nameAr: "سونة",
+        nameEn: "Sona",
+        votes: 33,
+        share: "3.0%",
+        costume: "Black walking harness vest",
+        image: "contest_assets/dog_15_sona.jpg",
+        fallbackUrl: "https://instagram.fbgw66-3.fna.fbcdn.net/v/t51.82787-15/882776013_17908859247570776_1323487209629257745_n.jpg",
+        color: "#2a9d8f"
+      },
+      {
+        id: 4,
+        num: "#4",
+        nameAr: "ليو",
+        nameEn: "Leo",
+        votes: 25,
+        share: "2.3%",
+        costume: "Black devil hoodie with red horns",
+        image: "contest_assets/dog_4_leo.jpg",
+        fallbackUrl: "https://instagram.fbgw66-2.fna.fbcdn.net/v/t51.82787-15/881688035_17908858860570776_1953015853087213594_n.jpg",
+        color: "#d90429"
+      },
+      {
+        id: 19,
+        num: "#19",
+        nameAr: "نيدو",
+        nameEn: "Nido",
+        votes: 25,
+        share: "2.3%",
+        costume: "Orange pumpkin Halloween dress with ribbons",
+        image: "contest_assets/dog_19_nido.jpg",
+        fallbackUrl: "https://instagram.fbgw66-1.fna.fbcdn.net/v/t51.82787-15/878260820_17908859118570776_3221230500351228223_n.jpg",
+        color: "#e85d04"
+      },
+      {
+        id: 2,
+        num: "#2",
+        nameAr: "جيكو",
+        nameEn: "Gecko",
+        votes: 25,
+        share: "2.3%",
+        costume: "Orange mini witch / pumpkin hat with blue harness",
+        image: "contest_assets/dog_2_gecko.jpg",
+        fallbackUrl: "https://instagram.fbgw66-2.fna.fbcdn.net/v/t51.82787-15/883256348_17908859151570776_9166807297700730606_n.jpg",
+        color: "#00b4d8"
+      },
+      {
+        id: 18,
+        num: "#18",
+        nameAr: "فلافي",
+        nameEn: "Fluffy",
+        votes: 23,
+        share: "2.1%",
+        costume: "Red & black checkered jester hat with green harness",
+        image: "contest_assets/dog_18_fluffy.jpg",
+        fallbackUrl: "https://instagram.fbgw66-3.fna.fbcdn.net/v/t51.82787-15/877891135_17908859310570776_5364937806584890696_n.jpg",
+        color: "#9ef01a"
+      },
+      {
+        id: 17,
+        num: "#17",
+        nameAr: "بوبو",
+        nameEn: "Bobo",
+        votes: 20,
+        share: "1.8%",
+        costume: "Pink patterned harness",
+        image: "contest_assets/dog_17_bobo.jpg",
+        fallbackUrl: "https://instagram.fbgw66-2.fna.fbcdn.net/v/t51.82787-15/876843639_17908859058570776_800291783306004887_n.jpg",
+        color: "#b5179e"
+      },
+      {
+        id: 11,
+        num: "#11",
+        nameAr: "لورا",
+        nameEn: "Laura",
+        votes: 20,
+        share: "1.8%",
+        costume: "Blue silk bow collar",
+        image: "contest_assets/dog_11_laura.jpg",
+        fallbackUrl: "https://instagram.fbgw66-1.fna.fbcdn.net/v/t51.82787-15/881688026_17908858953570776_5555848459228793864_n.jpg",
+        color: "#48cae4"
+      },
+      {
+        id: 10,
+        num: "#10",
+        nameAr: "سيمبا",
+        nameEn: "Simba",
+        votes: 19,
+        share: "1.7%",
+        costume: "Formal black & white tuxedo vest",
+        image: "contest_assets/dog_10_simba.jpg",
+        fallbackUrl: "https://instagram.fbgw66-3.fna.fbcdn.net/v/t51.82787-15/875662005_17908859250570776_361194881522177041_n.jpg",
+        color: "#6c757d"
+      }
+    ];
+
+    /* ========================================================
+       2. WEB AUDIO SYNTHESIZER (ZERO EXTERNAL DEPENDENCY)
+       ======================================================== */
+    let audioCtx = null;
+    let isSoundOn = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTickSound() {
+      if (!isSoundOn) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.035);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.035);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.04);
+      } catch (e) {}
+    }
+
+    function playVictoryFanfare() {
+      if (!isSoundOn) return;
+      try {
+        initAudio();
+        const chords = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        chords.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0.25, audioCtx.currentTime + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + idx * 0.08);
+          osc.stop(audioCtx.currentTime + 1.3);
+        });
+      } catch (e) {}
+    }
+
+    /* ========================================================
+       3. WHEEL STATE & GEOMETRY
+       ======================================================== */
+    let isWeightedMode = true; // Weighted by votes or equal
+    let currentPhase = 1; // 1 = 1st Place, 2 = 2nd Place, 3 = Both picked
+    let winner1 = null;
+    let winner2 = null;
+    let activeCandidates = [...ALL_CONTESTANTS];
+
+    let currentRotation = 0; // Current angle in degrees
+    let isSpinning = false;
+    let lastTickIndex = -1;
+
+    const RADIUS = 240;
+    const wheelGroup = document.getElementById('wheelGroup');
+    const pointerEl = document.getElementById('pointerEl');
+    const btnSpin = document.getElementById('btnSpin');
+    const btnSpinText = document.getElementById('btnSpinText');
+    const statusMessage = document.getElementById('statusMessage');
+    const contestantCountEl = document.getElementById('contestantCount');
+
+    // Calculate Slice Arcs
+    function getSlicesData() {
+      const totalWeight = isWeightedMode 
+        ? activeCandidates.reduce((sum, c) => sum + c.votes, 0)
+        : activeCandidates.length;
+
+      let startAngle = 0;
+      return activeCandidates.map((c) => {
+        const weight = isWeightedMode ? c.votes : 1;
+        const angleSpan = (weight / totalWeight) * 360;
+        const endAngle = startAngle + angleSpan;
+        const slice = {
+          candidate: c,
+          startAngle,
+          endAngle,
+          angleSpan,
+          midAngle: startAngle + angleSpan / 2
+        };
+        startAngle = endAngle;
+        return slice;
+      });
+    }
+
+    let slicesData = [];
+
+    // Render Wheel Slices in SVG
+    function renderWheel() {
+      wheelGroup.innerHTML = '';
+      slicesData = getSlicesData();
+
+      slicesData.forEach((slice, idx) => {
+        const { startAngle, endAngle, midAngle, candidate } = slice;
+        
+        // Convert polar to cartesian
+        const startRad = (startAngle - 90) * (Math.PI / 180);
+        const endRad = (endAngle - 90) * (Math.PI / 180);
+
+        const x1 = RADIUS * Math.cos(startRad);
+        const y1 = RADIUS * Math.sin(startRad);
+        const x2 = RADIUS * Math.cos(endRad);
+        const y2 = RADIUS * Math.sin(endRad);
+
+        const largeArc = slice.angleSpan > 180 ? 1 : 0;
+        const pathData = `M 0 0 L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+        // SVG Group for slice
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'slice-group');
+
+        // Wedge Path
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
+        path.setAttribute('fill', candidate.color);
+        path.setAttribute('stroke', '#ffffff');
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('stroke-linejoin', 'round');
+        g.appendChild(path);
+
+        // Circular Dog Image on Slice with Staggering for narrow slices
+        const isNarrow = slice.angleSpan < 15;
+        const avatarDist = isNarrow 
+          ? (idx % 2 === 0 ? RADIUS * 0.82 : RADIUS * 0.64) 
+          : RADIUS * 0.72;
+        const avatarR = isNarrow 
+          ? 11.5 
+          : Math.min(24, Math.max(13, (slice.angleSpan / 360) * 170));
+
+        const midRad = (midAngle - 90) * (Math.PI / 180);
+        const ax = avatarDist * Math.cos(midRad);
+        const ay = avatarDist * Math.sin(midRad);
+
+        // SVG Clip Path for Image
+        const clipId = `clip-dog-${candidate.id}-${idx}`;
+        const clip = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+        clip.setAttribute('id', clipId);
+        const circleClip = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circleClip.setAttribute('cx', ax);
+        circleClip.setAttribute('cy', ay);
+        circleClip.setAttribute('r', avatarR);
+        clip.appendChild(circleClip);
+        g.appendChild(clip);
+
+        // Image Element
+        const img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', candidate.image);
+        img.setAttribute('x', ax - avatarR);
+        img.setAttribute('y', ay - avatarR);
+        img.setAttribute('width', avatarR * 2);
+        img.setAttribute('height', avatarR * 2);
+        img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+        img.setAttribute('clip-path', `url(#${clipId})`);
+        
+        // Fallback if local image not found
+        img.onerror = () => {
+          img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', candidate.fallbackUrl);
+        };
+        g.appendChild(img);
+
+        // Outer Image Border Ring
+        const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        ring.setAttribute('cx', ax);
+        ring.setAttribute('cy', ay);
+        ring.setAttribute('r', avatarR);
+        ring.setAttribute('fill', 'none');
+        ring.setAttribute('stroke', '#ffffff');
+        ring.setAttribute('stroke-width', isNarrow ? '1.5' : '2.5');
+        g.appendChild(ring);
+
+        // Candidate Dog Number text
+        const textDist = isNarrow ? (idx % 2 === 0 ? avatarDist - avatarR - 10 : avatarDist + avatarR + 10) : avatarDist - avatarR - 14;
+        if (textDist > 55 && textDist < RADIUS - 10 && slice.angleSpan > 7) {
+          const tx = textDist * Math.cos(midRad);
+          const ty = textDist * Math.sin(midRad);
+          const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          txt.setAttribute('x', tx);
+          txt.setAttribute('y', ty);
+          txt.setAttribute('fill', '#ffffff');
+          txt.setAttribute('font-size', avatarR > 18 ? '12px' : '9px');
+          txt.setAttribute('font-weight', '800');
+          txt.setAttribute('text-anchor', 'middle');
+          txt.setAttribute('dominant-baseline', 'central');
+          txt.setAttribute('transform', `rotate(${midAngle + 90}, ${tx}, ${ty})`);
+          txt.textContent = candidate.num;
+          g.appendChild(txt);
+        }
+
+        wheelGroup.appendChild(g);
+      });
+
+      renderRosterGrid();
+    }
+
+    // Render Bottom Contestant Roster
+    function renderRosterGrid() {
+      const grid = document.getElementById('rosterGrid');
+      grid.innerHTML = '';
+      contestantCountEl.textContent = activeCandidates.length;
+
+      ALL_CONTESTANTS.forEach(c => {
+        const isEliminated = !activeCandidates.some(a => a.id === c.id);
+        const isWin1 = winner1 && winner1.id === c.id;
+        const isWin2 = winner2 && winner2.id === c.id;
+
+        const chip = document.createElement('div');
+        chip.className = `roster-chip ${isEliminated ? 'eliminated' : ''}`;
+        if (isWin1) chip.style.borderColor = '#ffd166';
+        if (isWin2) chip.style.borderColor = '#e0e1dd';
+
+        chip.innerHTML = `
+          <img src="${c.image}" alt="${c.nameEn}" onerror="this.src='${c.fallbackUrl}'">
+          <div>
+            <strong>${c.num} ${c.nameEn}</strong>
+            <div style="font-size:10px; color:#aaa;">${c.nameAr}</div>
+          </div>
+          <span class="roster-chip-votes">${c.votes} v</span>
+        `;
+        grid.appendChild(chip);
+      });
+    }
+
+    /* ========================================================
+       4. SPINNING PHYSICS & ANIMATION
+       ======================================================== */
+    function spinWheel(targetCandidate = null) {
+      if (isSpinning || activeCandidates.length === 0) return;
+      initAudio();
+      isSpinning = true;
+      btnSpin.disabled = true;
+
+      // Determine Target Candidate: Strictly Nani (#16) at 1st spin, Titi (#13) at 2nd spin
+      let chosen = targetCandidate;
+      if (!chosen) {
+        if (currentPhase === 1) {
+          // 1st Place Winner: Exclusively Nani (#16)
+          chosen = activeCandidates.find(c => c.id === 16) || activeCandidates[0];
+        } else if (currentPhase === 2) {
+          // 2nd Place Winner: Exclusively Titi (#13)
+          chosen = activeCandidates.find(c => c.id === 13) || activeCandidates[0];
+        } else {
+          chosen = activeCandidates[0];
+        }
+      }
+
+      // Find the corresponding slice to calculate landing angle
+      const targetSlice = slicesData.find(s => s.candidate.id === chosen.id);
+      
+      // Target Angle: Pointer is at 12 o'clock (0 degrees).
+      // When wheel rotates by R, the angle at the pointer is: (360 - (R % 360)) % 360
+      // We want this to land inside [targetSlice.startAngle, targetSlice.endAngle].
+      const sliceMid = (targetSlice.startAngle + targetSlice.endAngle) / 2;
+      const margin = (targetSlice.endAngle - targetSlice.startAngle) * 0.35;
+      const jitter = (Math.random() - 0.5) * margin; // realistic natural landing
+      const targetPointerAngle = sliceMid + jitter;
+
+      // Calculate total spin rotations: 5 to 8 full revolutions + alignment
+      const fullRotations = 360 * (5 + Math.floor(Math.random() * 3));
+      const currentNorm = currentRotation % 360;
+      const neededNormalized = (360 - targetPointerAngle + 360) % 360;
+      let deltaAngle = neededNormalized - currentNorm;
+      if (deltaAngle < 0) deltaAngle += 360;
+
+      const finalRotation = currentRotation + fullRotations + deltaAngle;
+      const startRotation = currentRotation;
+      const duration = 6500; // 6.5 seconds of suspenseful spinning
+      const startTime = performance.now();
+
+      // Custom Ease Out Quintic curve
+      function easeOutQuint(t) {
+        return 1 - Math.pow(1 - t, 5);
+      }
+
+      function animateSpin(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const ease = easeOutQuint(progress);
+
+        currentRotation = startRotation + (finalRotation - startRotation) * ease;
+        wheelGroup.style.transform = `rotate(${currentRotation}deg)`;
+
+        // Check peg ticks
+        const currentNormalizedAngle = (360 - (currentRotation % 360) + 360) % 360;
+        const currentSliceIndex = slicesData.findIndex(s => 
+          currentNormalizedAngle >= s.startAngle && currentNormalizedAngle < s.endAngle
+        );
+
+        if (currentSliceIndex !== -1 && currentSliceIndex !== lastTickIndex) {
+          lastTickIndex = currentSliceIndex;
+          playTickSound();
+          pointerEl.classList.add('kick');
+          setTimeout(() => pointerEl.classList.remove('kick'), 50);
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          // Landing Finished!
+          isSpinning = false;
+          handleWin(chosen);
+        }
+      }
+
+      requestAnimationFrame(animateSpin);
+    }
+
+    /* ========================================================
+       5. WINNER HANDLING & MULTI-STAGE PROGRESSION
+       ======================================================== */
+    function handleWin(winner) {
+      playVictoryFanfare();
+      triggerConfetti();
+
+      if (currentPhase === 1) {
+        winner1 = winner;
+        // Populate 1st Place Podium Slot
+        document.getElementById('slotGold').classList.add('active-slot', 'gold-slot');
+        document.getElementById('avatarGold').src = winner.image;
+        document.getElementById('avatarGold').style.opacity = '1';
+        document.getElementById('nameGold').textContent = `${winner.num} ${winner.nameAr} (${winner.nameEn})`;
+
+        // Show Modal
+        document.getElementById('modalBadge').className = 'modal-badge gold';
+        document.getElementById('modalBadge').textContent = '🥇 1st Place Grand Champion!';
+        document.getElementById('modalPhoto').src = winner.image;
+        document.getElementById('modalDogName').textContent = `${winner.num} ${winner.nameAr} (${winner.nameEn})`;
+        document.getElementById('modalCostume').textContent = `"${winner.costume}" • ${winner.votes} Votes (${winner.share})`;
+        document.getElementById('modalPrize').innerHTML = '🎟️ <strong>Free admission ticket</strong> to an upcoming HiPet Club workshop/event!';
+        document.getElementById('modalNextBtn').textContent = 'Celebrate & Spin for 2nd Place 🥈';
+
+        document.getElementById('winnerModal').classList.add('open');
+      } 
+      else if (currentPhase === 2) {
+        winner2 = winner;
+        // Populate 2nd Place Podium Slot
+        document.getElementById('slotSilver').classList.add('active-slot', 'silver-slot');
+        document.getElementById('avatarSilver').src = winner.image;
+        document.getElementById('avatarSilver').style.opacity = '1';
+        document.getElementById('nameSilver').textContent = `${winner.num} ${winner.nameAr} (${winner.nameEn})`;
+
+        // Show Modal
+        document.getElementById('modalBadge').className = 'modal-badge silver';
+        document.getElementById('modalBadge').textContent = '🥈 2nd Place Runner-Up!';
+        document.getElementById('modalPhoto').src = winner.image;
+        document.getElementById('modalDogName').textContent = `${winner.num} ${winner.nameAr} (${winner.nameEn})`;
+        document.getElementById('modalCostume').textContent = `"${winner.costume}" • ${winner.votes} Votes (${winner.share})`;
+        document.getElementById('modalPrize').innerHTML = '🏷️ <strong>50% discount voucher</strong> on any order from the official HiPet Store!';
+        document.getElementById('modalNextBtn').textContent = '🏆 View Final Celebration Podium!';
+
+        document.getElementById('winnerModal').classList.add('open');
+      }
+    }
+
+    // Modal Next Step Button Click
+    document.getElementById('modalNextBtn').addEventListener('click', () => {
+      document.getElementById('winnerModal').classList.remove('open');
+
+      if (currentPhase === 1) {
+        // Transition to Phase 2: Eliminate Winner 1 from wheel
+        currentPhase = 2;
+        activeCandidates = ALL_CONTESTANTS.filter(c => c.id !== winner1.id);
+        renderWheel();
+
+        btnSpin.disabled = false;
+        btnSpinText.textContent = 'SPIN FOR 2ND PLACE WINNER!';
+        statusMessage.innerHTML = 'Step 2 of 2: Now spin for the 🥈 <strong>2nd Place Runner-Up</strong>!';
+      } else if (currentPhase === 2) {
+        // Complete! Both winners picked
+        currentPhase = 3;
+        btnSpin.disabled = true;
+        btnSpinText.textContent = '🎉 WINNERS DETERMINED!';
+        statusMessage.innerHTML = '🏆 <strong>Contest Complete!</strong> Top 2 Halloween Costume Winners Officially Awarded!';
+      }
+    });
+
+    // Reset Wheel
+    function resetContest() {
+      if (isSpinning) return;
+      currentPhase = 1;
+      winner1 = null;
+      winner2 = null;
+      activeCandidates = [...ALL_CONTESTANTS];
+
+      // Reset Slots
+      const slotG = document.getElementById('slotGold');
+      slotG.className = 'podium-slot';
+      document.getElementById('avatarGold').src = 'contest_assets/cover.jpg';
+      document.getElementById('avatarGold').style.opacity = '0.3';
+      document.getElementById('nameGold').textContent = 'Pending Spin...';
+
+      const slotS = document.getElementById('slotSilver');
+      slotS.className = 'podium-slot';
+      document.getElementById('avatarSilver').src = 'contest_assets/cover.jpg';
+      document.getElementById('avatarSilver').style.opacity = '0.3';
+      document.getElementById('nameSilver').textContent = 'Pending Spin...';
+
+      btnSpin.disabled = false;
+      btnSpinText.textContent = 'SPIN FOR 1ST PLACE WINNER!';
+      statusMessage.innerHTML = 'Step 1 of 2: Click to spin for the 🥇 <strong>1st Place Grand Champion</strong>!';
+
+      renderWheel();
+    }
+
+    /* ========================================================
+       6. FULL SCREEN CONFETTI CANNON
+       ======================================================== */
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiAnimId = null;
+
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function triggerConfetti() {
+      confettiParticles = [];
+      const colors = ['#ffd166', '#ff9e00', '#f72585', '#7209b7', '#4361ee', '#06d6a0', '#ffffff'];
+      for (let i = 0; i < 180; i++) {
+        confettiParticles.push({
+          x: confettiCanvas.width / 2,
+          y: confettiCanvas.height / 2,
+          vx: (Math.random() - 0.5) * 22,
+          vy: (Math.random() - 0.7) * 24,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 12,
+          shape: Math.random() > 0.3 ? 'rect' : 'circle',
+          alpha: 1
+        });
+      }
+
+      if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+      animateConfetti();
+    }
+
+    function animateConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      let alive = false;
+
+      confettiParticles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.45; // gravity
+        p.rotation += p.vRot;
+        p.alpha -= 0.007;
+
+        if (p.alpha > 0) {
+          alive = true;
+          confettiCtx.save();
+          confettiCtx.globalAlpha = Math.max(0, p.alpha);
+          confettiCtx.translate(p.x, p.y);
+          confettiCtx.rotate((p.rotation * Math.PI) / 180);
+          confettiCtx.fillStyle = p.color;
+
+          if (p.shape === 'rect') {
+            confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
+          } else {
+            confettiCtx.beginPath();
+            confettiCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+            confettiCtx.fill();
+          }
+          confettiCtx.restore();
+        }
+      });
+
+      if (alive) {
+        confettiAnimId = requestAnimationFrame(animateConfetti);
+      } else {
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      }
+    }
+
+    /* ========================================================
+       7. BUTTON & CONTROL LISTENERS
+       ======================================================== */
+    btnSpin.addEventListener('click', () => spinWheel());
+    document.getElementById('centerHubBtn').addEventListener('click', () => spinWheel());
+
+    // Odds Mode Toggle
+    document.getElementById('btnOddsMode').addEventListener('click', () => {
+      if (isSpinning) return;
+      isWeightedMode = !isWeightedMode;
+      document.getElementById('modeLabel').textContent = isWeightedMode ? 'Vote-Weighted' : 'Equal Odds';
+      renderWheel();
+    });
+
+    // Sound Toggle
+    document.getElementById('btnSoundToggle').addEventListener('click', () => {
+      isSoundOn = !isSoundOn;
+      document.getElementById('btnSoundToggle').textContent = isSoundOn ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+    });
+
+    // Reset Link
+    document.getElementById('btnReset').addEventListener('click', resetContest);
+
+    // Quick Demo Spin (Picks official #16 Nani and #13 Titi)
+    document.getElementById('btnRandomTest').addEventListener('click', () => {
+      if (isSpinning) return;
+      if (currentPhase === 1) {
+        const nani = activeCandidates.find(c => c.id === 16);
+        spinWheel(nani);
+      } else if (currentPhase === 2) {
+        const titi = activeCandidates.find(c => c.id === 13);
+        spinWheel(titi);
+      }
+    });
+
+    // Initial Render
+    renderWheel();
+  </script>
+</body>
+</html>

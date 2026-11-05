@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { X, Send, Sparkles, MessageCircle, AlertTriangle } from 'lucide-react';
+import {
+  X,
+  Send,
+  Sparkles,
+  MessageCircle,
+} from 'lucide-react';
 import { Language } from '@/types';
 
 interface SimulateMessageModalProps {

@@ -104,7 +104,7 @@ export default function PrivacyPolicyPage() {
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2 text-xs">
               <div className="font-bold text-slate-900">طرق طلب الحذف الفوري:</div>
               <ul className="list-disc list-inside space-y-1 text-slate-700">
-                <li>إرسال رسالة "حذف بياناتي" أو "Delete my data" مباشرة في المحادثة مع الحساب.</li>
+                <li>إرسال رسالة &quot;حذف بياناتي&quot; أو &quot;Delete my data&quot; مباشرة في المحادثة مع الحساب.</li>
                 <li>الاتصال المباشر بهاتف العيادة: <span className="font-mono font-bold text-emerald-700">07768886667</span>.</li>
                 <li>زيارة صفحة تعليمات الحذف الرسمية: <Link href="/data-deletion" className="text-indigo-600 font-bold underline">تعليمات حذف البيانات</Link>.</li>
               </ul>
